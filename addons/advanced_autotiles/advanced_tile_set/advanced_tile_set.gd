@@ -142,9 +142,9 @@ static func get_tile_orientations_for_shape_and_axis(
 	if shape != AdvancedTileShape.TRIANGLE:
 		return [AdvancedTileOrientation.UP]
 	if axis == AdvancedTileLayoutAxis.HORIZONTAL:
-		return [AdvancedTileOrientation.LEFT, AdvancedTileOrientation.RIGHT]
-	else:
 		return [AdvancedTileOrientation.UP, AdvancedTileOrientation.DOWN]
+	else:
+		return [AdvancedTileOrientation.LEFT, AdvancedTileOrientation.RIGHT]
 
 
 ## Returns an array of autotile mask flags supported for the given terrain mode,

@@ -8,6 +8,7 @@ const CENTER_FLAG_SHRINK := 0.6
 enum Mode {
 	SETUP_TERRAIN = 0,
 	SETUP_MASKS = 1,
+	SETUP_ORIENTATION = 2,
 }
 var drag_start := Vector2.INF
 var drag_scroll_start := Vector2.ZERO
@@ -15,6 +16,7 @@ var mode: Mode = Mode.SETUP_TERRAIN
 var lmb_terrain_index: int = -1
 var rmb_terrain_index: int = -1
 var shift_lmb_terrain_index: int = -1
+var paint_orientation: AdvancedTileSet.AdvancedTileOrientation
 var tile_set: AdvancedTileSet:
 	set(value):
 		if tile_set is AdvancedTileSet:
@@ -32,10 +34,6 @@ var scroll := Vector2.ZERO
 var zoom := 1.0
 var tile_under_mouse: AdvancedTileSet.TileKey = null
 var flag_under_mouse := AdvancedTileSet.AdvancedCellNeighbor.SELF
-
-
-func _process(delta: float) -> void:
-	queue_redraw()
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -58,6 +56,8 @@ func _gui_input(event: InputEvent) -> void:
 						_paint_terrain()
 					Mode.SETUP_MASKS:
 						_paint_mask()
+					Mode.SETUP_ORIENTATION:
+						_paint_orientation()
 	elif event is InputEventMouseMotion:
 		if drag_start.is_finite():
 			scroll = drag_scroll_start + event.position - drag_start
@@ -105,6 +105,7 @@ func apply_settings(new_settings: Dictionary) -> void:
 	lmb_terrain_index = new_settings.lmb_terrain
 	rmb_terrain_index = new_settings.rmb_terrain
 	shift_lmb_terrain_index = new_settings.shift_lmb_terrain
+	paint_orientation = new_settings.orientation
 	queue_redraw()
 
 
@@ -145,6 +146,13 @@ func _paint_mask() -> void:
 	var mask := tile_set.get_advanced_tile_mask(tile_under_mouse)
 	mask[flag_under_mouse] = terrain_index
 	tile_set.set_advanced_tile_mask(tile_under_mouse, mask)
+
+
+func _paint_orientation() -> void:
+	if tile_under_mouse == null:
+		return
+	tile_set.set_advanced_tile_orientation(tile_under_mouse, paint_orientation)
+	queue_redraw()
 
 
 func _on_tile_set_changed() -> void:
@@ -222,7 +230,10 @@ func _draw_editable_tiles() -> void:
 				outline, center_point, CENTER_FLAG_SHRINK
 		)		
 		draw_texture_rect_region(atlas.texture, local_rect, src_rect)
-		if tile.equals(tile_under_mouse) and mode == Mode.SETUP_TERRAIN:
+		if tile.equals(tile_under_mouse) and mode in [
+				Mode.SETUP_TERRAIN,
+				Mode.SETUP_ORIENTATION
+		]:
 			draw_rect(local_rect, Color(1.0, 0.9, 0.0, 0.5), false, 3.0)
 		else:
 			draw_rect(local_rect, Color(1.0, 1.0, 1.0, 0.5), false, 1.0)

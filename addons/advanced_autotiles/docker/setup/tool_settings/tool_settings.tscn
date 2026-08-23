@@ -11,11 +11,17 @@ terrain_select_butons = [NodePath("Terrain/TerrainSelect"), NodePath("Mask/LMBSe
 unique_name_in_owner = true
 layout_mode = 2
 selected = 0
-item_count = 2
-popup/item_0/text = "Terrain"
-popup/item_0/id = 0
-popup/item_1/text = "Mask"
-popup/item_1/id = 1
+item_count = 3
+popup/item_0/text = "Orientation"
+popup/item_0/id = 2
+popup/item_1/text = "Terrain"
+popup/item_1/id = 0
+popup/item_2/text = "Mask"
+popup/item_2/id = 1
+
+[node name="OrientationSelect" type="OptionButton" parent="." unique_id=1328367289]
+unique_name_in_owner = true
+layout_mode = 2
 
 [node name="Terrain" type="GridContainer" parent="." unique_id=1748311811]
 unique_name_in_owner = true

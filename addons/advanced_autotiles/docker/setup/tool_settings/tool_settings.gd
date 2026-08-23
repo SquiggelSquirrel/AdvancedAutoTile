@@ -8,18 +8,29 @@ signal settings_changed
 var tile_set: AdvancedTileSet = null:
 	set(value):
 		tile_set = value
+		_setup_orientations()
 		_setup_terrains_lists()
+		_on_tool_select_changed()
 
 
 func _ready() -> void:
 	%ToolSelect.item_selected.connect(_on_tool_select_changed.unbind(1))
+	%OrientationSelect.item_selected.connect(_on_settings_changed.unbind(1))
 	for button in terrain_select_butons:
 		button.item_selected.connect(_on_settings_changed.unbind(1))
 
 
 func _on_tool_select_changed() -> void:
-	%Terrain.visible = (%ToolSelect.selected == 0)
-	%Mask.visible = (%ToolSelect.selected == 1)
+	var to_show: Control
+	match %ToolSelect.get_selected_id():
+		0:
+			to_show = %Terrain
+		1:
+			to_show = %Mask
+		2:
+			to_show = %OrientationSelect
+	for control in [%Terrain, %Mask, %OrientationSelect]:
+		control.visible = (control == to_show)
 	_on_settings_changed()
 
 
@@ -27,21 +38,40 @@ func _on_settings_changed() -> void:
 	settings_changed.emit()
 
 
-# Set up terrains option button
 func _setup_terrains_lists() -> void:
 	for button in terrain_select_butons:
 		button.tile_set = tile_set
 
 
+func _setup_orientations() -> void:
+	if tile_set == null:
+		return
+	var orientations := AdvancedTileSet.get_tile_orientations_for_shape_and_axis(
+			tile_set.advanced_tile_shape,
+			tile_set.advanced_tile_layout_axis
+	)
+	%OrientationSelect.clear()
+	for orientation in orientations:
+		%OrientationSelect.add_item(
+				AdvancedTileSet.AdvancedTileOrientation.find_key(
+					orientation).capitalize(),
+				orientation
+		)
+	%ToolSelect.set_item_disabled(0, orientations.size() < 2)
+	if %ToolSelect.is_item_disabled(%ToolSelect.selected):
+		%ToolSelect.select(%ToolSelect.selected + 1)
+
+
 func get_tool_settings() -> Dictionary:
 	var settings: Dictionary
-	match %ToolSelect.selected:
+	match %ToolSelect.get_selected_id():
 		0:
 			settings = {
 				"mode": 0,
 				"lmb_terrain": %TerrainSelect.get_selected_terrain_index(),
 				"rmb_terrain": -1,
-				"shift_lmb_terrain": -1
+				"shift_lmb_terrain": -1,
+				"orientation": AdvancedTileSet.AdvancedTileOrientation.UP
 			}
 		1:
 			settings = {
@@ -49,5 +79,14 @@ func get_tool_settings() -> Dictionary:
 				"lmb_terrain": %LMBSelect.get_selected_terrain_index(),
 				"rmb_terrain": %RMBSelect.get_selected_terrain_index(),
 				"shift_lmb_terrain": %ShiftSelect.get_selected_terrain_index(),
+				"orientation": AdvancedTileSet.AdvancedTileOrientation.UP
+			}
+		2:
+			settings = {
+				"mode": 2,
+				"lmb_terrain": -1,
+				"rmb_terrain": -1,
+				"shift_lmb_terrain": -1,
+				"orientation": %OrientationSelect.get_selected_id()
 			}
 	return settings
