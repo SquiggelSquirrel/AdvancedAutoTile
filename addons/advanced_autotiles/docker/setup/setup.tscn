@@ -40,6 +40,7 @@ layout_mode = 2
 
 [node name="AtlasView" type="Control" parent="AtlasEditor" unique_id=863875627]
 unique_name_in_owner = true
+texture_repeat = 2
 clip_contents = true
 layout_mode = 2
 script = ExtResource("3_yqrwc")

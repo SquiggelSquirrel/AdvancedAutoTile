@@ -1,6 +1,9 @@
 @tool
 extends Control
 
+const IGNORE_TEXTURE: Texture2D = preload(
+		"res://addons/advanced_autotiles/assets/checkered.png"
+)
 const CENTER_FLAG_SHRINK := 0.6
 enum Mode {
 	SETUP_TERRAIN = 0,
@@ -244,6 +247,18 @@ func _draw_editable_tiles() -> void:
 						draw_colored_polygon(
 								scaled_polygon,
 								tile_set.terrains[mask[flag]].color
+						)
+					elif mask.get(flag, -2) == -2:
+						draw_colored_polygon(
+								scaled_polygon,
+								Color.WHITE,
+								Transform2D(
+										0,
+										Vector2(8.0, 8.0),
+										0,
+										Vector2.ZERO
+								) * polygon,
+								IGNORE_TEXTURE
 						)
 					if tile.equals(tile_under_mouse) and flag_under_mouse == flag:
 						draw_polyline(

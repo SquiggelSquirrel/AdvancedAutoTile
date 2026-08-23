@@ -94,6 +94,8 @@ enum AdvancedTileOrientation {
 
 ## Key used for storing per-tile plugin data on TileSet custom data layer
 const DATA_LAYER_NAME := "Advanced Autotiles"
+const FLAG_EMPTY := -1
+const FLAG_IGNORE := -2
 
 @export_group("Advanced Autotiles")
 @export var advanced_tile_shape: AdvancedTileShape = AdvancedTileShape.SQUARE:
