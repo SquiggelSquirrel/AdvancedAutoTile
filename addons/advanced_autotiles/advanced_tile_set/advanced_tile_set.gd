@@ -554,6 +554,16 @@ class TileKey:
 		self.source_id = source_id
 		self.coords = coords
 		self.alternative_id = alternative_id
+	
+	
+	func equals(other_tile: TileKey) -> bool:
+		if other_tile == null:
+			return false
+		return (
+				source_id == other_tile.source_id
+				and coords == other_tile.coords
+				and alternative_id == other_tile.alternative_id
+		)
 
 
 ## Class for storing a single terrain.

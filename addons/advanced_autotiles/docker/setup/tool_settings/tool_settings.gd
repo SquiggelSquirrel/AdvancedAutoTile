@@ -12,8 +12,15 @@ var tile_set: AdvancedTileSet = null:
 
 
 func _ready() -> void:
-	%ToolSelect.item_selected.connect(_on_settings_changed.unbind(1))
-	%TerrainSelect.item_selected.connect(_on_settings_changed.unbind(1))
+	%ToolSelect.item_selected.connect(_on_tool_select_changed.unbind(1))
+	for button in terrain_select_butons:
+		button.item_selected.connect(_on_settings_changed.unbind(1))
+
+
+func _on_tool_select_changed() -> void:
+	%Terrain.visible = (%ToolSelect.selected == 0)
+	%Mask.visible = (%ToolSelect.selected == 1)
+	_on_settings_changed()
 
 
 func _on_settings_changed() -> void:
@@ -39,8 +46,8 @@ func get_tool_settings() -> Dictionary:
 		1:
 			settings = {
 				"mode": 1,
-				"lmb_terrain": -1,
-				"rmb_terrain": -1,
-				"shift_lmb_terrain": -1,
+				"lmb_terrain": %LMBSelect.get_selected_terrain_index(),
+				"rmb_terrain": %RMBSelect.get_selected_terrain_index(),
+				"shift_lmb_terrain": %ShiftSelect.get_selected_terrain_index(),
 			}
 	return settings

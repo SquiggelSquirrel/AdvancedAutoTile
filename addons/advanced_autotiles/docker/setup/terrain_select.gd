@@ -1,8 +1,10 @@
 @tool
 extends OptionButton
 
+
 @export var include_empty := false
 @export var include_ignore := false
+@export var default_index := 0
 var tile_set: AdvancedTileSet = null:
 	set(value):
 		tile_set = value
@@ -25,7 +27,8 @@ func _update_terrains() -> void:
 		var terrain: AdvancedTileSet.Terrain = tile_set.terrains[terrain_index]
 		add_item(terrain.name)
 		item_terrain_indices.append(terrain_index)
-	select(0)
+	if default_index < item_count:
+		select(default_index)
 
 
 func get_selected_terrain_index() -> int:

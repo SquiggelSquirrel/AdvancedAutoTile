@@ -5,7 +5,7 @@
 
 [node name="ToolSettings" type="VBoxContainer" unique_id=1187588071 node_paths=PackedStringArray("terrain_select_butons")]
 script = ExtResource("1_fdals")
-terrain_select_butons = [NodePath("Terrain/TerrainSelect")]
+terrain_select_butons = [NodePath("Terrain/TerrainSelect"), NodePath("Mask/LMBSelect"), NodePath("Mask/RMBSelect"), NodePath("Mask/ShiftSelect")]
 
 [node name="ToolSelect" type="OptionButton" parent="." unique_id=1004674968]
 unique_name_in_owner = true
@@ -18,6 +18,7 @@ popup/item_1/text = "Mask"
 popup/item_1/id = 1
 
 [node name="Terrain" type="GridContainer" parent="." unique_id=1748311811]
+unique_name_in_owner = true
 layout_mode = 2
 columns = 2
 
@@ -34,3 +35,56 @@ popup/item_0/text = "Empty"
 popup/item_0/id = 0
 script = ExtResource("2_4ebij")
 include_empty = true
+
+[node name="Mask" type="GridContainer" parent="." unique_id=195060578]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+columns = 2
+
+[node name="Label" type="Label" parent="Mask" unique_id=380863776]
+layout_mode = 2
+text = "Mouse 1:"
+
+[node name="LMBSelect" type="OptionButton" parent="Mask" unique_id=527050385]
+unique_name_in_owner = true
+layout_mode = 2
+selected = 0
+item_count = 1
+popup/item_0/text = "Empty"
+popup/item_0/id = 0
+script = ExtResource("2_4ebij")
+include_empty = true
+include_ignore = true
+default_index = 2
+
+[node name="Label2" type="Label" parent="Mask" unique_id=1398057006]
+layout_mode = 2
+text = "Mouse 2:"
+
+[node name="RMBSelect" type="OptionButton" parent="Mask" unique_id=900368825]
+unique_name_in_owner = true
+layout_mode = 2
+selected = 0
+item_count = 1
+popup/item_0/text = "Empty"
+popup/item_0/id = 0
+script = ExtResource("2_4ebij")
+include_empty = true
+include_ignore = true
+
+[node name="Label3" type="Label" parent="Mask" unique_id=54081777]
+layout_mode = 2
+text = "Shift + Mouse 1"
+
+[node name="ShiftSelect" type="OptionButton" parent="Mask" unique_id=46504074]
+unique_name_in_owner = true
+layout_mode = 2
+selected = 0
+item_count = 1
+popup/item_0/text = "Empty"
+popup/item_0/id = 0
+script = ExtResource("2_4ebij")
+include_empty = true
+include_ignore = true
+default_index = 1

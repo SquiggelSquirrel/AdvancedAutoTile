@@ -29,7 +29,7 @@ func _update_sources() -> void:
 		item_selected.emit(0)
 
 
-func get_selected_source_index() -> int:
+func get_selected_source_id() -> int:
 	if source_indices.size() == 0 or ! is_anything_selected():
 		return -1
 	return source_indices[get_selected_items()[0]]
