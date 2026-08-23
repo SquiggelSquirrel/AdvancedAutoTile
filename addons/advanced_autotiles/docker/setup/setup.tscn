@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://nwynghpbdaft"]
+
+[ext_resource type="Script" uid="uid://hx5627aip07s" path="res://addons/advanced_autotiles/docker/setup/setup.gd" id="1_q3koj"]
+[ext_resource type="Texture2D" uid="uid://ctqiwidhsjd2" path="res://icon.svg" id="2_68h4i"]
+[ext_resource type="Script" uid="uid://djyehmpg5ifkp" path="res://addons/advanced_autotiles/docker/setup/source_list.gd" id="3_agvwh"]
+[ext_resource type="Script" uid="uid://ciguuuv51sp7j" path="res://addons/advanced_autotiles/docker/setup/atlas_view.gd" id="3_yqrwc"]
+[ext_resource type="PackedScene" uid="uid://varfml7cw6is" path="res://addons/advanced_autotiles/docker/setup/tool_settings/tool_settings.tscn" id="4_yqrwc"]
+
+[node name="Setup" type="HSplitContainer" unique_id=721241819]
+script = ExtResource("1_q3koj")
+metadata/_tab_index = 0
+
+[node name="Sources" type="VBoxContainer" parent="." unique_id=1028714605]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Sources" unique_id=589578697]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SourceList" type="ItemList" parent="Sources/ScrollContainer" unique_id=1781774229]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+auto_width = true
+auto_height = true
+item_count = 1
+item_0/text = "No source"
+item_0/icon = ExtResource("2_68h4i")
+script = ExtResource("3_agvwh")
+
+[node name="AtlasEditor" type="HSplitContainer" parent="." unique_id=368316844]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ToolSettings" parent="AtlasEditor" unique_id=1187588071 instance=ExtResource("4_yqrwc")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AtlasView" type="Control" parent="AtlasEditor" unique_id=863875627]
+unique_name_in_owner = true
+clip_contents = true
+layout_mode = 2
+script = ExtResource("3_yqrwc")

@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://ccv3f7mgxsdr3"]
+
+[ext_resource type="Script" uid="uid://nmvbdh7usskf" path="res://addons/advanced_autotiles/docker/docker.gd" id="1_txssj"]
+[ext_resource type="PackedScene" uid="uid://nwynghpbdaft" path="res://addons/advanced_autotiles/docker/setup/setup.tscn" id="2_qa76d"]
+[ext_resource type="PackedScene" uid="uid://c4o6vjehd702n" path="res://addons/advanced_autotiles/docker/painting/painting.tscn" id="3_lsv0f"]
+
+[node name="AdvancedAutotilesDocker" type="PanelContainer" unique_id=1516887453]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_txssj")
+
+[node name="TabContainer" type="TabContainer" parent="." unique_id=1854340370]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+switch_on_drag_hover = false
+
+[node name="Setup" parent="TabContainer" unique_id=721241819 instance=ExtResource("2_qa76d")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Painting" parent="TabContainer" unique_id=1946510370 instance=ExtResource("3_lsv0f")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
