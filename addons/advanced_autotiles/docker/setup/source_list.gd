@@ -5,11 +5,20 @@ extends ItemList
 
 var tile_set: AdvancedTileSet = null:
 	set(value):
+		if tile_set != null:
+			if tile_set.changed.is_connected(_on_tile_set_changed):
+				tile_set.changed.disconnect(_on_tile_set_changed)
 		tile_set = value
+		if tile_set != null:
+			tile_set.changed.connect(_on_tile_set_changed)
 		if ! is_node_ready():
 			await ready
 		_update_sources()
 var source_indices: PackedInt32Array = []
+
+
+func _on_tile_set_changed() -> void:
+	_update_sources()
 
 
 func _update_sources() -> void:

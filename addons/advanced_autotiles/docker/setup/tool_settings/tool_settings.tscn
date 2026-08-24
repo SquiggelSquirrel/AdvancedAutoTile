@@ -25,6 +25,7 @@ layout_mode = 2
 
 [node name="Terrain" type="GridContainer" parent="." unique_id=1748311811]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 columns = 2
 

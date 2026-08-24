@@ -100,10 +100,23 @@ const FLAG_IGNORE := -2
 @export_group("Advanced Autotiles")
 @export var advanced_tile_shape: AdvancedTileShape = AdvancedTileShape.SQUARE:
 	set(value):
+		if advanced_tile_shape == value:
+			return
 		advanced_tile_shape = value
 		notify_property_list_changed()
-@export var advanced_tile_layout: AdvancedTileLayout = AdvancedTileLayout.STACKED
-@export var advanced_tile_layout_axis: AdvancedTileLayoutAxis = AdvancedTileLayoutAxis.HORIZONTAL
+		changed.emit()
+@export var advanced_tile_layout: AdvancedTileLayout = AdvancedTileLayout.STACKED:
+	set(value):
+		if advanced_tile_layout == value:
+			return
+		advanced_tile_layout = value
+		emit_changed()
+@export var advanced_tile_layout_axis: AdvancedTileLayoutAxis = AdvancedTileLayoutAxis.HORIZONTAL:
+	set(value):
+		if advanced_tile_layout_axis == value:
+			return
+		advanced_tile_layout_axis = value
+		emit_changed()
 @export_storage var _bindings: PackedInt32Array = []
 @export_storage var _priorities: PackedInt32Array = []
 var terrains: Array[Terrain] = []
@@ -422,14 +435,20 @@ func _set(property: StringName, value: Variant) -> bool:
 						"Terrain %s" % i,
 						color)
 		notify_property_list_changed()
+		changed.emit()
 		return true
 	elif property.begins_with("advanced_terrain_"):
 		var parts: PackedStringArray = property.trim_prefix(
 				"advanced_terrain_").split("/")
 		var i := parts[0].to_int()
 		terrains[i].set(parts[1], value)
+		# Bit of a hack - should this be a list of specific
+		# properties that require a property list refresh,
+		# rather than just "anything boolean"?
+		# (It *is* just all the booleans right now though.)
 		if value is bool:
 			notify_property_list_changed()
+		changed.emit()
 		return true
 	return false
 
@@ -455,8 +474,14 @@ func set_advanced_tile_orientation(
 
 ## Get the orientation of a tile
 func get_advanced_tile_orientation(tile: TileKey) -> AdvancedTileOrientation:
-	return _get_advanced_tile_data(
+	var orientation := _get_advanced_tile_data(
 			tile, "orientation", AdvancedTileOrientation.UP)
+	var allowed := get_tile_orientations_for_shape_and_axis(
+			advanced_tile_shape, advanced_tile_layout_axis
+	)
+	if orientation in allowed:
+		return orientation
+	return allowed[0]
 
 
 ## Set the terrain index of a tile
@@ -480,7 +505,10 @@ func set_advanced_tile_terrain_index(tile: TileKey, terrain_index: int) -> void:
 
 ## Get the terrain index of a tile
 func get_advanced_tile_terrain_index(tile: TileKey) -> int:
-	return _get_advanced_tile_data(tile, "terrain_index", -1)
+	var stored := _get_advanced_tile_data(tile, "terrain_index", -1)
+	if stored <= terrains.size():
+		return stored
+	return -1
 
 
 ## Set the autotile mask of a tile
@@ -490,7 +518,41 @@ func set_advanced_tile_mask(tile: TileKey, mask: Dictionary) -> void:
 
 ## Get the autotile mask of a tile
 func get_advanced_tile_mask(tile: TileKey) -> Dictionary:
-	return _get_advanced_tile_data(tile, "mask", {})
+	var stored_mask := _get_advanced_tile_data(tile, "mask", {})
+	var terrain_index := get_advanced_tile_terrain_index(tile)
+	if terrain_index == -1:
+		return {}
+	var terrain := terrains[terrain_index]
+	var orientation := get_advanced_tile_orientation(tile)
+	var return_mask := {}
+	for flag in get_advanced_terrain_mask_flags(
+			terrain.mode,
+			advanced_tile_shape,
+			advanced_tile_layout_axis,
+			orientation,
+	):
+		return_mask[flag] = stored_mask.get(flag, -1)
+	return return_mask
+
+
+## Returns an array of tile keys in all the atlas sources of this tile set.
+func get_tiles() -> Array[TileKey]:
+	var tiles: Array[TileKey] = []
+	for source_index in get_source_count():
+		var id := get_source_id(source_index)
+		var source := get_source(id)
+		if source is TileSetAtlasSource:
+			var size: Vector2 = source.get_atlas_grid_size()
+			for x in size:
+				for y in size:
+					var coords := Vector2(x, y)
+					if source.get_tile_size_in_atlas(coords) != coords:
+						continue
+					for alternative_id in source.get_alternative_tiles_count(coords):
+						tiles.append(TileKey.new(
+								id, coords, alternative_id
+						))
+	return tiles
 
 
 # Set any per-tile data used by the AdvancedTileSet plugin

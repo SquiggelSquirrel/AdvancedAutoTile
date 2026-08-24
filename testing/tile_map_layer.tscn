@@ -209,7 +209,6 @@ custom_data_layer_1/name = "Advanced Autotiles"
 custom_data_layer_1/type = 27
 sources/0 = SubResource("TileSetAtlasSource_x2tp6")
 script = ExtResource("1_6vt83")
-advanced_tile_shape = 4
 advanced_tile_layout_axis = 1
 _bindings = PackedInt32Array()
 _priorities = PackedInt32Array()
