@@ -242,11 +242,11 @@ func _draw_editable_tiles() -> void:
 				Color(1.0, 0.5, 0.5, 0.5)
 		)
 		
-		var terrain := _get_tile_terrain(tile)
-		if terrain != null:
+		var terrain_index: int = tile_set.get_advanced_tile_terrain_index(tile)
+		if terrain_index != -1:
 			draw_colored_polygon(
 					local_transform * center_shape,
-					terrain.color
+					tile_set.get_advanced_terrain_color(terrain_index),
 			)
 			if mode == Mode.SETUP_MASKS:
 				var flag_polygons := _get_tile_flag_polygons(tile)
@@ -257,7 +257,7 @@ func _draw_editable_tiles() -> void:
 					if mask.get(flag, -1) > -1:
 						draw_colored_polygon(
 								scaled_polygon,
-								tile_set.terrains[mask[flag]].color
+								tile_set.get_advanced_terrain_color(mask[flag]),
 						)
 					elif mask.get(flag, -2) == -2:
 						draw_colored_polygon(
@@ -291,24 +291,14 @@ func _draw_editable_tiles() -> void:
 
 
 func _get_tile_flag_polygons(tile: AdvancedTileSet.TileKey) -> Dictionary:
-	var terrain := _get_tile_terrain(tile)
+	var terrain_index: int = tile_set.get_advanced_tile_terrain_index(tile)
 	var orientation := tile_set.get_advanced_tile_orientation(tile)
 	return _get_flag_polygons(
 			tile_set.advanced_tile_shape,
 			tile_set.advanced_tile_layout_axis,
-			terrain.mode,
-			orientation
+			tile_set.get_advanced_terrain_mode(terrain_index),
+			orientation,
 	)
-	
-
-
-func _get_tile_terrain(
-		tile: AdvancedTileSet.TileKey
-) -> AdvancedTileSet.Terrain:
-	var terrain_index: int = tile_set.get_advanced_tile_terrain_index(tile)
-	if terrain_index == -1:
-		return null
-	return tile_set.terrains[terrain_index]
 	
 
 
@@ -410,7 +400,7 @@ func _point_to_flag(point: Vector2) -> AdvancedTileSet.AdvancedCellNeighbor:
 		return AdvancedTileSet.AdvancedCellNeighbor.SELF
 	var shape := tile_set.advanced_tile_shape
 	var axis := tile_set.advanced_tile_layout_axis
-	var mode := tile_set.terrains[terrain_index].mode
+	var mode := tile_set.get_advanced_terrain_mode(terrain_index)
 	var orientation := tile_set.get_advanced_tile_orientation(tile)
 	var flag_polygons := _get_flag_polygons(
 			shape,

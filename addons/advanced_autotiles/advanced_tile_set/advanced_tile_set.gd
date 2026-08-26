@@ -117,9 +117,17 @@ const FLAG_IGNORE := -2
 			return
 		advanced_tile_layout_axis = value
 		emit_changed()
+@export var advanced_terrains_auto_priorities := false:
+	set(value):
+		advanced_terrains_auto_priorities = value
+		notify_property_list_changed()
+@export var advanced_empty_flag_auto_bindings := true
+@export var advanced_empty_flag_bindings: int = 0
+@export_storage var _advanced_empty_flag_bindings_need_update := true
+@export_storage var _advanced_auto_priorities_need_update := true
 @export_storage var _bindings: PackedInt32Array = []
 @export_storage var _priorities: PackedInt32Array = []
-var terrains: Array[Terrain] = []
+var _terrains: Array[Terrain] = []
 
 
 #region static methods defining tile/grid settings which depend on each other
@@ -373,65 +381,71 @@ func _get_property_list() -> Array[Dictionary]:
 		"type": TYPE_INT,
 		"usage": PROPERTY_USAGE_ARRAY | PROPERTY_USAGE_DEFAULT,
 		"class_name": "Terrains,advanced_terrain_,static",
-		"hint": PROPERTY_HINT_NONE
+		"hint": PROPERTY_HINT_NONE,
 	})
-	for i in terrains.size():
+	for i in _terrains.size():
 		properties.append_array([
 			{
 				"name": "advanced_terrain_%d/name" % i,
-				"type": TYPE_STRING
+				"type": TYPE_STRING,
 			}, {
 				"name": "advanced_terrain_%d/color" % i,
-				"type": TYPE_COLOR
+				"type": TYPE_COLOR,
 			}, {
 				"name": "advanced_terrain_%d/mode" % i,
 				"type": TYPE_INT,
 				"hint": PROPERTY_HINT_ENUM,
-				"hint_string": _get_mode_hint_string()
+				"hint_string": _get_mode_hint_string(),
 			}, {
 				"name": "advanced_terrain_%d/auto_binding" % i,
-				"type": TYPE_BOOL
+				"type": TYPE_BOOL,
 			}])
-		if ! terrains[i].auto_binding:
-			properties.append({
-				"name": "advanced_terrain_%d/bindings" % i,
-				"type": TYPE_INT,
-				"hint": PROPERTY_HINT_FLAGS,
-				"hint_string": _get_bindings_hint_string()
-			})
 		properties.append({
-				"name": "advanced_terrain_%d/auto_priority" % i,
-				"type": TYPE_BOOL
-			})
-		if ! terrains[i].auto_priority:
-			properties.append({
-				"name": "advanced_terrain_%d/priority" % i,
-				"type": TYPE_INT,
-				"hint": PROPERTY_HINT_RANGE,
-				"hint_string": "0, 100, or_greater"
-			})
+			"name": "advanced_terrain_%d/bindings" % i,
+			"type": TYPE_INT,
+			"hint": PROPERTY_HINT_FLAGS,
+			"hint_string": _get_bindings_hint_string(),
+			"usage": (
+					PROPERTY_USAGE_STORAGE
+					if _terrains[i].auto_binding
+					else PROPERTY_USAGE_DEFAULT
+			),
+		})
+		properties.append({
+			"name": "advanced_terrain_%d/priority" % i,
+			"type": TYPE_INT,
+			"hint": PROPERTY_HINT_RANGE,
+			"hint_string": "0, 100, or_greater",
+			"usage": (
+				PROPERTY_USAGE_STORAGE
+				if advanced_terrains_auto_priorities
+				else PROPERTY_USAGE_EDITOR
+			),
+		})
 	return properties
 
 
 func _validate_property(property: Dictionary) -> void:
-	if (
-			property.name in [
-				"advanced_tile_layout",
-				"advanced_tile_layout_axis"
-			]
-			and advanced_tile_shape == AdvancedTileShape.SQUARE
-	):
-		property.usage |= PROPERTY_USAGE_READ_ONLY
+	match property:
+		"advanced_tile_layout", "advanced_tile_layout_axis":
+			if advanced_tile_shape == AdvancedTileShape.SQUARE:
+				property.usage |= PROPERTY_USAGE_READ_ONLY
+		"advanced_empty_flag_bindings":
+			if advanced_empty_flag_auto_bindings or _terrains.size() == 0:
+				property.usage = PROPERTY_USAGE_STORAGE
+			else:
+				property.hint = PROPERTY_HINT_FLAGS
+				property.hint_string = _get_bindings_hint_string(false)
 
 
 func _set(property: StringName, value: Variant) -> bool:
 	if property == "advanced_terrain_count":
-		terrains.resize(value)
-		for i in terrains.size():
-			if not terrains[i] is Terrain:
+		_terrains.resize(value)
+		for i in _terrains.size():
+			if not _terrains[i] is Terrain:
 				var color := Color.INDIAN_RED
 				color.h = wrapf(i * 0.05, 0.0, 1.0)
-				terrains[i] = Terrain.new(
+				_terrains[i] = Terrain.new(
 						"Terrain %s" % i,
 						color)
 		notify_property_list_changed()
@@ -441,7 +455,7 @@ func _set(property: StringName, value: Variant) -> bool:
 		var parts: PackedStringArray = property.trim_prefix(
 				"advanced_terrain_").split("/")
 		var i := parts[0].to_int()
-		terrains[i].set(parts[1], value)
+		_terrains[i].set(parts[1], value)
 		# Bit of a hack - should this be a list of specific
 		# properties that require a property list refresh,
 		# rather than just "anything boolean"?
@@ -455,12 +469,12 @@ func _set(property: StringName, value: Variant) -> bool:
 
 func _get(property: StringName) -> Variant:
 	if property == "advanced_terrain_count":
-		return terrains.size()
+		return _terrains.size()
 	elif property.begins_with("advanced_terrain_"):
 		var parts: PackedStringArray = property.trim_prefix(
 				"advanced_terrain_").split("/")
 		var i := parts[0].to_int()
-		return terrains[i].get(parts[1])
+		return _terrains[i].get(parts[1])
 	return null
 #endregion
 
@@ -470,6 +484,7 @@ func set_advanced_tile_orientation(
 	tile: TileKey, orientation: AdvancedTileOrientation
 ) -> void:
 	_set_advanced_tile_data(tile, "orientation", orientation)
+	_set_advanced_tile_data(tile, "mask", {})
 
 
 ## Get the orientation of a tile
@@ -492,7 +507,7 @@ func set_advanced_tile_terrain_index(tile: TileKey, terrain_index: int) -> void:
 	var orientation := get_advanced_tile_orientation(tile)
 	var default_mask := {}
 	if terrain_index > -1:
-		var terrain := terrains[terrain_index]
+		var terrain := _terrains[terrain_index]
 		for flag in get_advanced_terrain_mask_flags(
 				terrain.mode,
 				advanced_tile_shape,
@@ -501,19 +516,48 @@ func set_advanced_tile_terrain_index(tile: TileKey, terrain_index: int) -> void:
 		):
 			default_mask[flag] = -1
 	_set_advanced_tile_data(tile, "mask", default_mask)
+	if advanced_empty_flag_auto_bindings:
+		_advanced_empty_flag_bindings_need_update = true
+	if advanced_terrains_auto_priorities:
+		_advanced_auto_priorities_need_update
 
 
 ## Get the terrain index of a tile
 func get_advanced_tile_terrain_index(tile: TileKey) -> int:
 	var stored := _get_advanced_tile_data(tile, "terrain_index", -1)
-	if stored <= terrains.size():
+	if stored <= _terrains.size():
 		return stored
 	return -1
 
 
-## Set the autotile mask of a tile
-func set_advanced_tile_mask(tile: TileKey, mask: Dictionary) -> void:
+## Set a flag of the "Advanced Autotiles" mask of a tile
+func set_advanced_tile_flag(
+		tile: TileKey, flag: AdvancedCellNeighbor, flag_value: int
+) -> void:
+	var terrain_index := get_advanced_tile_terrain_index(tile)
+	var mask := get_advanced_tile_mask(tile)
+	var old_value: int = mask[flag]
+	if flag_value == old_value:
+		return
+	mask[flag] = flag_value
 	_set_advanced_tile_data(tile, "mask", mask)
+	# Expire cached values as needed
+	var some_bindings_need_update := false
+	for affected in [old_value, flag_value]:
+		match affected:
+			-2:
+				# Do nothing (ignore flags don't affect bindings or priorities)
+				pass
+			-1:
+				if advanced_empty_flag_auto_bindings:
+					_advanced_empty_flag_bindings_need_update = true
+				some_bindings_need_update = true
+			_:
+				if _terrains[affected].auto_binding:
+					_terrains[affected].bindings_need_update = true
+				some_bindings_need_update = true
+	if some_bindings_need_update and advanced_terrains_auto_priorities:
+		_advanced_auto_priorities_need_update = true
 
 
 ## Get the autotile mask of a tile
@@ -522,7 +566,7 @@ func get_advanced_tile_mask(tile: TileKey) -> Dictionary:
 	var terrain_index := get_advanced_tile_terrain_index(tile)
 	if terrain_index == -1:
 		return {}
-	var terrain := terrains[terrain_index]
+	var terrain := _terrains[terrain_index]
 	var orientation := get_advanced_tile_orientation(tile)
 	var return_mask := {}
 	for flag in get_advanced_terrain_mask_flags(
@@ -536,7 +580,7 @@ func get_advanced_tile_mask(tile: TileKey) -> Dictionary:
 
 
 ## Returns an array of tile keys in all the atlas sources of this tile set.
-func get_tiles() -> Array[TileKey]:
+func get_advanced_tiles() -> Array[TileKey]:
 	var tiles: Array[TileKey] = []
 	for source_index in get_source_count():
 		var id := get_source_id(source_index)
@@ -553,6 +597,48 @@ func get_tiles() -> Array[TileKey]:
 								id, coords, alternative_id
 						))
 	return tiles
+
+
+func get_advanced_terrain_name(terrain_index: int) -> String:
+	return _terrains[terrain_index].name
+
+
+func get_advanced_terrain_color(terrain_index: int) -> Color:
+	return _terrains[terrain_index].color
+
+
+func get_advanced_terrain_mode(terrain_index: int) -> AdvancedTerrainMode:
+	return _terrains[terrain_index].mode
+
+
+func get_advanced_terrain_auto_binding(terrain_index: int) -> bool:
+	return _terrains[terrain_index].auto_binding
+
+
+func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool:
+	if _terrains[terrain_index].bindings_need_update:
+		_advanced_terrain_update_auto_bindings()
+	return _binding_get_terrain_index(
+			_terrains[terrain_index].bindings, other_index
+	)
+
+
+func get_advanced_terrain_priority(terrain_index: int) -> int:
+	if terrain_index == FLAG_IGNORE:
+		return 0
+	if _advanced_auto_priorities_need_update:
+		_advanced_terrain_update_priorities()
+	return _priorities[terrain_index]
+
+
+func _advanced_terrain_update_priorities() -> void:
+	#TODO - lookup algorith for strongly linked groups
+	#TODO - does Godot have a built-in data model for DAGs?
+	pass
+
+
+func get_advanced_terrain_auto_priority(terrain_index: int) -> bool:
+	return _terrains[terrain_index].auto_priority
 
 
 # Set any per-tile data used by the AdvancedTileSet plugin
@@ -589,12 +675,39 @@ func _get_advanced_tile_data(
 
 #region private methods used by _get_property_list
 # For use in _get_property_list. Hint string for manual terrain bindings
-func _get_bindings_hint_string() -> String:
+func _get_bindings_hint_string(include_empty := true) -> String:
 	var names: PackedStringArray = []
-	names.append("Empty")
-	for terrain in terrains:
-		names.append(terrain.name)
+	if include_empty:
+		var name := "Empty"
+		var mask := _binding_get_terrain_mask(-1)
+		var hint := "%s:%d" % [name, mask]
+		names.append(hint)
+	for terrain_index in _terrains.size():
+		var name := _terrains[terrain_index].name
+		var mask := _binding_get_terrain_mask(terrain_index)
+		var hint := "%s:%d" % [name, mask]
+		names.append(hint)
 	return ",".join(names)
+
+
+func _advanced_terrain_update_auto_bindings() -> void:
+	for tile in get_advanced_tiles():
+		var center_index := get_advanced_tile_terrain_index(tile)
+		if center_index < 0:
+			continue
+		var mask := get_advanced_tile_mask(tile)
+		for flag in mask:
+			var flag_index: int = mask[flag]
+			if flag_index < 0:
+				continue
+			var flag_terrain := _terrains[flag_index]
+			if ! flag_terrain.bindings_need_update:
+				continue
+			flag_terrain.bindings = _binding_set_terrain_index(
+					flag_index,
+					center_index,
+					true,
+			)
 
 
 # For use in _get_property_list. Hint string for terrain modes
@@ -606,6 +719,25 @@ func _get_mode_hint_string() -> String:
 			"%s:%s" % [key.capitalize(), AdvancedTerrainMode[key]])
 	return ",".join(hint_strings)
 #endregion
+
+
+static func _binding_set_terrain_index(
+		binding: int, terrain_index: int, value: bool
+) -> int:
+	var mask := _binding_get_terrain_mask(terrain_index)
+	if value:
+		return binding | mask
+	else:
+		return binding & ~ mask
+
+
+static func _binding_get_terrain_index(binding: int, terrain_index: int) -> bool:
+	var mask := _binding_get_terrain_mask(terrain_index)
+	return (binding & mask == mask)
+
+
+static func _binding_get_terrain_mask(terrain_index: int) -> int:
+	return 1 << (terrain_index + 1)
 
 
 ## Class TileKey contains all fields needed to identify a Tile in a TileSet
@@ -637,7 +769,7 @@ class Terrain:
 	var mode: AdvancedTileSet.AdvancedTerrainMode
 	var auto_binding := true
 	var bindings: int = 0 #(bitmask)
-	var auto_priority := true
+	var bindings_need_update := true
 	var priority: int = 0
 	
 	

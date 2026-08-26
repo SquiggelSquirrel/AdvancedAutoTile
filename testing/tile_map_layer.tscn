@@ -217,11 +217,13 @@ advanced_terrain_0/name = "Terrain 0"
 advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
 advanced_terrain_0/mode = 3
 advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 0
 advanced_terrain_0/auto_priority = true
 advanced_terrain_1/name = "Terrain 1"
 advanced_terrain_1/color = Color(0.3752, 0.8, 0.368, 1)
 advanced_terrain_1/mode = 1
 advanced_terrain_1/auto_binding = true
+advanced_terrain_1/bindings = 0
 advanced_terrain_1/auto_priority = true
 metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
 
