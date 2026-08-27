@@ -33,7 +33,6 @@ func _on_source_list_item_selected(_item_index: int) -> void:
 	%AtlasView.show()
 	%AtlasView.tile_set = tile_set
 	%AtlasView.source_id = source_id
-	%AtlasView.queue_redraw()
 
 
 func _on_tool_settings_settings_changed() -> void:

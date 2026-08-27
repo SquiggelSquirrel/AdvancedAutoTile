@@ -26,8 +26,8 @@ enum Layout {
 ## Tile layout axis (offset axis for hexagon or half-offset, orientations
 ## for triangle layouts) see [method get_tile_shape_axes]
 enum Axis {
-	HORIZONTAL,
-	VERTICAL,
+	HORIZONTAL, ## Horizontal half-offet, or triangles with a horizontal edge
+	VERTICAL, ## Vertical half-offset, or triangles with a vertical edge
 }
 ## Tile orientations (for triangle shapes only)
 enum Orientation {
@@ -245,20 +245,6 @@ static func get_flags(
 			return sides
 		_:
 			return corners + sides
-
-
-#static func connection_mode_has_edge_flags(mode: ConnectionMode) -> bool:
-	#return mode in [
-			#ConnectionMode.EDGES,
-			#ConnectionMode.CORNERS_AND_EDGES,
-			#ConnectionMode.EDGES_AND_DIAGONALS]
-#
-#
-#static func connection_mode_has_corner_flags(mode: ConnectionMode) -> bool:
-	#return mode in [
-			#ConnectionMode.CORNERS,
-			#ConnectionMode.CORNERS_AND_EDGES,
-			#ConnectionMode.EDGES_AND_DIAGONALS]
 #endregion
 
 

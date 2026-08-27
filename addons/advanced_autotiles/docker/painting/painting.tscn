@@ -1,4 +1,7 @@
 [gd_scene format=3 uid="uid://c4o6vjehd702n"]
 
+[ext_resource type="Script" uid="uid://dja2xa4pil331" path="res://addons/advanced_autotiles/docker/painting/painting.gd" id="1_mts8s"]
+
 [node name="Painting" type="HSplitContainer" unique_id=1946510370]
+script = ExtResource("1_mts8s")
 metadata/_tab_index = 1

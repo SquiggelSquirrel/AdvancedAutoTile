@@ -26,6 +26,7 @@ size_flags_vertical = 3
 auto_width = true
 auto_height = true
 item_count = 1
+fixed_icon_size = Vector2i(64, 64)
 item_0/text = "No source"
 item_0/icon = ExtResource("2_68h4i")
 script = ExtResource("3_agvwh")
@@ -33,12 +34,18 @@ script = ExtResource("3_agvwh")
 [node name="AtlasEditor" type="HSplitContainer" parent="." unique_id=368316844]
 layout_mode = 2
 size_flags_horizontal = 3
+split_offsets = PackedInt32Array(122)
+split_offset = 122
 
 [node name="ToolSettings" parent="AtlasEditor" unique_id=1187588071 instance=ExtResource("4_yqrwc")]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="AtlasView" type="Control" parent="AtlasEditor" unique_id=863875627]
+[node name="PanelContainer" type="PanelContainer" parent="AtlasEditor" unique_id=800756016]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AtlasView" type="Control" parent="AtlasEditor/PanelContainer" unique_id=863875627]
 unique_name_in_owner = true
 texture_repeat = 2
 clip_contents = true

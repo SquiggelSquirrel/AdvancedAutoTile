@@ -3,9 +3,12 @@ class_name AdvancedTileSet
 extends TileSet
 
 ## Key used for storing per-tile plugin data on TileSet custom data layer
-const DATA_LAYER_NAME := "Advanced Autotiles"
+const DATA_LAYER_NAME := "_advanced_autotiles"
 
 @export_group("Advanced Autotiles", "advanced_")
+## The tile shape used by the Advanced Autotiles plugin.
+## In most cases, this is the same as the base [member tile_shape],
+## but triangles are supported (and will use square shape on the base class)
 @export var advanced_shape := TileGeometry.Shape.SQUARE:
 	set(value):
 		if advanced_shape == value:
@@ -15,24 +18,62 @@ const DATA_LAYER_NAME := "Advanced Autotiles"
 			for tile in get_advanced_tiles():
 				if get_advanced_terrain(tile) > -1:
 					clear_advanced_mask(tile)
+			_apply_base_overrides()
 			_need_recalc = true
 			notify_property_list_changed()
 			changed.emit()
+## The tile layout used by the Advanced Autotiles plugin.
+## Currently just a mirror of the base [member tile_layout]
 @export var advanced_layout := TileGeometry.Layout.STACKED:
 	set(value):
 		if advanced_layout == value:
 			return
 		advanced_layout = value
-		changed.emit()
+		if _is_loaded:
+			_apply_base_overrides()
+			changed.emit()
+## For half-offset shapes (isometric, hexagonal, half-offset square),
+## determines the offset axis. For triangles, determines the allowed
+## orientations
 @export var advanced_axis := TileGeometry.Axis.HORIZONTAL:
 	set(value):
 		if advanced_axis == value:
 			return
 		advanced_axis = value
-		for tile in get_advanced_tiles():
-			if get_advanced_terrain(tile) > -1:
-				clear_advanced_mask(tile)
-		changed.emit()
+		if _is_loaded:
+			for tile in get_advanced_tiles():
+				if get_advanced_terrain(tile) > -1:
+					clear_advanced_mask(tile)
+			advanced_tile_size = advanced_tile_size
+			_apply_base_overrides()
+			changed.emit()
+## The size, in pixels, of the minumum rectangle that fully encompasses
+## one cell. Triangles must have even width if horizontal, or height if vertical
+## (due to implementation limitations).
+@export var advanced_tile_size := Vector2i(16, 16):
+	set(value):
+		if advanced_shape == TileGeometry.Shape.TRIANGLE:
+			if advanced_axis == TileGeometry.Axis.HORIZONTAL:
+				if value.x > advanced_tile_size.x:
+					value.x = 2 * ceili(value.x * 0.5)
+				else:
+					value.x = 2 * floori(value.x * 0.5)
+			else:
+				if value.y > advanced_tile_size.y:
+					value.y = 2 * ceil(value.y * 0.5)
+				else:
+					value.y = 2 * floori(value.y * 0.5)
+		advanced_tile_size = value
+		if _is_loaded:
+			_apply_base_overrides()
+			changed.emit()
+## If enabled, properties of the base [class TileSet] will not show in the
+## editor if intended to be replaced by Advanced Autotiles properties.
+## (Note that this only affects the inspector and not the underlying API)
+@export var hide_base_class_features := true:
+	set(value):
+		hide_base_class_features = value
+		notify_property_list_changed()
 @export_subgroup("Empty Flag Bindings", "advanced_empty_flag")
 @export var advanced_empty_flag_auto_bindings := true
 @export var advanced_empty_flag_bindings: int = 0
@@ -77,14 +118,14 @@ func _get_property_list() -> Array[Dictionary]:
 				"hint": PROPERTY_HINT_ENUM,
 				"hint_string": _get_enum_hint_string(TileGeometry.ConnectionMode),
 			}, {
-				"name": "advanced_terrain_%d/auto_binding" % i,
-				"type": TYPE_BOOL,
-			}, {
 				"name": "advanced_terrain_%d/priority" % i,
 				"type": TYPE_INT,
 				"hint": PROPERTY_HINT_RANGE,
 				"hint_string": "0, 100, or_greater",
 				"usage": PROPERTY_USAGE_STORAGE,
+			}, {
+				"name": "advanced_terrain_%d/auto_binding" % i,
+				"type": TYPE_BOOL,
 			}])
 		properties.append({
 			"name": "advanced_terrain_%d/bindings" % i,
@@ -101,18 +142,19 @@ func _get_property_list() -> Array[Dictionary]:
 
 
 func _validate_property(property: Dictionary) -> void:
-	match property:
+	match property.name:
 		"advanced_layout", "advanced_axis":
 			if advanced_shape == TileGeometry.Shape.SQUARE:
 				property.usage |= PROPERTY_USAGE_READ_ONLY
 		"advanced_empty_flag_bindings":
 			if advanced_empty_flag_auto_bindings or _terrains.size() == 0:
-				print("Should be hidden")
 				property.usage = PROPERTY_USAGE_STORAGE
 			else:
-				print("Should be visible")
 				property.hint = PROPERTY_HINT_FLAGS
 				property.hint_string = _get_bindings_hint_string(false)
+		"tile_shape", "tile_layout", "tile_offset_axis", "tile_size", "terrain_sets":
+			if hide_base_class_features:
+				property.usage &= ~ PROPERTY_USAGE_EDITOR
 
 
 func _set(property: StringName, value: Variant) -> bool:
@@ -129,38 +171,46 @@ func _set(property: StringName, value: Variant) -> bool:
 						color)
 		for tile in get_advanced_tiles():
 			if get_advanced_terrain(tile) >= value:
+				# This tile was using a now-removed terrain,
+				# set its terrain to empty
 				set_advanced_terrain(tile, -1)
+				
 			elif get_advanced_terrain(tile) > -1:
+				# This tile's terrain still exists, but it may have a mask
+				# that uses a now-removed terrain. If so, clear the mask.
 				for flag in get_advanced_mask(tile).values():
 					if flag >= value:
 						clear_advanced_mask(tile)
 						break
 		notify_property_list_changed()
-		changed.emit()
+		if _is_loaded:
+			changed.emit()
 		return true
 	elif property.begins_with("advanced_terrain_"):
 		var parts: PackedStringArray = property.trim_prefix(
 				"advanced_terrain_").split("/")
 		var terrain_index := parts[0].to_int()
 		var terrain_property := parts[1]
-		match terrain_property:
-			"mode":
-				for tile in get_advanced_tiles():
-					if get_advanced_terrain(tile) == terrain_index:
-						clear_advanced_mask(tile)
-						_need_recalc = true
-			"auto_binding":
-				# If we are enabling manual bindings,
-				# Apply automatic bindings before switching
-				if _need_recalc and ! value:
+		if _is_loaded:
+			match terrain_property:
+				"mode":
+					for tile in get_advanced_tiles():
+						if get_advanced_terrain(tile) == terrain_index:
+							clear_advanced_mask(tile)
+							_need_recalc = true
+				"auto_binding":
+					# If we are enabling manual bindings,
+					# Apply automatic bindings before switching
+					if _need_recalc and ! value:
+						_recalc()
+					notify_property_list_changed()
+				"bindings":
+					# (Only priorities really need recalc, should cache be
+					# more granular?)
 					_recalc()
-				notify_property_list_changed()
-			"bindings":
-				# (Only priorities really need recalc, should cache be
-				# more granular?)
-				_recalc()
 		_terrains[terrain_index].set(terrain_property, value)
-		changed.emit()
+		if _is_loaded:
+			changed.emit()
 		return true
 	return false
 
@@ -427,6 +477,17 @@ func _clear_advanced_tile_data(tile: TileKey, key: String) -> void:
 	custom_data.erase(key)
 
 
+func _apply_base_overrides() -> void:
+	tile_shape = BaseOverrides.get_tile_shape(advanced_shape)
+	tile_layout = BaseOverrides.get_tile_layout(advanced_layout)
+	tile_offset_axis = BaseOverrides.get_tile_offset_axis(advanced_axis)
+	tile_size = BaseOverrides.get_tile_size(
+			advanced_shape,
+			advanced_axis,
+			advanced_tile_size,
+	)
+
+
 #region Functions for manipulating terrain binding bitmask
 static func _binding_set_terrain_index(
 		binding: int, terrain_index: int, value: bool
@@ -486,3 +547,62 @@ class Terrain:
 	func _init(init_name: String, init_color: Color) -> void:
 		name = init_name
 		color = init_color
+
+
+class BaseOverrides:
+	static func get_tile_shape(
+			advanced_shape: TileGeometry.Shape
+	) -> TileSet.TileShape:
+		match advanced_shape:
+			TileGeometry.Shape.SQUARE, TileGeometry.Shape.TRIANGLE:
+				return TileSet.TileShape.TILE_SHAPE_SQUARE
+			TileGeometry.Shape.ISOMETRIC:
+				return TileSet.TileShape.TILE_SHAPE_ISOMETRIC
+			TileGeometry.Shape.HALF_OFFSET_SQUARE:
+				return TileSet.TileShape.TILE_SHAPE_HALF_OFFSET_SQUARE
+			_:
+				assert(advanced_shape == TileGeometry.Shape.HEXAGON)
+				return TileSet.TileShape.TILE_SHAPE_HEXAGON
+	
+	
+	static func get_tile_layout(
+			advanced_layout: TileGeometry.Layout
+	) -> TileSet.TileLayout:
+		match advanced_layout:
+			TileGeometry.Layout.STACKED_OFFSET:
+				return TileSet.TILE_LAYOUT_STACKED_OFFSET
+			TileGeometry.Layout.STAIRS_RIGHT:
+				return TileSet.TILE_LAYOUT_STAIRS_RIGHT
+			TileGeometry.Layout.STAIRS_DOWN:
+				return TileSet.TILE_LAYOUT_STAIRS_DOWN
+			TileGeometry.Layout.DIAMOND_RIGHT:
+				return TileSet.TILE_LAYOUT_DIAMOND_RIGHT
+			TileGeometry.Layout.DIAMOND_DOWN:
+				return TileSet.TILE_LAYOUT_DIAMOND_DOWN
+			_:
+				assert(advanced_layout == TileGeometry.Layout.STACKED)
+				return TileSet.TILE_LAYOUT_STACKED
+	
+	
+	static func get_tile_offset_axis(
+			advanced_axis: TileGeometry.Axis
+	) -> TileSet.TileOffsetAxis:
+		match advanced_axis:
+			TileGeometry.Axis.HORIZONTAL:
+				return TileSet.TILE_OFFSET_AXIS_HORIZONTAL
+			_:
+				assert(advanced_axis == TileGeometry.Axis.VERTICAL)
+				return TileSet.TILE_OFFSET_AXIS_VERTICAL
+	
+	
+	static func get_tile_size(
+			advanced_shape: TileGeometry.Shape,
+			advanced_axis: TileGeometry.Axis,
+			advanced_size: Vector2i
+	) -> Vector2i:
+		if advanced_shape != TileGeometry.Shape.TRIANGLE:
+			return advanced_size
+		if advanced_axis == TileGeometry.Axis.HORIZONTAL:
+			return Vector2i(Vector2(advanced_size) * Vector2(0.5, 1.0))
+		else:
+			return Vector2i(Vector2(advanced_size) * Vector2(1.0, 0.5))
