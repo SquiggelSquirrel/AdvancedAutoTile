@@ -9,9 +9,10 @@ var tile_set: AdvancedTileSet = null:
 	set(value):
 		if tile_set != null:
 			if tile_set.changed.is_connected(_on_tile_set_changed):
-				tile_set.changed.connect(_on_tile_set_changed)
+				tile_set.changed.disconnect(_on_tile_set_changed)
 		tile_set = value
-		tile_set.changed.connect(_on_tile_set_changed)
+		if tile_set != null:
+			tile_set.changed.connect(_on_tile_set_changed)
 		_update_terrains()
 var item_terrain_indices: PackedInt32Array = []
 
@@ -31,9 +32,8 @@ func _update_terrains() -> void:
 	if include_ignore:
 		add_item("Ignore")
 		item_terrain_indices.append(-2)
-	for terrain_index in tile_set.terrains.size():
-		var terrain: AdvancedTileSet.Terrain = tile_set.terrains[terrain_index]
-		add_item(terrain.name)
+	for terrain_index in tile_set.get_advanced_terrains_count():
+		add_item(tile_set.get_advanced_terrain_name(terrain_index))
 		item_terrain_indices.append(terrain_index)
 	if default_index < item_count:
 		select(default_index)

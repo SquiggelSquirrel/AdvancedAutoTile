@@ -16,7 +16,7 @@ var mode: Mode = Mode.SETUP_TERRAIN
 var lmb_terrain_index: int = -1
 var rmb_terrain_index: int = -1
 var shift_lmb_terrain_index: int = -1
-var paint_orientation: AdvancedTileSet.AdvancedTileOrientation
+var paint_orientation: TileGeometry.Orientation
 var tile_set: AdvancedTileSet:
 	set(value):
 		if tile_set is AdvancedTileSet:
@@ -33,7 +33,7 @@ var source_id: int = -1:
 var scroll := Vector2.ZERO
 var zoom := 1.0
 var tile_under_mouse: AdvancedTileSet.TileKey = null
-var flag_under_mouse := AdvancedTileSet.AdvancedCellNeighbor.SELF
+var flag_under_mouse := TileGeometry.CellNeighbor.SELF
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -76,9 +76,9 @@ func _gui_input(event: InputEvent) -> void:
 			_paint_terrain()
 			return
 			
-		var new_flag_under_mouse: AdvancedTileSet.AdvancedCellNeighbor
+		var new_flag_under_mouse: TileGeometry.CellNeighbor
 		if tile_under_mouse == null:
-			new_flag_under_mouse = AdvancedTileSet.AdvancedCellNeighbor.SELF
+			new_flag_under_mouse = TileGeometry.CellNeighbor.SELF
 		else:
 			new_flag_under_mouse = _point_to_flag(event.position)
 		
@@ -122,7 +122,7 @@ func _paint_terrain() -> void:
 			terrain_index = rmb_terrain_index
 		_:
 			return
-	tile_set.set_advanced_tile_terrain_index(
+	tile_set.set_advanced_terrain(
 			tile_under_mouse, terrain_index
 	)
 	queue_redraw()
@@ -131,7 +131,7 @@ func _paint_terrain() -> void:
 func _paint_mask() -> void:
 	if tile_under_mouse == null:
 		return
-	if flag_under_mouse == AdvancedTileSet.AdvancedCellNeighbor.SELF:
+	if flag_under_mouse == TileGeometry.CellNeighbor.SELF:
 		return
 	var terrain_index: int
 	match Input.get_mouse_button_mask():
@@ -143,15 +143,14 @@ func _paint_mask() -> void:
 			terrain_index = rmb_terrain_index
 		_:
 			return
-	var mask := tile_set.get_advanced_tile_mask(tile_under_mouse)
-	mask[flag_under_mouse] = terrain_index
-	tile_set.set_advanced_tile_mask(tile_under_mouse, mask)
+	tile_set.set_advanced_flag(tile_under_mouse, flag_under_mouse, terrain_index)
+	queue_redraw()
 
 
 func _paint_orientation() -> void:
 	if tile_under_mouse == null:
 		return
-	tile_set.set_advanced_tile_orientation(tile_under_mouse, paint_orientation)
+	tile_set.set_advanced_orientation(tile_under_mouse, paint_orientation)
 	queue_redraw()
 
 
@@ -242,7 +241,7 @@ func _draw_editable_tiles() -> void:
 				Color(1.0, 0.5, 0.5, 0.5)
 		)
 		
-		var terrain_index: int = tile_set.get_advanced_tile_terrain_index(tile)
+		var terrain_index: int = tile_set.get_advanced_terrain(tile)
 		if terrain_index != -1:
 			draw_colored_polygon(
 					local_transform * center_shape,
@@ -250,16 +249,12 @@ func _draw_editable_tiles() -> void:
 			)
 			if mode == Mode.SETUP_MASKS:
 				var flag_polygons := _get_tile_flag_polygons(tile)
-				var mask := tile_set.get_advanced_tile_mask(tile)
-				for flag in flag_polygons.keys():
-					var polygon: PackedVector2Array = flag_polygons[flag]
+				var mask := tile_set.get_advanced_mask(tile)
+				for flag_key in flag_polygons.keys():
+					var polygon: PackedVector2Array = flag_polygons[flag_key]
 					var scaled_polygon := local_transform * polygon
-					if mask.get(flag, -1) > -1:
-						draw_colored_polygon(
-								scaled_polygon,
-								tile_set.get_advanced_terrain_color(mask[flag]),
-						)
-					elif mask.get(flag, -2) == -2:
+					var flag_value := mask.get(flag_key, TileGeometry.FLAG_EMPTY)
+					if flag_value == TileGeometry.FLAG_IGNORE:
 						draw_colored_polygon(
 								scaled_polygon,
 								Color.WHITE,
@@ -271,7 +266,12 @@ func _draw_editable_tiles() -> void:
 								) * polygon,
 								IGNORE_TEXTURE
 						)
-					if tile.equals(tile_under_mouse) and flag_under_mouse == flag:
+					elif flag_value != TileGeometry.FLAG_EMPTY:
+						draw_colored_polygon(
+								scaled_polygon,
+								tile_set.get_advanced_terrain_color(flag_value),
+						)
+					if tile.equals(tile_under_mouse) and flag_under_mouse == flag_key:
 						draw_polyline(
 								_polygon_to_polyline(scaled_polygon),
 								Color(1.0, 0.9, 0.0, 0.5),
@@ -291,11 +291,11 @@ func _draw_editable_tiles() -> void:
 
 
 func _get_tile_flag_polygons(tile: AdvancedTileSet.TileKey) -> Dictionary:
-	var terrain_index: int = tile_set.get_advanced_tile_terrain_index(tile)
-	var orientation := tile_set.get_advanced_tile_orientation(tile)
+	var terrain_index: int = tile_set.get_advanced_terrain(tile)
+	var orientation := tile_set.get_advanced_orientation(tile)
 	return _get_flag_polygons(
-			tile_set.advanced_tile_shape,
-			tile_set.advanced_tile_layout_axis,
+			tile_set.advanced_shape,
+			tile_set.advanced_axis,
 			tile_set.get_advanced_terrain_mode(terrain_index),
 			orientation,
 	)
@@ -303,12 +303,12 @@ func _get_tile_flag_polygons(tile: AdvancedTileSet.TileKey) -> Dictionary:
 
 
 func _get_tile_outline(tile: AdvancedTileSet.TileKey) -> PackedVector2Array:
-	var shape: AdvancedTileSet.AdvancedTileShape
-	shape = tile_set.advanced_tile_shape
-	var axis: AdvancedTileSet.AdvancedTileLayoutAxis
-	axis = tile_set.advanced_tile_layout_axis
-	var orientation := tile_set.get_advanced_tile_orientation(tile)
-	return AdvancedTileSet.get_advanced_tile_shape_polygon(
+	var shape: TileGeometry.Shape
+	shape = tile_set.advanced_shape
+	var axis: TileGeometry.Axis
+	axis = tile_set.advanced_axis
+	var orientation := tile_set.get_advanced_orientation(tile)
+	return TileGeometry.get_tile_polygon(
 			shape, axis, orientation
 	)
 
@@ -390,18 +390,18 @@ func _get_tile_under_point(point: Vector2) -> AdvancedTileSet.TileKey:
 	)
 
 
-func _point_to_flag(point: Vector2) -> AdvancedTileSet.AdvancedCellNeighbor:
+func _point_to_flag(point: Vector2) -> TileGeometry.CellNeighbor:
 	var atlas: TileSetAtlasSource = tile_set.get_source(source_id)
 	var tile: AdvancedTileSet.TileKey = _get_tile_under_point(point)
 	if tile == null:
-		return AdvancedTileSet.AdvancedCellNeighbor.SELF
-	var terrain_index := tile_set.get_advanced_tile_terrain_index(tile)
+		return TileGeometry.CellNeighbor.SELF
+	var terrain_index := tile_set.get_advanced_terrain(tile)
 	if terrain_index == -1:
-		return AdvancedTileSet.AdvancedCellNeighbor.SELF
-	var shape := tile_set.advanced_tile_shape
-	var axis := tile_set.advanced_tile_layout_axis
+		return TileGeometry.CellNeighbor.SELF
+	var shape := tile_set.advanced_shape
+	var axis := tile_set.advanced_axis
 	var mode := tile_set.get_advanced_terrain_mode(terrain_index)
-	var orientation := tile_set.get_advanced_tile_orientation(tile)
+	var orientation := tile_set.get_advanced_orientation(tile)
 	var flag_polygons := _get_flag_polygons(
 			shape,
 			axis,
@@ -412,22 +412,22 @@ func _point_to_flag(point: Vector2) -> AdvancedTileSet.AdvancedCellNeighbor:
 	for flag in flag_polygons:
 		if Geometry2D.is_point_in_polygon(local, flag_polygons[flag]):
 			return flag
-	return AdvancedTileSet.AdvancedCellNeighbor.SELF
+	return TileGeometry.CellNeighbor.SELF
 
 
 static func _get_flag_polygons(
-		shape: AdvancedTileSet.AdvancedTileShape,
-		axis: AdvancedTileSet.AdvancedTileLayoutAxis,
-		mode: AdvancedTileSet.AdvancedTerrainMode,
-		orientation: AdvancedTileSet.AdvancedTileOrientation,
+		shape: TileGeometry.Shape,
+		axis: TileGeometry.Axis,
+		mode: TileGeometry.ConnectionMode,
+		orientation: TileGeometry.Orientation,
 ) -> Dictionary:
 	var polygons := {}
-	var outline := AdvancedTileSet.get_advanced_tile_shape_polygon(
+	var outline := TileGeometry.get_tile_polygon(
 			shape, axis, orientation
 	)
 	var center_point := _points_average(outline)
 	match mode:
-		AdvancedTileSet.AdvancedTerrainMode.CORNERS:
+		TileGeometry.ConnectionMode.CORNERS:
 			for i in outline.size():
 				var point := outline[i]
 				var previous := outline[i - 1]
@@ -444,7 +444,7 @@ static func _get_flag_polygons(
 					previous.lerp(point, 0.5).lerp(
 						center_point, CENTER_FLAG_SHRINK),
 				]
-		AdvancedTileSet.AdvancedTerrainMode.EDGES:
+		TileGeometry.ConnectionMode.EDGES:
 			for i in outline.size():
 				var point := outline[i]
 				var previous := outline[i - 1]
@@ -488,9 +488,9 @@ static func _get_flag_polygons(
 
 static func _point_to_corner(
 		point: Vector2
-) -> AdvancedTileSet.AdvancedCellNeighbor:
-	var CN := AdvancedTileSet.AdvancedCellNeighbor
-	var key := AdvancedTileSet.AdvancedCellNeighbor.CORNER
+) -> TileGeometry.CellNeighbor:
+	var CN := TileGeometry.CellNeighbor
+	var key := TileGeometry.CellNeighbor.CORNER
 	if point.y < 0.4:
 		key |= CN.TOP
 	elif point.y > 0.6:
@@ -505,18 +505,21 @@ static func _point_to_corner(
 # Return the flag of the side between the points
 static func _side_between_points(
 		point1 :Vector2, point2 :Vector2
-) -> AdvancedTileSet.AdvancedCellNeighbor:
-	var CN := AdvancedTileSet.AdvancedCellNeighbor
+) -> TileGeometry.CellNeighbor:
+	var CN := TileGeometry.CellNeighbor
 	var sum := point1 + point2
 	var key := CN.SIDE
-	if sum.y < 0.9:
+	
+	if sum.y < 0.999:
 		key |= CN.TOP
-	elif sum.y > 1.1:
+	elif sum.y > 1.001:
 		key |= CN.BOTTOM
-	if sum.x < 0.9:
+	
+	if sum.x < 0.999:
 		key |= CN.LEFT
-	if sum.y > 1.0:
+	elif sum.x > 1.001:
 		key |= CN.RIGHT
+	
 	return key
 
 

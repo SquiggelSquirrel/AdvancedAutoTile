@@ -57,14 +57,14 @@ func _setup_terrains_lists() -> void:
 func _setup_orientations() -> void:
 	if tile_set == null:
 		return
-	var orientations := AdvancedTileSet.get_tile_orientations_for_shape_and_axis(
-			tile_set.advanced_tile_shape,
-			tile_set.advanced_tile_layout_axis
+	var orientations := TileGeometry.get_orientations(
+			tile_set.advanced_shape,
+			tile_set.advanced_axis
 	)
 	%OrientationSelect.clear()
 	for orientation in orientations:
 		%OrientationSelect.add_item(
-				AdvancedTileSet.AdvancedTileOrientation.find_key(
+				TileGeometry.Orientation.find_key(
 					orientation).capitalize(),
 				orientation
 		)
@@ -82,7 +82,7 @@ func get_tool_settings() -> Dictionary:
 				"lmb_terrain": %TerrainSelect.get_selected_terrain_index(),
 				"rmb_terrain": -1,
 				"shift_lmb_terrain": -1,
-				"orientation": AdvancedTileSet.AdvancedTileOrientation.UP
+				"orientation": TileGeometry.Orientation.UP
 			}
 		1:
 			settings = {
@@ -90,7 +90,7 @@ func get_tool_settings() -> Dictionary:
 				"lmb_terrain": %LMBSelect.get_selected_terrain_index(),
 				"rmb_terrain": %RMBSelect.get_selected_terrain_index(),
 				"shift_lmb_terrain": %ShiftSelect.get_selected_terrain_index(),
-				"orientation": AdvancedTileSet.AdvancedTileOrientation.UP
+				"orientation": TileGeometry.Orientation.UP
 			}
 		2:
 			settings = {

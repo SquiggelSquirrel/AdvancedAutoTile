@@ -13,27 +13,13 @@ separation = Vector2i(2, 2)
 }
 1:0/0 = 0
 1:0/0/custom_data_1 = {
-"mask": {
-5: -1,
-9: -1,
-14: -1,
-17: -1,
-26: -1,
-34: -1
-},
+"mask": {},
 "orientation": 2,
 "terrain_index": 0
 }
 2:0/0 = 0
 2:0/0/custom_data_1 = {
-"mask": {
-5: -1,
-9: -1,
-14: -1,
-17: -1,
-26: -1,
-34: -1
-},
+"mask": {},
 "orientation": 2,
 "terrain_index": 0
 }
@@ -51,14 +37,7 @@ separation = Vector2i(2, 2)
 }
 0:1/0 = 0
 0:1/0/custom_data_1 = {
-"mask": {
-5: -1,
-9: -1,
-14: -1,
-17: -1,
-26: -1,
-34: -1
-},
+"mask": {},
 "orientation": 2,
 "terrain_index": 0
 }
@@ -80,13 +59,14 @@ separation = Vector2i(2, 2)
 5:2/0 = 0
 5:2/0/custom_data_1 = {
 "mask": {},
+"orientation": 3,
 "terrain_index": -1
 }
 6:2/0 = 0
 6:2/0/custom_data_1 = {
 "mask": {},
 "orientation": 3,
-"terrain_index": -1
+"terrain_index": 1
 }
 0:3/0 = 0
 0:3/0/custom_data_1 = {
@@ -113,7 +93,7 @@ separation = Vector2i(2, 2)
 6:3/0/custom_data_1 = {
 "mask": {},
 "orientation": 3,
-"terrain_index": -1
+"terrain_index": 2
 }
 0:4/0 = 0
 0:4/0/custom_data_1 = {
@@ -125,26 +105,15 @@ separation = Vector2i(2, 2)
 "mask": {},
 "terrain_index": 1
 }
+1:5/animation_columns = 3
+1:5/animation_frame_0/duration = 1.0
+1:5/animation_frame_1/duration = 1.0
+1:5/animation_frame_2/duration = 1.0
 1:5/0 = 0
 1:5/0/custom_data_1 = {
 "mask": {},
 "orientation": 2,
 "terrain_index": 1
-}
-2:5/0 = 0
-2:5/0/custom_data_1 = {
-"mask": {
-14: 1,
-34: 0
-},
-"orientation": 1,
-"terrain_index": 1
-}
-3:5/0 = 0
-3:5/0/custom_data_1 = {
-"mask": {},
-"orientation": 1,
-"terrain_index": -1
 }
 0:6/0 = 0
 0:6/0/custom_data_1 = {
@@ -195,7 +164,7 @@ separation = Vector2i(2, 2)
 5:0/0/custom_data_1 = {
 "mask": {},
 "orientation": 3,
-"terrain_index": -1
+"terrain_index": 0
 }
 5:0/1 = 1
 
@@ -209,22 +178,29 @@ custom_data_layer_1/name = "Advanced Autotiles"
 custom_data_layer_1/type = 27
 sources/0 = SubResource("TileSetAtlasSource_x2tp6")
 script = ExtResource("1_6vt83")
-advanced_tile_layout_axis = 1
+advanced_shape = 4
+advanced_axis = 1
 _bindings = PackedInt32Array()
 _priorities = PackedInt32Array()
-advanced_terrain_count = 2
+advanced_terrain_count = 3
 advanced_terrain_0/name = "Terrain 0"
 advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
-advanced_terrain_0/mode = 3
+advanced_terrain_0/mode = 1
 advanced_terrain_0/auto_binding = true
+advanced_terrain_0/priority = 0
 advanced_terrain_0/bindings = 0
-advanced_terrain_0/auto_priority = true
 advanced_terrain_1/name = "Terrain 1"
-advanced_terrain_1/color = Color(0.3752, 0.8, 0.368, 1)
-advanced_terrain_1/mode = 1
+advanced_terrain_1/color = Color(0.8039216, 0.4937255, 0.36078432, 1)
+advanced_terrain_1/mode = 2
 advanced_terrain_1/auto_binding = true
+advanced_terrain_1/priority = 0
 advanced_terrain_1/bindings = 0
-advanced_terrain_1/auto_priority = true
+advanced_terrain_2/name = "Terrain 2"
+advanced_terrain_2/color = Color(0.8039216, 0.62666667, 0.36078432, 1)
+advanced_terrain_2/mode = 3
+advanced_terrain_2/auto_binding = true
+advanced_terrain_2/priority = 0
+advanced_terrain_2/bindings = 0
 metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
 
 [node name="TileMapLayer" type="TileMapLayer" unique_id=1109048334]
