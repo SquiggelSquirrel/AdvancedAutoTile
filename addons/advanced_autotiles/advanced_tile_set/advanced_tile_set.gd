@@ -77,10 +77,9 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 @export_subgroup("Empty Flag Bindings", "advanced_empty_flag")
 @export var advanced_empty_flag_auto_bindings := true
 @export var advanced_empty_flag_bindings: int = 0
+var _empty_flag_priority := 0
 
 @export_storage var _need_recalc := true
-@export_storage var _bindings: PackedInt32Array = []
-@export_storage var _priorities: PackedInt32Array = []
 var _is_loaded := false
 
 var _terrains: Array[Terrain] = []
@@ -120,8 +119,6 @@ func _get_property_list() -> Array[Dictionary]:
 			}, {
 				"name": "advanced_terrain_%d/priority" % i,
 				"type": TYPE_INT,
-				"hint": PROPERTY_HINT_RANGE,
-				"hint_string": "0, 100, or_greater",
 				"usage": PROPERTY_USAGE_STORAGE,
 			}, {
 				"name": "advanced_terrain_%d/auto_binding" % i,
@@ -133,8 +130,7 @@ func _get_property_list() -> Array[Dictionary]:
 			"hint": PROPERTY_HINT_FLAGS,
 			"hint_string": _get_bindings_hint_string(),
 			"usage": (
-					PROPERTY_USAGE_STORAGE
-					if _terrains[i].auto_binding
+					PROPERTY_USAGE_STORAGE if _terrains[i].auto_binding
 					else PROPERTY_USAGE_DEFAULT
 			),
 		})
@@ -331,10 +327,6 @@ func get_advanced_mask(tile: TileKey) -> Dictionary:
 	return _get_advanced_tile_data(tile, "mask", {})
 
 
-func get_advanced_tile_priority(tile: TileKey) -> int:
-	return _get_advanced_tile_data(tile, "priority", 0)
-
-
 ## Returns an array of tile keys in all the atlas sources of this tile set.
 func get_advanced_tiles() -> Array[TileKey]:
 	var tiles: Array[TileKey] = []
@@ -376,7 +368,7 @@ func get_advanced_terrain_auto_binding(terrain_index: int) -> bool:
 
 
 func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool:
-	if _terrains[terrain_index].bindings_need_update:
+	if _need_recalc:
 		_advanced_terrain_update_auto_bindings()
 	return _binding_matches_terrain_index(
 			_terrains[terrain_index].bindings, other_index
@@ -388,13 +380,14 @@ func get_advanced_terrain_priority(terrain_index: int) -> int:
 		return 0
 	if _need_recalc:
 		_recalc()
-	return _priorities[terrain_index]
+	if terrain_index == TileGeometry.FLAG_EMPTY:
+		return _empty_flag_priority
+	return _terrains[terrain_index].priority
 
 
 func _recalc() -> void:
 	_advanced_terrain_update_auto_bindings()
 	_advanced_terrain_update_priorities()
-	_advanced_tiles_update_priorities()
 	_need_recalc = false
 
 
@@ -407,11 +400,16 @@ func _advanced_terrain_update_auto_bindings() -> void:
 		var mask := get_advanced_mask(tile)
 		for flag in mask:
 			var flag_index: int = mask[flag]
-			if flag_index < 0:
+			if advanced_empty_flag_auto_bindings and flag_index == -1:
+				advanced_empty_flag_bindings = _binding_set_terrain_index(
+					advanced_empty_flag_bindings,
+					center_index,
+					true
+				)
+				continue
+			elif flag_index < -1:
 				continue
 			var flag_terrain := _terrains[flag_index]
-			if ! flag_terrain.bindings_need_update:
-				continue
 			flag_terrain.bindings = _binding_set_terrain_index(
 					flag_index,
 					center_index,
@@ -421,17 +419,24 @@ func _advanced_terrain_update_auto_bindings() -> void:
 
 func _advanced_terrain_update_priorities() -> void:
 	# Re-calculate terrain priorities, based on bindings
-	#TODO - lookup algorith for strongly linked groups
-	#TODO - does Godot have a built-in data model for DAGs?
-	pass
-
-
-func get_advanced_terrain_auto_priority(terrain_index: int) -> bool:
-	return _terrains[terrain_index].auto_priority
-
-
-func _advanced_tiles_update_priorities() -> void:
-	pass
+	var graph := DirectedGraph.new()
+	for i in _terrains.size():
+		graph.add_node()
+	var empty_node_index := graph.add_node()
+	for i in _binding_get_matched_terrains(advanced_empty_flag_bindings):
+		graph.add_edge(empty_node_index, i)
+	for i in _terrains.size():
+		for j in _binding_get_matched_terrains(_terrains[i].bindings):
+			if j == -1:
+				graph.add_edge(i, empty_node_index)
+			else:
+				graph.add_edge(i, j)
+	graph.sort()
+	for i in graph.t_sort.size():
+		if graph.t_sort[i] == empty_node_index:
+			_empty_flag_priority = i + 1
+		else:
+			_terrains[graph.t_sort[i]].priority = i + 1
 
 
 # Set any per-tile data used by the AdvancedTileSet plugin
@@ -508,6 +513,18 @@ static func _binding_matches_terrain_index(
 
 static func _binding_get_terrain_mask(terrain_index: int) -> int:
 	return 1 << (terrain_index + 1)
+
+
+static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
+	var terrains: PackedInt32Array = []
+	var mask := 1
+	var i := -1
+	while mask <= binding:
+		if binding & mask:
+			terrains.append(i)
+		mask <<= 1
+		i += 1
+	return terrains
 #endregion
 
 
@@ -540,7 +557,6 @@ class Terrain:
 	var mode: TileGeometry.ConnectionMode
 	var auto_binding := true
 	var bindings: int = 0 #(bitmask)
-	var bindings_need_update := true
 	var priority: int = 0
 	
 	

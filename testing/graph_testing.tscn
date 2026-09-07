@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://twrm44bodi04"]
+
+[ext_resource type="Script" uid="uid://srjncxo0oy1h" path="res://testing/graph_testing.gd" id="1_k6uj1"]
+
+[node name="GraphTesting" type="Control" unique_id=1711185160]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_k6uj1")
+
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=623916773]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Button" type="Button" parent="CenterContainer" unique_id=1388566358]
+layout_mode = 2
+text = "Test"
+
+[connection signal="pressed" from="CenterContainer/Button" to="." method="_on_button_pressed"]
