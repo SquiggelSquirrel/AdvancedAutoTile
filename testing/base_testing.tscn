@@ -70,7 +70,7 @@ texture = ExtResource("1_obl7g")
 7:7/0 = 0
 
 [sub_resource type="TileSet" id="TileSet_t6efk"]
-tile_shape = 3
+tile_shape = 1
 tile_size = Vector2i(32, 32)
 sources/0 = SubResource("TileSetAtlasSource_dpgl4")
 

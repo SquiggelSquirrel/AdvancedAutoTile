@@ -385,6 +385,22 @@ func get_advanced_terrain_priority(terrain_index: int) -> int:
 	return _terrains[terrain_index].priority
 
 
+func get_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation:
+	if advanced_shape == TileGeometry.Shape.TRIANGLE:
+		if advanced_axis == TileGeometry.Axis.HORIZONTAL:
+			if (coords.x ^ coords.y) & 1 == 1:
+				return TileGeometry.Orientation.UP
+			else:
+				return TileGeometry.Orientation.DOWN
+		else:
+			if (coords.x ^ coords.y) & 1 == 1:
+				return TileGeometry.Orientation.LEFT
+			else:
+				return TileGeometry.Orientation.RIGHT
+	else:
+		return TileGeometry.Orientation.UP
+
+
 func _recalc() -> void:
 	_advanced_terrain_update_auto_bindings()
 	_advanced_terrain_update_priorities()
