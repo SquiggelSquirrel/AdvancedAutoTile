@@ -347,6 +347,12 @@ func get_advanced_tiles() -> Array[TileKey]:
 	return tiles
 
 
+func get_tile_data(tile: TileKey) -> TileData:
+	return (
+			get_source(tile.source_id) as TileSetAtlasSource
+	).get_tile_data(tile.coords, tile.alternative_id)
+
+
 func get_advanced_terrains_count() -> int:
 	return _terrains.size()
 
@@ -385,7 +391,7 @@ func get_advanced_terrain_priority(terrain_index: int) -> int:
 	return _terrains[terrain_index].priority
 
 
-func get_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation:
+func get_advanced_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation:
 	if advanced_shape == TileGeometry.Shape.TRIANGLE:
 		if advanced_axis == TileGeometry.Axis.HORIZONTAL:
 			if (coords.x ^ coords.y) & 1 == 1:
@@ -475,6 +481,8 @@ func _set_advanced_tile_data(
 # requires a default value
 func _get_advanced_tile_data(
 		tile: TileKey, key: String, default: Variant) -> Variant:
+	if tile.source_id == -1:
+		return default
 	var layer_index: int = get_custom_data_layer_by_name(DATA_LAYER_NAME)
 	if layer_index == -1:
 		add_custom_data_layer()
@@ -546,6 +554,7 @@ static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
 
 ## Class TileKey contains all fields needed to identify a Tile in a TileSet
 class TileKey:
+	static var EMPTY := TileKey.new(-1, Vector2i(-1, -1), 0)
 	var source_id: int
 	var coords: Vector2i
 	var alternative_id: int

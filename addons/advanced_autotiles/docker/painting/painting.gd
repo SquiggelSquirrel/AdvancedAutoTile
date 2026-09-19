@@ -3,17 +3,8 @@ extends HSplitContainer
 
 signal changed
 
-enum PaintAction {
-	PAINT,
-	ERASE,
-	SELECT
-}
-enum PaintShape {
-	POINT,
-	LINE,
-	RECTANGLE,
-	FILL
-}
+enum PaintAction {PAINT, ERASE, SELECT}
+enum PaintShape {POINT, LINE, RECTANGLE, FILL}
 var tile_set: AdvancedTileSet = null:
 	set(value):
 		tile_set = value
@@ -42,5 +33,5 @@ func _on_show_grid_toggled(toggled_on: bool) -> void:
 
 
 func _on_terrain_select_item_selected(index: int) -> void:
-	paint_action = index
+	paint_terrain = index
 	changed.emit()

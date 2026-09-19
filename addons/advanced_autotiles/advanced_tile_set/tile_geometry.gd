@@ -4,6 +4,36 @@ extends Object
 ## Reserved terrain_index values with special meaning
 const FLAG_EMPTY := -1
 const FLAG_IGNORE := -2
+const _UP_TRIANGLE_NEIGHBOR_OFFSETS: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {
+	TileGeometry.CellNeighbor.TOP_COUNTERCLOCKWISE_CORNER:
+		Vector2i(-1, -1),
+	TileGeometry.CellNeighbor.TOP_CORNER:
+		Vector2i(0, -1),
+	TileGeometry.CellNeighbor.TOP_CLOCKWISE_CORNER:
+		Vector2i(1, -1),
+	TileGeometry.CellNeighbor.RIGHT_SIDE:
+		Vector2i(1, 0),
+	TileGeometry.CellNeighbor.BOTTOM_RIGHT_COUNTERCLOCKWISE_CORNER:
+		Vector2i(2, 0),
+	TileGeometry.CellNeighbor.BOTTOM_RIGHT_CORNER:
+		Vector2i(2, 1),
+	TileGeometry.CellNeighbor.BOTTOM_RIGHT_CLOCKWISE_CORNER:
+		Vector2i(1, 1),
+	TileGeometry.CellNeighbor.BOTTOM_SIDE:
+		Vector2i(0, 1),
+	TileGeometry.CellNeighbor.BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER:
+		Vector2i(-1, 1),
+	TileGeometry.CellNeighbor.BOTTOM_LEFT_CORNER:
+		Vector2i(-2, 1),
+	TileGeometry.CellNeighbor.BOTTOM_LEFT_CLOCKWISE_CORNER:
+		Vector2i(-2, 0),
+	TileGeometry.CellNeighbor.LEFT_SIDE:
+		Vector2i(-1, 0),
+}
+static var _down_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {}
+static var _left_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {}
+static var _right_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {}
+static var _triangle_offsets_setup := false
 ## Tile shapes suppored by advanced autotile plugin
 enum Shape {
 	SQUARE,
@@ -45,8 +75,8 @@ enum ConnectionMode {
 	CORNERS = 1,
 	EDGES = 2,
 	DIAGONALS = 4,
-	CORNERS_AND_EDGES = 3,
-	EDGES_AND_DIAGONALS = 6,
+	CORNERS_AND_EDGES = 1 | 2,
+	EDGES_AND_DIAGONALS = 2 | 4,
 }
 ## Cell Neighbor flags, defined to support triangle layouts
 ## and bit-wise logic
@@ -59,7 +89,7 @@ enum CellNeighbor {
 	BOTTOM = 16,
 	LEFT = 32,
 	CLOCKWISE = 64,
-	COUNTERCLOCKWISE = 128,
+	COUNTERCLOCKWISE = 128, # End of "core" flags
 	TOP_SIDE = 1 | 4,
 	RIGHT_SIDE = 1 | 8,
 	BOTTOM_SIDE = 1 | 16,
@@ -315,3 +345,109 @@ static func get_tile_polygon(
 			polygon[i] = Vector2(polygon[i].y, polygon[i].x)
 	
 	return polygon
+
+
+static func _setup_triangle_offsets() -> void:
+	for neighbor in _UP_TRIANGLE_NEIGHBOR_OFFSETS.keys():
+		var offset: Vector2i = _UP_TRIANGLE_NEIGHBOR_OFFSETS[neighbor]
+		_down_triangle_neighbor_offsets[
+				TileGeometry.cell_neighbor_flip_v(neighbor)
+				] = Vector2i(offset.x, - offset.y)
+		_left_triangle_neighbor_offsets[
+				TileGeometry.cell_neighbor_transpose(neighbor)
+				] = Vector2i(offset.y, offset.x)
+		_right_triangle_neighbor_offsets[
+				TileGeometry.cell_neighbor_flip_h(
+					TileGeometry.cell_neighbor_transpose(neighbor)
+				)] = Vector2i(- offset.y, offset.x)
+	_triangle_offsets_setup = true
+
+
+#static func _triangle_offsets_debug_string(
+		#offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i]
+#) -> String:
+	#var pairs: PackedStringArray = []
+	#for key in offsets:
+		#pairs.append(
+				#TileGeometry.CellNeighbor.find_key(key)
+				#+ "=("
+				#+ String.num_int64(offsets[key].x)
+				#+ ":"
+				#+ String.num_int64(offsets[key].y)
+				#+ ")"
+		#)
+	#return "[" + ", ".join(pairs) + "]"
+
+
+static func cell_neighbor_flip_h(neighbor_in: CellNeighbor) -> CellNeighbor:
+	var neighbor_out := neighbor_in & (
+			CellNeighbor.SIDE
+			| CellNeighbor.CORNER
+			| CellNeighbor.TOP
+			| CellNeighbor.BOTTOM
+	)
+	neighbor_out |= (
+			((neighbor_in & CellNeighbor.RIGHT) << 2)
+			| ((neighbor_in & CellNeighbor.LEFT) >> 2)
+			| ((neighbor_in & CellNeighbor.CLOCKWISE) << 1)
+			| ((neighbor_in & CellNeighbor.COUNTERCLOCKWISE) >> 1)
+	)
+	return neighbor_out
+
+
+static func cell_neighbor_flip_v(neighbor_in: CellNeighbor) -> CellNeighbor:
+	var neighbor_out := neighbor_in & (
+			CellNeighbor.SIDE
+			| CellNeighbor.CORNER
+			| CellNeighbor.LEFT
+			| CellNeighbor.RIGHT
+	)
+	neighbor_out |= (
+			((neighbor_in & CellNeighbor.TOP) << 2)
+			| ((neighbor_in & CellNeighbor.BOTTOM) >> 2)
+			| ((neighbor_in & CellNeighbor.CLOCKWISE) << 1)
+			| ((neighbor_in & CellNeighbor.COUNTERCLOCKWISE) >> 1)
+	)
+	return neighbor_out
+
+
+static func cell_neighbor_transpose(neighbor_in: CellNeighbor) -> CellNeighbor:
+	var neighbor_out := neighbor_in & (CellNeighbor.SIDE | CellNeighbor.CORNER)
+	neighbor_out |= (
+			( (neighbor_in & CellNeighbor.TOP) << 3 )
+			|
+			( (neighbor_in
+				& (CellNeighbor.RIGHT | CellNeighbor.CLOCKWISE)
+				) << 1 )
+			|
+			( (neighbor_in
+				& (CellNeighbor.BOTTOM | CellNeighbor.COUNTERCLOCKWISE)
+				) >> 1 )
+			|
+			( (neighbor_in & CellNeighbor.LEFT) >> 3 )
+	)
+	return neighbor_out
+
+
+static func get_triangle_neighbor_cell(
+		coords: Vector2i,
+		neighbor: TileGeometry.CellNeighbor,
+		orientation: TileGeometry.Orientation
+) -> Vector2i:
+	if ! _triangle_offsets_setup:
+		_setup_triangle_offsets()
+	var CN := TileGeometry.CellNeighbor
+	var OR := TileGeometry.Orientation
+	var offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i]
+	match orientation:
+		OR.UP:
+			offsets = _UP_TRIANGLE_NEIGHBOR_OFFSETS
+		OR.DOWN:
+			offsets = _down_triangle_neighbor_offsets
+		OR.LEFT:
+			offsets = _left_triangle_neighbor_offsets
+		OR.RIGHT:
+			offsets = _right_triangle_neighbor_offsets
+	assert(offsets.has(neighbor), "Invalid neighbor flag from cell")
+	return coords + offsets[neighbor]
+	return coords
