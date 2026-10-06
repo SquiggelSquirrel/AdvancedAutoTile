@@ -1,23 +1,92 @@
-[gd_scene format=3 uid="uid://crld6mjdfhec6"]
+[gd_scene format=4 uid="uid://crld6mjdfhec6"]
 
 [ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_6vt83"]
 [ext_resource type="Texture2D" uid="uid://ctqiwidhsjd2" path="res://icon.svg" id="2_lk1su"]
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="3_lk1su"]
+[ext_resource type="Script" uid="uid://dnw5mau450bn1" path="res://testing/test.gd" id="4_x2tp6"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_x2tp6"]
 texture = ExtResource("2_lk1su")
 separation = Vector2i(2, 2)
 0:0/0 = 0
+0:0/0/custom_data_0 = {
+"mask": {
+14: -1,
+26: -1,
+34: -1
+},
+"terrain_index": 0
+}
 1:0/0 = 0
+1:0/0/custom_data_0 = {
+"mask": {
+10: -1,
+38: -1,
+50: -1
+},
+"orientation": 3,
+"terrain_index": 0
+}
 2:0/0 = 0
+2:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+34: -1
+},
+"terrain_index": 2
+}
 3:0/0 = 0
+3:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+10: -1,
+17: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"orientation": 3,
+"terrain_index": 2
+}
 4:0/0 = 0
+4:0/0/custom_data_0 = {
+"terrain_index": -1
+}
 0:1/0 = 0
+0:1/0/custom_data_0 = {
+"mask": {
+5: -1,
+17: -1,
+33: -1
+},
+"orientation": 3,
+"terrain_index": 1
+}
 4:1/0 = 0
+4:1/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+17: -1
+},
+"orientation": 2,
+"terrain_index": 1
+}
 0:2/0 = 0
+0:2/0/custom_data_0 = {
+"terrain_index": -1
+}
 4:2/0 = 0
 5:2/0 = 0
 6:2/0 = 0
 0:3/0 = 0
+0:3/0/custom_data_0 = {
+"orientation": 3
+}
 4:3/next_alternative_id = 13
 4:3/0 = 0
 4:3/1 = 1
@@ -29,6 +98,9 @@ separation = Vector2i(2, 2)
 6:3/0 = 0
 0:4/0 = 0
 0:5/0 = 0
+0:5/0/custom_data_0 = {
+"orientation": 3
+}
 1:5/animation_columns = 3
 1:5/animation_frame_0/duration = 1.0
 1:5/animation_frame_1/duration = 1.0
@@ -36,10 +108,19 @@ separation = Vector2i(2, 2)
 1:5/0 = 0
 0:6/0 = 0
 1:6/0 = 0
+1:6/0/custom_data_0 = {
+"orientation": 3
+}
 2:6/0 = 0
 3:6/0 = 0
+3:6/0/custom_data_0 = {
+"orientation": 3
+}
 4:6/0 = 0
 5:6/0 = 0
+5:6/0/custom_data_0 = {
+"orientation": 3
+}
 6:6/0 = 0
 4:4/size_in_atlas = Vector2i(3, 2)
 4:4/next_alternative_id = 2
@@ -51,35 +132,41 @@ separation = Vector2i(2, 2)
 5:0/1 = 1
 
 [sub_resource type="TileSet" id="TileSet_8e8nc"]
+tile_offset_axis = 1
+tile_size = Vector2i(16, 8)
 custom_data_layer_0/name = "_advanced_autotiles"
 custom_data_layer_0/type = 27
 sources/0 = SubResource("TileSetAtlasSource_x2tp6")
 script = ExtResource("1_6vt83")
-_bindings = PackedInt32Array()
-_priorities = PackedInt32Array()
+advanced_shape = 4
+advanced_axis = 1
+advanced_empty_flag_bindings = 14
+_need_recalc = false
 advanced_terrain_count = 3
 advanced_terrain_0/name = "Terrain 0"
 advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
 advanced_terrain_0/mode = 1
-advanced_terrain_0/priority = 0
+advanced_terrain_0/priority = 2
 advanced_terrain_0/auto_binding = true
 advanced_terrain_0/bindings = 0
 advanced_terrain_1/name = "Terrain 1"
 advanced_terrain_1/color = Color(0.8039216, 0.4937255, 0.36078432, 1)
 advanced_terrain_1/mode = 2
-advanced_terrain_1/priority = 0
+advanced_terrain_1/priority = 3
 advanced_terrain_1/auto_binding = true
 advanced_terrain_1/bindings = 0
 advanced_terrain_2/name = "Terrain 2"
 advanced_terrain_2/color = Color(0.8039216, 0.62666667, 0.36078432, 1)
 advanced_terrain_2/mode = 3
-advanced_terrain_2/priority = 0
+advanced_terrain_2/priority = 4
 advanced_terrain_2/auto_binding = true
 advanced_terrain_2/bindings = 0
 metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
 
 [node name="TileMapLayer" type="TileMapLayer" unique_id=1109048334]
-tile_map_data = PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0)
+tile_map_data = PackedByteArray("AAAAAAAAAAADAAAAAAAAAAIAAAADAAAAAAACAAIAAAAAAAEAAAAEAAIAAAAAAAEAAAAGAAIAAAAAAAEAAAAGAAQAAAAAAAEAAAAEAAQAAAAAAAEAAAAFAAMAAAAAAAEAAAADAAMAAAAAAAEAAAACAAQAAAAAAAEAAAAAAAYAAAAAAAEAAAAAAAgAAAAAAAEAAAACAAcAAAAEAAEAAAABAAcAAAAAAAEAAAADAAcAAAAAAAEAAAAEAAcAAAAEAAEAAAAFAAcAAAAAAAEAAAAGAAcAAAAEAAEAAAA=")
 tile_set = SubResource("TileSet_8e8nc")
+script = ExtResource("3_lk1su")
 
 [node name="Node2D" type="Node2D" parent="." unique_id=1491467165]
+script = ExtResource("4_x2tp6")

@@ -1,7 +1,100 @@
 [gd_scene format=3 uid="uid://c4o6vjehd702n"]
 
 [ext_resource type="Script" uid="uid://dja2xa4pil331" path="res://addons/advanced_autotiles/docker/painting/painting.gd" id="1_mts8s"]
+[ext_resource type="Script" uid="uid://dwr6ubnh13peh" path="res://addons/advanced_autotiles/docker/painting/button_select.gd" id="2_57cp5"]
+[ext_resource type="Script" uid="uid://cmj653nrcdt7j" path="res://addons/advanced_autotiles/docker/setup/terrain_select.gd" id="3_mts8s"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_3ii1l"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_ynxr4"]
 
 [node name="Painting" type="HSplitContainer" unique_id=1946510370]
 script = ExtResource("1_mts8s")
 metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1023197438]
+layout_mode = 2
+
+[node name="PaintSettings" type="HBoxContainer" parent="VBoxContainer" unique_id=775009628]
+layout_mode = 2
+
+[node name="Show Grid" type="Button" parent="VBoxContainer/PaintSettings" unique_id=420857108]
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+text = "Show Grid"
+
+[node name="ActionSelect" type="HBoxContainer" parent="VBoxContainer" unique_id=2016421026]
+layout_mode = 2
+script = ExtResource("2_57cp5")
+button_group = SubResource("ButtonGroup_3ii1l")
+
+[node name="Paint" type="Button" parent="VBoxContainer/ActionSelect" unique_id=1885013162]
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_3ii1l")
+text = "Paint"
+
+[node name="Erase" type="Button" parent="VBoxContainer/ActionSelect" unique_id=1124593127]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_3ii1l")
+text = "Erase"
+
+[node name="Select" type="Button" parent="VBoxContainer/ActionSelect" unique_id=1195660876]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_3ii1l")
+text = "Select"
+
+[node name="ShapeSelect" type="HBoxContainer" parent="VBoxContainer" unique_id=7835994]
+layout_mode = 2
+script = ExtResource("2_57cp5")
+button_group = SubResource("ButtonGroup_ynxr4")
+
+[node name="Point" type="Button" parent="VBoxContainer/ShapeSelect" unique_id=791485610]
+layout_mode = 2
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_ynxr4")
+text = "Point"
+
+[node name="Line" type="Button" parent="VBoxContainer/ShapeSelect" unique_id=827341244]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_ynxr4")
+text = "Line"
+
+[node name="Rectangle" type="Button" parent="VBoxContainer/ShapeSelect" unique_id=1941976987]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_ynxr4")
+text = "Rectangle
+"
+
+[node name="Fill" type="Button" parent="VBoxContainer/ShapeSelect" unique_id=570300349]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_ynxr4")
+text = "Fill"
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="." unique_id=1780883589]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer2" unique_id=1537744076]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer2/HBoxContainer" unique_id=1628100602]
+layout_mode = 2
+text = "Terrain"
+
+[node name="TerrainSelect" type="OptionButton" parent="VBoxContainer2/HBoxContainer" unique_id=1708742404]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("3_mts8s")
+
+[connection signal="toggled" from="VBoxContainer/PaintSettings/Show Grid" to="." method="_on_show_grid_toggled"]
+[connection signal="item_selected" from="VBoxContainer/ActionSelect" to="." method="_on_action_select_item_selected"]
+[connection signal="item_selected" from="VBoxContainer/ShapeSelect" to="." method="_on_shape_select_item_selected"]
+[connection signal="item_selected" from="VBoxContainer2/HBoxContainer/TerrainSelect" to="." method="_on_terrain_select_item_selected"]
