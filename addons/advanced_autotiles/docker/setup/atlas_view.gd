@@ -427,6 +427,8 @@ static func _get_flag_polygons(
 	)
 	var center_point := _points_average(outline)
 	match mode:
+		TileGeometry.ConnectionMode.NONE:
+			pass
 		TileGeometry.ConnectionMode.CORNERS:
 			for i in outline.size():
 				var point := outline[i]
