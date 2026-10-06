@@ -75,7 +75,10 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		hide_base_class_features = value
 		notify_property_list_changed()
 @export_subgroup("Empty Flag Bindings", "advanced_empty_flag")
-@export var advanced_empty_flag_auto_bindings := true
+@export var advanced_empty_flag_auto_bindings := true:
+	set(value):
+		advanced_empty_flag_auto_bindings = value
+		notify_property_list_changed()
 @export var advanced_empty_flag_bindings: int = 0
 var _empty_flag_priority := 0
 
@@ -290,7 +293,7 @@ func get_advanced_terrain(tile: TileKey) -> int:
 func set_advanced_flag(
 		tile: TileKey, flag: TileGeometry.CellNeighbor, flag_value: int
 ) -> void:
-	var terrain_index := get_advanced_terrain(tile)
+	var terrain_index: int = get_advanced_terrain(tile)
 	assert(terrain_index > -1,
 			"Cannot set autotile flag on tile without terrain")
 	var allowed := TileGeometry.get_flags(
@@ -307,7 +310,7 @@ func set_advanced_flag(
 
 
 func clear_advanced_mask(tile: TileKey) -> void:
-	var terrain_index := get_advanced_terrain(tile)
+	var terrain_index: int = get_advanced_terrain(tile)
 	assert(terrain_index > -1,
 			"Cannot set autotile mask on tile without terrain")
 	var flags := TileGeometry.get_flags(
@@ -415,27 +418,35 @@ func _recalc() -> void:
 
 func _advanced_terrain_update_auto_bindings() -> void:
 	# Re-calculate terrain auto bindings
+	if advanced_empty_flag_auto_bindings:
+		advanced_empty_flag_bindings = 0
+	for index in _terrains.size():
+		if _terrains[index].auto_binding:
+			_terrains[index].bindings = 0
 	for tile in get_advanced_tiles():
-		var center_index := get_advanced_terrain(tile)
-		if center_index < 0:
+		var center_terrain_index: int = get_advanced_terrain(tile)
+		if center_terrain_index < 0:
+			continue
+		if ! _terrains[center_terrain_index].auto_binding:
 			continue
 		var mask := get_advanced_mask(tile)
 		for flag in mask:
-			var flag_index: int = mask[flag]
-			if advanced_empty_flag_auto_bindings and flag_index == -1:
-				advanced_empty_flag_bindings = _binding_set_terrain_index(
-					advanced_empty_flag_bindings,
-					center_index,
-					true
-				)
+			var flag_terrain_index: int = mask[flag]
+			if flag_terrain_index == TileGeometry.FLAG_IGNORE:
 				continue
-			elif flag_index < -1:
+			if flag_terrain_index == TileGeometry.FLAG_EMPTY:
+				if advanced_empty_flag_auto_bindings:
+					advanced_empty_flag_bindings = _binding_set_terrain_index(
+						advanced_empty_flag_bindings,
+						center_terrain_index,
+						true
+					)
 				continue
-			var flag_terrain := _terrains[flag_index]
+			var flag_terrain: Terrain = _terrains[flag_terrain_index]
 			flag_terrain.bindings = _binding_set_terrain_index(
-					flag_index,
-					center_index,
-					true,
+					flag_terrain.bindings,
+					center_terrain_index,
+					true
 			)
 
 
@@ -550,7 +561,6 @@ static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
 		i += 1
 	return terrains
 #endregion
-
 
 ## Class TileKey contains all fields needed to identify a Tile in a TileSet
 class TileKey:

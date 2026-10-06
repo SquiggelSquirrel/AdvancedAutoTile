@@ -8,7 +8,7 @@ enum PaintShape {POINT, LINE, RECTANGLE, FILL}
 enum ActionState {NONE, LINE, RECTANGLE, ERASE_LINE, ERASE_RECTANGLE}
 var dock: EditorDock
 var dock_scene :AdvancedAutotilesDockPanel
-var active_tilemap_layer: AdvancedTileMapLayer
+var active_tilemap_layer: TileMapLayer
 var active_tileset: AdvancedTileSet
 var cell_selection: Dictionary[Vector2i, bool] = {}
 var _current_action := ActionState.NONE

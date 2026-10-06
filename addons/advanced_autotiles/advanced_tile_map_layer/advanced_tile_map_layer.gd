@@ -34,7 +34,7 @@ func advanced_autotile_paint_cells(
 		var terrain := advanced_get_final_cell_terrain(cell)
 		if terrain == -1:
 			continue
-		var preservation_mask := 0
+		var preserve_flags: PackedInt32Array = []
 		if preserve_surrounding_connections:
 			for flag in advanced_get_existing_cell_mask(cell):
 				var preserve_flag := true
@@ -46,17 +46,24 @@ func advanced_autotile_paint_cells(
 					if adjacent in cells:
 						preserve_flag = false
 				if preserve_flag:
-					preservation_mask |= flag
-		var tile := advanced_autotile_choose_tile(cell, 0, preservation_mask)
+					preserve_flags.append(flag)
+		var tile := advanced_autotile_choose_tile(
+				cell,
+				preserve_flags,
+				preserve_flags
+		)
 		set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
 	_incoming_terrains.clear()
 
 
 func advanced_autotile_choose_tile(
 		cell: Vector2i,
-		deprioritize_mask := 0,
-		preservation_mask := 0
+		deprioritize_flags: PackedInt32Array = [],
+		preserve_flags: PackedInt32Array = []
 ) -> AdvancedTileSet.TileKey:
+	print("Choosing tile for cell ", cell)
+	print("Preserving ", preserve_flags)
+	print("Deprioritizing ", deprioritize_flags)
 	var terrain := advanced_get_final_cell_terrain(cell)
 	if terrain == -1:
 		return AdvancedTileSet.TileKey.EMPTY
@@ -75,13 +82,6 @@ func advanced_autotile_choose_tile(
 				advanced_tile_set.get_advanced_orientation(tile)
 				!= cell_orientation
 		):
-			print(
-					tile.coords,
-					" discarded ",
-					cell_orientation,
-					" ",
-					advanced_tile_set.get_advanced_orientation(tile)
-			)
 			continue
 		var is_match := true
 		var tile_priority := 0
@@ -91,7 +91,7 @@ func advanced_autotile_choose_tile(
 					advanced_tile_set.get_advanced_terrain_priority(mask[flag])
 			)
 			if (
-					flag | preservation_mask
+					flag in preserve_flags
 					and mask[flag] == existing_mask.get(flag, -1)
 			):
 				tile_priority += flag_priority
@@ -108,7 +108,7 @@ func advanced_autotile_choose_tile(
 					is_match = false
 					tile_priority -= flag_priority
 					continue
-				if flag | deprioritize_mask:
+				if flag in deprioritize_flags:
 					tile_priority -= flag_priority
 				else:
 					tile_priority += flag_priority
@@ -215,9 +215,13 @@ func advanced_get_neighbor_cell(
 	var CN := TileGeometry.CellNeighbor
 	var OR := TileGeometry.Orientation
 	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
-		return get_neighbor_cell(coords, TileSet.CellNeighbor[
-				CN.find_key(neighbor)
-		])
+		var target_key: String = "CELL_NEIGHBOR_" + CN.find_key(neighbor)
+		var keys := ClassDB.class_get_enum_constants("TileSet", "CellNeighbor")
+		for i in keys.size():
+			if keys[i] == target_key:
+				return get_neighbor_cell(coords, i)
+		assert(false, "Could not find key in base class")
+		return coords
 	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
 	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
 
