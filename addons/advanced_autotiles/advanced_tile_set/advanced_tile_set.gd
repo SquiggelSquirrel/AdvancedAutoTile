@@ -191,6 +191,8 @@ func _set(property: StringName, value: Variant) -> bool:
 				"advanced_terrain_").split("/")
 		var terrain_index := parts[0].to_int()
 		var terrain_property := parts[1]
+		if _terrains[terrain_index].get(terrain_property) == value:
+			return true
 		if _is_loaded:
 			match terrain_property:
 				"mode":
@@ -508,7 +510,10 @@ func _set_advanced_tile_data(
 # Retrieve any per-tile data used by the AdvancedTileSet plugin,
 # requires a default value
 func _get_advanced_tile_data(
-		tile: TileKey, key: String, default: Variant) -> Variant:
+		tile: TileKey,
+		key: String,
+		default: Variant
+) -> Variant:
 	if tile.source_id == -1:
 		return default
 	var layer_index: int = get_custom_data_layer_by_name(DATA_LAYER_NAME)

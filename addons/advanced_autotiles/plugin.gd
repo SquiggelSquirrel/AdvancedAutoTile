@@ -5,7 +5,7 @@ const DOCK_SCENE := preload("res://addons/advanced_autotiles/docker/docker.tscn"
 enum DockMode {SETUP, PAINTING}
 enum PaintAction {PAINT, ERASE, SELECT}
 enum PaintShape {POINT, LINE, RECTANGLE, FILL}
-enum ActionState {NONE, LINE, RECTANGLE, ERASE_LINE, ERASE_RECTANGLE}
+enum ActionState {NONE, LMB, RMB}
 var dock: EditorDock
 var dock_scene :AdvancedAutotilesDockPanel
 var active_tilemap_layer: TileMapLayer
@@ -28,9 +28,12 @@ func _enter_tree() -> void:
 	)
 	add_dock(dock)
 	dock_scene.overlay_changed.connect(_on_dock_scene_overlay_changed)
+	dock.close()
 
 
 func _exit_tree() -> void:
+	active_tileset = null
+	active_tilemap_layer = null
 	remove_dock(dock)
 	dock.queue_free()
 
@@ -58,6 +61,11 @@ func _edit(object: Object) -> void:
 		active_tileset = null
 		dock.close()
 		dock_scene.tile_set = active_tileset
+
+
+func _clear() -> void:
+	active_tilemap_layer = null
+	active_tileset = null
 
 
 func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
@@ -105,6 +113,8 @@ func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
 
 
 func _forward_canvas_gui_input(event: InputEvent) -> bool:
+	if ! dock_scene.is_visible_in_tree():
+		return false
 	if ! event is InputEventMouse:
 		return false
 	if dock_scene.get_mode() != DockMode.PAINTING:
@@ -129,41 +139,55 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 
 
 func _handle_lmb_press(cell: Vector2i) -> void:
-	match dock_scene.get_paint_shape():
-		PaintShape.POINT:
-			_perform_current_paint_action([cell])
-		PaintShape.LINE:
-			if _current_action == ActionState.NONE:
-				_current_action = ActionState.LINE
-				_action_start_cell = cell
-				return
-		PaintShape.RECTANGLE:
-			if _current_action == ActionState.NONE:
-				_current_action = ActionState.RECTANGLE
-				_action_start_cell = cell
-				return
-		PaintShape.FILL:
-			# Paint region now
-			pass
+	if _current_action == ActionState.RMB:
+		_current_action = ActionState.NONE
+		return
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		return
+	if dock_scene.get_paint_shape() == PaintShape.FILL:
+		pass
+	elif _current_action == ActionState.NONE:
+		_current_action = ActionState.LMB
+		_action_start_cell = cell
+		_perform_current_lmb_action([cell])
 
 
 func _handle_lmb_release(cell: Vector2i) -> void:
-	pass
+	_current_action = ActionState.NONE
 
 
 func _handle_rmb_press(cell: Vector2i) -> void:
-	pass
+	if _current_action == ActionState.LMB:
+		_current_action = ActionState.NONE
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		return
+	if dock_scene.get_paint_shape() == PaintShape.FILL:
+		pass
+	elif _current_action == ActionState.NONE:
+		_current_action = ActionState.RMB
+		_action_start_cell = cell
+		_perform_current_rmb_action([cell])
 
 
 func _handle_rmb_release(cell: Vector2i) -> void:
-	pass
+	_current_action = ActionState.NONE
 
 
-func _handle_motion(cell: Vector2i) -> void:
-	pass
+func _handle_motion(current_cell: Vector2i) -> void:
+	var action_cells: Array[Vector2i]
+	match dock_scene.get_paint_shape():
+		PaintShape.POINT:
+			action_cells = [current_cell]
+	match _current_action:
+		ActionState.NONE:
+			return
+		ActionState.LMB:
+			_perform_current_lmb_action(action_cells)
+		ActionState.RMB:
+			_perform_current_rmb_action(action_cells)
 
 
-func _perform_current_paint_action(cells: Array[Vector2i]) -> void:
+func _perform_current_lmb_action(cells: Array[Vector2i]) -> void:
 	match dock_scene.get_paint_action():
 		PaintAction.PAINT:
 			active_tilemap_layer.advanced_autotile_paint_cells(
@@ -178,6 +202,18 @@ func _perform_current_paint_action(cells: Array[Vector2i]) -> void:
 		PaintAction.SELECT:
 			for cell in cells:
 				cell_selection[cell] = true
+
+
+func _perform_current_rmb_action(cells: Array[Vector2i]) -> void:
+	match dock_scene.get_paint_action():
+		PaintAction.PAINT, PaintAction.ERASE:
+			active_tilemap_layer.advanced_autotile_paint_cells(
+					TileGeometry.FLAG_EMPTY,
+					cells
+			)
+		PaintAction.SELECT:
+			for cell in cells:
+				cell_selection.erase(cell)
 
 
 func _get_cell_under_mouse() -> Vector2i:

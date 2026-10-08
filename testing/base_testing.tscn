@@ -5,6 +5,14 @@
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_dpgl4"]
 texture = ExtResource("1_obl7g")
 0:0/0 = 0
+0:0/0/custom_data_0 = {
+"TestDictionarty": {
+12: 0,
+24: 1,
+36: 2
+},
+"TestProperty": 0
+}
 1:0/0 = 0
 2:0/0 = 0
 3:0/0 = 0
@@ -72,6 +80,8 @@ texture = ExtResource("1_obl7g")
 [sub_resource type="TileSet" id="TileSet_t6efk"]
 tile_shape = 3
 tile_size = Vector2i(32, 32)
+custom_data_layer_0/name = "Test Layer"
+custom_data_layer_0/type = 27
 sources/0 = SubResource("TileSetAtlasSource_dpgl4")
 
 [node name="BaseTesting" type="Node2D" unique_id=248049947]

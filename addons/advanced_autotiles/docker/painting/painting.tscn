@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://cmj653nrcdt7j" path="res://addons/advanced_autotiles/docker/setup/terrain_select.gd" id="3_mts8s"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_3ii1l"]
+resource_name = "action select group"
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_ynxr4"]
 

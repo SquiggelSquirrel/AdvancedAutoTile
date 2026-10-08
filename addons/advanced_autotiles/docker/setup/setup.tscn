@@ -22,9 +22,8 @@ horizontal_scroll_mode = 0
 [node name="SourceList" type="ItemList" parent="Sources/ScrollContainer" unique_id=1781774229]
 unique_name_in_owner = true
 layout_mode = 2
+size_flags_horizontal = 3
 size_flags_vertical = 3
-auto_width = true
-auto_height = true
 item_count = 1
 fixed_icon_size = Vector2i(64, 64)
 item_0/text = "No source"

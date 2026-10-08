@@ -22,7 +22,7 @@ func advanced_autotile_paint_cells(
 	for cell in cells:
 		_incoming_terrains[cell] = terrain_id
 	var surrounding_cells:Array[Vector2i] = []
-	
+		
 	for cell in cells:
 		for neighbor in advanced_get_surrounding_cells(cell, true):
 			if ! neighbor in cells and ! neighbor in surrounding_cells:
