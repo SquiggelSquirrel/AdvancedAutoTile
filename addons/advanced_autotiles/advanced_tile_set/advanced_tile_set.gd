@@ -80,7 +80,8 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		advanced_empty_flag_auto_bindings = value
 		notify_property_list_changed()
 @export var advanced_empty_flag_bindings: int = 0
-var _empty_flag_priority := 0
+@export_storage var _empty_flag_priority := 0
+@export_storage var _tile_match_priority_bonus := 0
 
 @export_storage var _need_recalc := true
 var _is_loaded := false
@@ -296,15 +297,18 @@ func set_advanced_flag(
 	var terrain_index: int = get_advanced_terrain(tile)
 	assert(terrain_index > -1,
 			"Cannot set autotile flag on tile without terrain")
-	var allowed := TileGeometry.get_flags(
+	var expected_flags := TileGeometry.get_flags(
 			_terrains[terrain_index].mode,
 			advanced_shape,
 			advanced_axis,
 			get_advanced_orientation(tile)
 	)
-	assert(flag in allowed, "Unsupported autotile flag for this tile")
+	assert(flag in expected_flags, "Unsupported autotile flag for this tile")
 	var mask := get_advanced_mask(tile)
 	mask[flag] = flag_value
+	for expected_flag in expected_flags:
+		if ! mask.has(expected_flag):
+			mask[expected_flag] = TileGeometry.FLAG_EMPTY
 	_set_advanced_tile_data(tile, "mask", mask)
 	_need_recalc = true
 
@@ -327,7 +331,13 @@ func clear_advanced_mask(tile: TileKey) -> void:
 
 ## Get the autotile mask of a tile
 func get_advanced_mask(tile: TileKey) -> Dictionary:
-	return _get_advanced_tile_data(tile, "mask", {})
+	var terrain_index: int = get_advanced_terrain(tile)
+	var orientation: TileGeometry.Orientation = get_advanced_orientation(tile)
+	return _get_advanced_tile_data(
+			tile,
+			"mask",
+			_get_terrain_empty_mask(terrain_index, orientation)
+	)
 
 
 ## Returns an array of tile keys in all the atlas sources of this tile set.
@@ -410,6 +420,12 @@ func get_advanced_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation
 		return TileGeometry.Orientation.UP
 
 
+func get_tile_match_priority_bonus() -> int:
+	if _need_recalc:
+		_recalc()
+	return _tile_match_priority_bonus
+
+
 func _recalc() -> void:
 	_advanced_terrain_update_auto_bindings()
 	_advanced_terrain_update_priorities()
@@ -470,6 +486,7 @@ func _advanced_terrain_update_priorities() -> void:
 			_empty_flag_priority = i + 1
 		else:
 			_terrains[graph.t_sort[i]].priority = i + 1
+	_tile_match_priority_bonus = (graph.t_sort.size() + 1) * 16
 
 
 # Set any per-tile data used by the AdvancedTileSet plugin
@@ -528,6 +545,24 @@ func _apply_base_overrides() -> void:
 	)
 
 
+func _get_terrain_empty_mask(
+		terrain_index: int,
+		orientation: TileGeometry.Orientation
+) -> Dictionary:
+	if terrain_index == TileGeometry.FLAG_EMPTY:
+		return {}
+	var flags: PackedInt32Array = TileGeometry.get_flags(
+			_terrains[terrain_index].mode,
+			advanced_shape,
+			advanced_axis,
+			orientation
+	)
+	var mask := {}
+	for flag in flags:
+		mask[flag] = TileGeometry.FLAG_EMPTY
+	return mask
+
+
 #region Functions for manipulating terrain binding bitmask
 static func _binding_set_terrain_index(
 		binding: int, terrain_index: int, value: bool
@@ -561,6 +596,7 @@ static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
 		i += 1
 	return terrains
 #endregion
+
 
 ## Class TileKey contains all fields needed to identify a Tile in a TileSet
 class TileKey:

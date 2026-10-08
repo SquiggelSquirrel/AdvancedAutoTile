@@ -61,92 +61,103 @@ func advanced_autotile_choose_tile(
 		deprioritize_flags: PackedInt32Array = [],
 		preserve_flags: PackedInt32Array = []
 ) -> AdvancedTileSet.TileKey:
-	print("Choosing tile for cell ", cell)
-	print("Preserving ", preserve_flags)
-	print("Deprioritizing ", deprioritize_flags)
 	var terrain := advanced_get_final_cell_terrain(cell)
 	if terrain == -1:
 		return AdvancedTileSet.TileKey.EMPTY
 	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
 	var existing_mask := advanced_get_existing_cell_mask(cell)
-	var max_priority := 0
-	var matches_found := false
+	var max_priority := -1 * advanced_tile_set.get_tile_match_priority_bonus()
 	var candidates: Array[AdvancedTileSet.TileKey] = []
-	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(
-			cell
-	)
+	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
 	for tile in advanced_tile_set.get_advanced_tiles():
 		if advanced_tile_set.get_advanced_terrain(tile) != terrain:
 			continue
-		if (
-				advanced_tile_set.get_advanced_orientation(tile)
-				!= cell_orientation
-		):
+		var tile_orientation := advanced_tile_set.get_advanced_orientation(tile)
+		if tile_orientation != cell_orientation:
 			continue
-		var is_match := true
-		var tile_priority := 0
-		var mask: Dictionary = advanced_tile_set.get_advanced_mask(tile)
-		for flag in mask.keys():
-			var flag_priority := (
-					advanced_tile_set.get_advanced_terrain_priority(mask[flag])
-			)
-			if (
-					flag in preserve_flags
-					and mask[flag] == existing_mask.get(flag, -1)
-			):
-				tile_priority += flag_priority
-				continue
-			for neighbor in advanced_get_neighbor_cells_for_flag(
-					cell, flag, mode
-			):
-				var neighbor_terrain := advanced_get_final_cell_terrain(
-						neighbor
-				)
-				if ! advanced_tile_set.get_advanced_terrain_binds_to(
-						mask[flag], neighbor_terrain
-				):
-					is_match = false
-					tile_priority -= flag_priority
-					continue
-				if flag in deprioritize_flags:
-					tile_priority -= flag_priority
-				else:
-					tile_priority += flag_priority
-		if is_match:
-			if tile_priority > max_priority or ! matches_found:
-				matches_found = true
-				max_priority = tile_priority
-				candidates = [tile]
-			elif tile_priority == max_priority:
-				candidates.append(tile)
-		elif ! matches_found:
-			if tile_priority > max_priority or candidates.is_empty():
-				max_priority = tile_priority
-				candidates = [tile]
-			elif tile_priority == max_priority:
-				candidates.append(tile)
+		var tile_priority := _tile_match_priority(
+				cell,
+				tile,
+				mode,
+				existing_mask,
+				deprioritize_flags,
+				preserve_flags
+		)
+		if tile_priority > max_priority:
+			max_priority = tile_priority
+			candidates = [tile]
+		elif tile_priority == max_priority:
+			candidates.append(tile)
 	
+	# Should only be empty if no tiles exist for the given terrain
+	# (with the correct orientation)
+	# - not sure what the best behaviour is, in this situation.
 	if candidates.is_empty():
-		# Should only happen if no tiles exist for the given terrain
 		return AdvancedTileSet.TileKey.EMPTY
-	
+	return _tile_select_random(candidates)
+
+
+func _tile_match_priority(
+		cell: Vector2i,
+		tile: AdvancedTileSet.TileKey,
+		mode: TileGeometry.ConnectionMode,
+		existing_mask: Dictionary,
+		deprioritize_flags: PackedInt32Array,
+		preserve_flags: PackedInt32Array
+) -> int:
+	var tile_is_match := true
+	var tile_priority := 0
+	var mask: Dictionary = advanced_tile_set.get_advanced_mask(tile)
+	for flag in mask.keys():
+		var flag_priority := advanced_tile_set.get_advanced_terrain_priority(mask[flag])
+		if flag in preserve_flags and mask[flag] == existing_mask.get(flag, -1):
+			tile_priority += flag_priority
+			continue
+		if ! _flag_matches_neighbors(cell, mask, flag, mode):
+			tile_is_match = false
+			tile_priority -= flag_priority
+		elif flag in deprioritize_flags:
+			tile_priority -= flag_priority
+		else:
+			tile_priority += flag_priority
+	if tile_is_match:
+		tile_priority += advanced_tile_set.get_tile_match_priority_bonus()
+	return tile_priority
+
+
+func _flag_matches_neighbors(
+		cell: Vector2i,
+		mask: Dictionary,
+		flag: int,
+		mode: TileGeometry.ConnectionMode
+) -> bool:
+	for neighbor in advanced_get_neighbor_cells_for_flag(
+			cell, flag, mode
+	):
+		var neighbor_terrain := advanced_get_final_cell_terrain(neighbor)
+		if ! advanced_tile_set.get_advanced_terrain_binds_to(
+				mask[flag], neighbor_terrain
+		):
+			return false
+	return true
+
+
+func _tile_select_random(
+		tiles: Array[AdvancedTileSet.TileKey]
+) -> AdvancedTileSet.TileKey:
 	var sum_probability := 0.0
-	for tile in candidates:
+	for tile in tiles:
 		sum_probability += advanced_tile_set.get_tile_data(tile).probability
 	var r := randf()
-	for tile in candidates:
+	for tile in tiles:
 		r -= (
 				advanced_tile_set.get_tile_data(tile).probability
 				/ sum_probability
 		)
 		if r < 0.0 or is_zero_approx(r):
 			return tile
-	
-	assert(
-			false,
-			"Math failure when randomising tiles, possibly due to floats?"
-	)
-	return AdvancedTileSet.TileKey.EMPTY
+	# Should not be reachable, float rounding error?
+	return tiles[0]
 
 
 func advanced_get_final_cell_terrain(cell: Vector2i) -> int:
