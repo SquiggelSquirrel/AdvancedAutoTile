@@ -1,0 +1,388 @@
+[gd_scene format=4 uid="uid://70kjcyq5qaxj"]
+
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_wwmrf"]
+[ext_resource type="Texture2D" uid="uid://2kyplgnwqc85" path="res://examples/03 - Single Terrain Hexagon and Triangle Grids/02 - Hexagon Match Corners/tileset.png" id="2_nrvct"]
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="3_tf3bm"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_m052n"]
+texture = ExtResource("2_nrvct")
+texture_region_size = Vector2i(32, 16)
+0:0/0 = 0
+0:0/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:0/0 = 0
+1:0/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+2:0/0 = 0
+2:0/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: 0,
+26: -1,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:0/0 = 0
+3:0/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+4:0/0 = 0
+4:0/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: 0,
+26: -1,
+34: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+5:0/0 = 0
+5:0/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: -1,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+0:1/0 = 0
+0:1/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: 0,
+34: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+1:1/0 = 0
+1:1/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+2:1/0 = 0
+2:1/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: -1,
+26: -1,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:1/0 = 0
+3:1/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+4:1/0 = 0
+4:1/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: 0,
+34: -1,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+5:1/0 = 0
+5:1/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: -1,
+26: 0,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+0:2/0 = 0
+0:2/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: -1,
+26: -1,
+34: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:2/0 = 0
+1:2/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: -1,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+2:2/0 = 0
+2:2/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: 0,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:2/0 = 0
+3:2/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: 0,
+34: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+4:2/0 = 0
+4:2/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: 0,
+26: -1,
+34: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+5:2/0 = 0
+5:2/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: -1,
+34: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+0:3/0 = 0
+0:3/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: 0,
+26: -1,
+34: -1,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+1:3/0 = 0
+1:3/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: 0,
+34: -1,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+2:3/0 = 0
+2:3/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: -1,
+26: 0,
+34: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+3:3/0 = 0
+3:3/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: 0,
+34: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+4:3/0 = 0
+4:3/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: -1,
+34: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+5:3/0 = 0
+5:3/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: 0,
+34: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:4/0 = 0
+1:4/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: 0,
+34: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+2:4/0 = 0
+2:4/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: 0,
+26: -1,
+34: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+3:4/0 = 0
+3:4/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: 0,
+26: -1,
+34: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+4:4/0 = 0
+4:4/0/custom_data_0 = {
+"mask": {
+10: -1,
+14: -1,
+26: 0,
+34: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+5:4/0 = 0
+5:4/0/custom_data_0 = {
+"mask": {
+10: 0,
+14: -1,
+26: 0,
+34: -1,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+
+[sub_resource type="TileSet" id="TileSet_i2ep1"]
+tile_shape = 3
+tile_offset_axis = 1
+tile_size = Vector2i(32, 16)
+custom_data_layer_0/name = "_advanced_autotiles"
+custom_data_layer_0/type = 27
+sources/0 = SubResource("TileSetAtlasSource_m052n")
+script = ExtResource("1_wwmrf")
+advanced_shape = 3
+advanced_axis = 1
+advanced_tile_size = Vector2i(32, 16)
+advanced_empty_flag_bindings = 2
+_empty_flag_priority = 1
+_tile_match_priority_bonus = 48
+_need_recalc = false
+advanced_terrain_count = 1
+advanced_terrain_0/name = "Grass"
+advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
+advanced_terrain_0/mode = 1
+advanced_terrain_0/priority = 2
+advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 2
+metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
+
+[node name="Tilemap" type="TileMapLayer" unique_id=606480090]
+tile_map_data = PackedByteArray("AAAAAAAAAAACAAIAAAAAAAEAAAACAAAAAAABAAAAAAAAAAIAAAACAAAAAAABAAIAAAACAAEAAAABAAAAAAAAAAMAAAACAAEAAAABAAIAAAABAAIAAAABAAMAAAAAAAEAAAACAAQAAAABAAEAAAABAAQAAAACAAAAAAABAAYAAAACAAIAAAACAAcAAAABAAEAAAABAAcAAAAAAAMAAAAAAAgAAAACAAEAAAABAAgAAAABAAAAAAAEAAEAAAACAAEAAAAFAAAAAAAEAAEAAAAGAAEAAAABAAEAAAAFAAEAAAAEAAAAAAAEAAMAAAACAAIAAAAEAAQAAAAFAAMAAAAEAAUAAAACAAAAAAAFAAQAAAADAAAAAAAFAAMAAAADAAEAAAAEAAcAAAACAAIAAAAFAAcAAAADAAEAAAAEAAgAAAAFAAMAAAAEAAkAAAACAAAAAAAFAAgAAAADAAAAAAAIAAEAAAAFAAEAAAAJAAAAAAABAAIAAAAJAAEAAAADAAAAAAAIAAIAAAACAAAAAAAIAAQAAAACAAIAAAAJAAQAAAADAAEAAAAIAAUAAAAFAAAAAAAJAAUAAAABAAAAAAAIAAcAAAAEAAEAAAAHAAcAAAAFAAEAAAAIAAgAAAADAAIAAAAHAAgAAAAFAAAAAAAIAAkAAAAEAAAAAAAJAAgAAAADAAAAAAAJAAcAAAADAAEAAAALAAIAAAACAAIAAAALAAMAAAACAAAAAAAMAAMAAAABAAEAAAAMAAUAAAABAAIAAAALAAUAAAACAAEAAAAMAAYAAAABAAAAAAALAAkAAAAFAAEAAAALAAoAAAAFAAMAAAANAAgAAAAEAAEAAAAMAAkAAAAFAAQAAAAMAAoAAAADAAIAAAANAAkAAAADAAIAAAAMAAsAAAADAAIAAAANAAoAAAADAAIAAAAOAAkAAAAEAAQAAAAOAAoAAAADAAIAAAAOAAsAAAADAAIAAAANAAsAAAADAAIAAAAPAAkAAAADAAEAAAAPAAoAAAAEAAMAAAAPAAsAAAADAAAAAAAOAAwAAAAEAAIAAAAMAAwAAAAFAAIAAAALAAsAAAAFAAAAAAANAAwAAAAEAAAAAAAAAAwAAAACAAAAAAAAAAsAAAAFAAEAAAABAAsAAAACAAQAAAABAAoAAAAEAAEAAAACAAsAAAADAAEAAAACAAwAAAABAAAAAAAAAA4AAAACAAIAAAAAAA8AAAAFAAAAAAABAA4AAAACAAMAAAABAA8AAAAEAAAAAAACAA4AAAABAAIAAAACAA8AAAADAAAAAAAFAAoAAAAEAAEAAAAGAAsAAAABAAEAAAAEAAsAAAAFAAEAAAAFAAsAAAADAAQAAAAEAAwAAAAFAAAAAAAFAAwAAAABAAAAAAAFAA4AAAABAAIAAAAFAA8AAAADAAMAAAAEABAAAAAFAAAAAAAFABAAAAAEAAAAAAAGABAAAAABAAEAAAAEAA8AAAAFAAEAAAAIAAwAAAACAAIAAAAHAA0AAAACAAEAAAAIAA4AAAAEAAAAAAAIAA0AAAABAAMAAAAJAA0AAAADAAAAAAAJAAwAAAADAAEAAAAJAA8AAAAEAAEAAAAIABAAAAACAAEAAAAJABEAAAACAAAAAAAJABAAAAABAAQAAAAKABAAAAADAAEAAAAKABEAAAADAAAAAAALAA0AAAAAAAAAAAA=")
+tile_set = SubResource("TileSet_i2ep1")
+script = ExtResource("3_tf3bm")
+
+[node name="Node2D" type="Node2D" parent="." unique_id=1679902577]

@@ -15,7 +15,7 @@ func advanced_autotile_paint_cells(
 		terrain_id: int,
 		cells: Array[Vector2i],
 		preserve_surrounding_connections := true
-) -> void:
+) -> void:	
 	assert(tile_set is AdvancedTileSet)
 	if ! tile_set is AdvancedTileSet:
 		return
@@ -226,10 +226,8 @@ func advanced_get_neighbor_cell(
 	var CN := TileGeometry.CellNeighbor
 	var OR := TileGeometry.Orientation
 	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
-		return get_neighbor_cell(
-				coords,
-				TileGeometry.advanced_neighbor_to_base_neighbor(neighbor)
-		)
+		var base_neighbor := TileGeometry.advanced_neighbor_to_base_neighbor(neighbor)
+		return get_neighbor_cell(coords, base_neighbor)
 	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
 	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
 
@@ -239,12 +237,29 @@ func advanced_get_neighbor_cells_for_flag(
 		flag: TileGeometry.CellNeighbor,
 		mode: TileGeometry.ConnectionMode
 ) -> Array[Vector2i]:
+	var result_cells: Array[Vector2i] = []
+	for neighbor_flag in advanced_get_neighbor_flags_for_flag(cell, flag, mode):
+		result_cells.append(advanced_get_neighbor_cell(cell, neighbor_flag))
+	return result_cells
+
+
+func advanced_get_neighbor_flags_for_flag(
+		cell: Vector2i,
+		flag: TileGeometry.CellNeighbor,
+		mode: TileGeometry.ConnectionMode
+) -> Array[TileGeometry.CellNeighbor]:
 	var CN := TileGeometry.CellNeighbor
 	var CM := TileGeometry.ConnectionMode
 	
+	# For every mode excpe match-corners, and every flag that isn't a corner
+	# flag, the neighbor flag is just the same as the mask flag.
 	if not (flag & CN.CORNER and mode & CM.CORNERS):
-		return [advanced_get_neighbor_cell(cell, flag)]
+		return [flag]
 	
+	# ====
+	# NB. from here it must be a corner flag in corner connections mode
+	
+	# The same flag but as a side instead of a corner
 	var side_flag := (flag | CN.SIDE) & ~ CN.CORNER
 	
 	match advanced_tile_set.advanced_shape:
@@ -252,78 +267,73 @@ func advanced_get_neighbor_cells_for_flag(
 			# One side can be found by stripping horizontal component,
 			# the other by stripping vertical
 			return [
-				advanced_get_neighbor_cell(
-						cell, side_flag & ~ (CN.LEFT | CN.RIGHT)
-				),
-				advanced_get_neighbor_cell(cell, flag),
-				advanced_get_neighbor_cell(
-						cell, side_flag & ~ (CN.TOP | CN.BOTTOM)
-				),
+				side_flag & ~ (CN.LEFT | CN.RIGHT),
+				flag,
+				side_flag & ~ (CN.TOP | CN.BOTTOM),
 			]
 		TileGeometry.Shape.ISOMETRIC:
 			if flag & (CN.TOP | CN.BOTTOM):
 				# TOP or BOTTOM corner flag, sides are TL/TR or BL/BR
 				return [
-					advanced_get_neighbor_cell(cell, side_flag | CN.LEFT),
-					advanced_get_neighbor_cell(cell, flag),
-					advanced_get_neighbor_cell(cell, side_flag | CN.RIGHT),
+					side_flag | CN.LEFT,
+					flag,
+					side_flag | CN.RIGHT,
 				]
 			return [
-				advanced_get_neighbor_cell(cell, side_flag | CN.TOP),
-				advanced_get_neighbor_cell(cell, flag),
-				advanced_get_neighbor_cell(cell, side_flag | CN.BOTTOM),
+				side_flag | CN.TOP,
+				flag,
+				side_flag | CN.BOTTOM,
 			]
 		TileGeometry.Shape.TRIANGLE:
 			if not (flag & (CN.TOP | CN.BOTTOM)):
 				# Flag does not have a vertical component
 				# (e.g. LEFT -> TL, LCC, L, LC, BL)
 				return [
-					advanced_get_neighbor_cell(cell, CN.TOP_SIDE),
-					advanced_get_neighbor_cell(cell, flag | CN.COUNTERCLOCKWISE),
-					advanced_get_neighbor_cell(cell, flag),
-					advanced_get_neighbor_cell(cell, flag | CN.CLOCKWISE),
-					advanced_get_neighbor_cell(cell, CN.BOTTOM_SIDE),
+					CN.TOP_SIDE,
+					flag | CN.COUNTERCLOCKWISE,
+					flag,
+					flag | CN.CLOCKWISE,
+					CN.BOTTOM_SIDE,
 				]
 			if not (flag & (CN.LEFT | CN.RIGHT)):
 				# Flag does not have a horizontal component
 				return [
-					advanced_get_neighbor_cell(cell, CN.LEFT_SIDE),
-					advanced_get_neighbor_cell(cell, flag | CN.COUNTERCLOCKWISE),
-					advanced_get_neighbor_cell(cell, flag),
-					advanced_get_neighbor_cell(cell, flag | CN.CLOCKWISE),
-					advanced_get_neighbor_cell(cell, CN.RIGHT_SIDE),
+					CN.LEFT_SIDE,
+					flag | CN.COUNTERCLOCKWISE,
+					flag,
+					flag | CN.CLOCKWISE,
+					CN.RIGHT_SIDE,
 				]
 			return [
-				advanced_get_neighbor_cell(cell, side_flag & ~ (CN.LEFT | CN.RIGHT)),
-				advanced_get_neighbor_cell(cell, flag | CN.COUNTERCLOCKWISE),
-				advanced_get_neighbor_cell(cell, flag),
-				advanced_get_neighbor_cell(cell, flag | CN.CLOCKWISE),
-				advanced_get_neighbor_cell(cell, side_flag & ~ (CN.TOP | CN.BOTTOM)),
+				side_flag & ~ (CN.LEFT | CN.RIGHT),
+				flag | CN.COUNTERCLOCKWISE,
+				flag,
+				flag | CN.CLOCKWISE,
+				side_flag & ~ (CN.TOP | CN.BOTTOM),
 			]
-	assert(advanced_tile_set.advanced_shape in [
-			TileGeometry.Shape.HALF_OFFSET_SQUARE,
-			TileGeometry.Shape.HEXAGON
-	])
-	if not (flag & (CN.TOP | CN.BOTTOM)):
-		return [
-			advanced_get_neighbor_cell(cell, side_flag | CN.TOP),
-			advanced_get_neighbor_cell(cell, flag),
-			advanced_get_neighbor_cell(cell, side_flag | CN.BOTTOM),
-		]
-	if not (flag & (CN.LEFT | CN.RIGHT)):
-		return [
-			advanced_get_neighbor_cell(cell, side_flag | CN.LEFT),
-			advanced_get_neighbor_cell(cell, flag),
-			advanced_get_neighbor_cell(cell, side_flag | CN.RIGHT),
-		]
-	if advanced_tile_set.advanced_axis == TileGeometry.Axis.HORIZONTAL:
-		return [
-			advanced_get_neighbor_cell(cell, side_flag),
-			advanced_get_neighbor_cell(cell, flag),
-			advanced_get_neighbor_cell(cell, flag & ~ (CN.TOP | CN.BOTTON)),
-		]
-	return [
-		advanced_get_neighbor_cell(cell, side_flag),
-		advanced_get_neighbor_cell(cell, flag),
-		advanced_get_neighbor_cell(cell, flag & ~ (CN.LEFT | CN.RIGHT)),
-	]
+		_:
+			assert(advanced_tile_set.advanced_shape in [
+					TileGeometry.Shape.HALF_OFFSET_SQUARE,
+					TileGeometry.Shape.HEXAGON
+			])
+			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+				if not (flag & (CN.TOP | CN.BOTTOM)):
+					return [
+						side_flag | CN.TOP,
+						side_flag | CN.BOTTOM,
+					]
+				return [
+					side_flag,
+					side_flag & ~ (CN.LEFT | CN.RIGHT),
+				]
+			else:
+				assert(advanced_tile_set.advanced_axis == TileGeometry.Axis.HORIZONTAL)
+				if not (flag & (CN.LEFT | CN.RIGHT)):
+					return [
+						side_flag | CN.LEFT,
+						side_flag | CN.RIGHT,
+					]
+				return [
+					side_flag,
+					side_flag & ~ (CN.TOP | CN.BOTTOM),
+				]

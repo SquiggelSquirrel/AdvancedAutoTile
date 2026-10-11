@@ -8,7 +8,7 @@ enum PaintShape {POINT, LINE, RECTANGLE, FILL}
 enum ActionState {NONE, LMB, RMB}
 var dock: EditorDock
 var dock_scene :AdvancedAutotilesDockPanel
-var active_tilemap_layer: TileMapLayer
+var active_tilemap_layer: AdvancedTileMapLayer
 var active_tileset: AdvancedTileSet
 var cell_selection: Dictionary[Vector2i, bool] = {}
 var _current_action := ActionState.NONE
@@ -41,7 +41,7 @@ func _exit_tree() -> void:
 func _handles(object: Object) -> bool:
 	if object is AdvancedTileSet:
 		return true
-	if object is TileMapLayer and object.tile_set is AdvancedTileSet:
+	if object is AdvancedTileMapLayer and object.tile_set is AdvancedTileSet:
 		return true
 	return false
 
@@ -51,7 +51,7 @@ func _edit(object: Object) -> void:
 		active_tileset = object
 		dock.open()
 		dock_scene.tile_set = active_tileset
-	elif object is TileMapLayer and object.tile_set is AdvancedTileSet:
+	elif object is AdvancedTileMapLayer and object.tile_set is AdvancedTileSet:
 		active_tilemap_layer = object
 		active_tileset = object.tile_set
 		dock.open()
@@ -70,7 +70,7 @@ func _clear() -> void:
 
 func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
 	if not (
-			active_tilemap_layer is TileMapLayer
+			active_tilemap_layer is AdvancedTileMapLayer
 			and active_tileset is AdvancedTileSet
 	):
 		return
