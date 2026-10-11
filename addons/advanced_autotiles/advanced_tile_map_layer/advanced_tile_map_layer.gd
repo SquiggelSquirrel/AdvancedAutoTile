@@ -140,6 +140,8 @@ func _flag_matches_neighbors(
 		flag: int,
 		mode: TileGeometry.ConnectionMode
 ) -> bool:
+	if mask[flag] == TileGeometry.FLAG_IGNORE:
+		return true
 	for neighbor in advanced_get_neighbor_cells_for_flag(
 			cell, flag, mode
 	):

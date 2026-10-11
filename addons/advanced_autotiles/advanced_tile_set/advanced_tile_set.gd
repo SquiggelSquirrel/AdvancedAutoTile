@@ -75,6 +75,8 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		notify_property_list_changed()
 @export var advanced_empty_flag_auto_bindings := true:
 	set(value):
+		if value and not advanced_empty_flag_auto_bindings:
+			_need_recalc = true
 		advanced_empty_flag_auto_bindings = value
 		notify_property_list_changed()
 @export var advanced_empty_flag_bindings: int = 0
@@ -152,7 +154,7 @@ func _validate_property(property: Dictionary) -> void:
 				property.usage = PROPERTY_USAGE_STORAGE
 			else:
 				property.hint = PROPERTY_HINT_FLAGS
-				property.hint_string = _get_bindings_hint_string(false)
+				property.hint_string = _get_bindings_hint_string()
 		"tile_shape", "tile_layout", "tile_offset_axis", "tile_size", "terrain_sets":
 			if hide_base_class_features:
 				property.usage &= ~ PROPERTY_USAGE_EDITOR
@@ -206,6 +208,8 @@ func _set(property: StringName, value: Variant) -> bool:
 					# Apply automatic bindings before switching
 					if _need_recalc and ! value:
 						_recalc()
+					elif value:
+						_need_recalc = true
 					notify_property_list_changed()
 				"bindings":
 					# (Only priorities really need recalc, should cache be
@@ -336,11 +340,14 @@ func clear_advanced_mask(tile: TileKey) -> void:
 func get_advanced_mask(tile: TileKey) -> Dictionary:
 	var terrain_index: int = get_advanced_terrain(tile)
 	var orientation: TileGeometry.Orientation = get_advanced_orientation(tile)
-	return _get_advanced_tile_data(
+	var mask := _get_advanced_tile_data(
 			tile,
 			"mask",
-			_get_terrain_empty_mask(terrain_index, orientation)
+			{}
 	)
+	if mask.is_empty():
+		return _get_terrain_empty_mask(terrain_index, orientation)
+	return mask
 
 
 ## Returns an array of tile keys in all the atlas sources of this tile set.
@@ -391,10 +398,17 @@ func get_advanced_terrain_auto_binding(terrain_index: int) -> bool:
 
 func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool:
 	if _need_recalc:
-		_advanced_terrain_update_auto_bindings()
-	return _binding_matches_terrain_index(
-			_terrains[terrain_index].bindings, other_index
-	)
+		_recalc()
+	if terrain_index == TileGeometry.FLAG_IGNORE:
+		return true
+	elif terrain_index == TileGeometry.FLAG_EMPTY:
+		return _binding_matches_terrain_index(
+				advanced_empty_flag_bindings, other_index
+		)
+	else:
+		return _binding_matches_terrain_index(
+				_terrains[terrain_index].bindings, other_index
+		)
 
 
 func get_advanced_terrain_priority(terrain_index: int) -> int:
@@ -438,7 +452,7 @@ func _recalc() -> void:
 func _advanced_terrain_update_auto_bindings() -> void:
 	# Re-calculate terrain auto bindings
 	if advanced_empty_flag_auto_bindings:
-		advanced_empty_flag_bindings = 0
+		advanced_empty_flag_bindings = _binding_set_terrain_index(0, -1, true)
 	for index in _terrains.size():
 		if _terrains[index].auto_binding:
 			_terrains[index].bindings = 0
@@ -476,10 +490,13 @@ func _advanced_terrain_update_priorities() -> void:
 		graph.add_node()
 	var empty_node_index := graph.add_node()
 	for i in _binding_get_matched_terrains(advanced_empty_flag_bindings):
-		graph.add_edge(empty_node_index, i)
+		if i != TileGeometry.FLAG_EMPTY:
+			graph.add_edge(empty_node_index, i)
 	for i in _terrains.size():
 		for j in _binding_get_matched_terrains(_terrains[i].bindings):
-			if j == -1:
+			if i == j:
+				continue
+			elif j == TileGeometry.FLAG_EMPTY:
 				graph.add_edge(i, empty_node_index)
 			else:
 				graph.add_edge(i, j)

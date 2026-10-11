@@ -66,6 +66,7 @@ func _edit(object: Object) -> void:
 func _clear() -> void:
 	active_tilemap_layer = null
 	active_tileset = null
+	dock.close()
 
 
 func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
@@ -116,6 +117,8 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 	if ! dock_scene.is_visible_in_tree():
 		return false
 	if ! event is InputEventMouse:
+		return false
+	if active_tilemap_layer == null or active_tileset == null:
 		return false
 	if dock_scene.get_mode() != DockMode.PAINTING:
 		return false
