@@ -128,6 +128,31 @@ enum CellNeighbor {
 #region static methods defining tile/grid settings which depend on each other
 # (e.g. terrain modes avaliable for a given shape)
 
+
+static func advanced_neighbor_to_base_neighbor(
+	advanced_neighbor: CellNeighbor
+) -> TileSet.CellNeighbor:
+	var advanced_key: String = CellNeighbor.find_key(advanced_neighbor)
+	var target_key: String = "CELL_NEIGHBOR_" + advanced_key
+	var keys := ClassDB.class_get_enum_constants("TileSet", "CellNeighbor")
+	# (This approach depends on base class cell neighbors having
+	# consecutive values, starting from 0)
+	for i in keys.size():
+		if keys[i] == target_key:
+			return i
+	assert(false, "Could not find match for " + target_key)
+	return -1
+
+
+static func shape_has_diagonals(shape: Shape) -> bool:
+	match shape:
+		Shape.SQUARE, Shape.ISOMETRIC, Shape.TRIANGLE:
+			return true
+		_:
+			assert(shape in [Shape.HEXAGON, Shape.HALF_OFFSET_SQUARE])
+			return false
+
+
 ## Returns an array of connection modes supported for the given shape
 static func get_connection_modes(shape: Shape) -> Array[ConnectionMode]:
 	if shape in [Shape.SQUARE, Shape.ISOMETRIC]:

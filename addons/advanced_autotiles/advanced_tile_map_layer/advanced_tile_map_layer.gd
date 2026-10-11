@@ -190,7 +190,7 @@ func advanced_get_surrounding_cells(
 ) -> Array[Vector2i]:
 	var mode := (
 			TileGeometry.ConnectionMode.CORNERS_AND_EDGES
-			if include_diagonals
+			if include_diagonals and TileGeometry.shape_has_diagonals(advanced_tile_set.advanced_shape)
 			else TileGeometry.ConnectionMode.EDGES
 	)
 	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
@@ -226,13 +226,10 @@ func advanced_get_neighbor_cell(
 	var CN := TileGeometry.CellNeighbor
 	var OR := TileGeometry.Orientation
 	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
-		var target_key: String = "CELL_NEIGHBOR_" + CN.find_key(neighbor)
-		var keys := ClassDB.class_get_enum_constants("TileSet", "CellNeighbor")
-		for i in keys.size():
-			if keys[i] == target_key:
-				return get_neighbor_cell(coords, i)
-		assert(false, "Could not find key in base class")
-		return coords
+		return get_neighbor_cell(
+				coords,
+				TileGeometry.advanced_neighbor_to_base_neighbor(neighbor)
+		)
 	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
 	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
 
