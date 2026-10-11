@@ -3,12 +3,21 @@ class_name AdvancedTileMapLayer
 extends TileMapLayer
 
 
-var advanced_tile_set: AdvancedTileSet:
+@export var advanced_tile_set: AdvancedTileSet:
 	set(value):
 		tile_set = value as AdvancedTileSet
 	get:
 		return tile_set as AdvancedTileSet
+@export var hide_base_class_features := true:
+	set(value):
+		hide_base_class_features = value
+		notify_property_list_changed()
 var _incoming_terrains: Dictionary[Vector2i, int] = {}
+
+
+func _validate_property(property: Dictionary) -> void:
+	if property.name == "tile_set" and hide_base_class_features:
+		property.usage &= ~ PROPERTY_USAGE_EDITOR
 
 
 func advanced_autotile_paint_cells(

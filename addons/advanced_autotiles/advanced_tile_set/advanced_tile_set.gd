@@ -5,7 +5,6 @@ extends TileSet
 ## Key used for storing per-tile plugin data on TileSet custom data layer
 const DATA_LAYER_NAME := "_advanced_autotiles"
 
-@export_group("Advanced Autotiles", "advanced_")
 ## The tile shape used by the Advanced Autotiles plugin.
 ## In most cases, this is the same as the base [member tile_shape],
 ## but triangles are supported (and will use square shape on the base class)
@@ -74,7 +73,6 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 	set(value):
 		hide_base_class_features = value
 		notify_property_list_changed()
-@export_subgroup("Empty Flag Bindings", "advanced_empty_flag")
 @export var advanced_empty_flag_auto_bindings := true:
 	set(value):
 		advanced_empty_flag_auto_bindings = value
@@ -146,6 +144,9 @@ func _validate_property(property: Dictionary) -> void:
 		"advanced_layout", "advanced_axis":
 			if advanced_shape == TileGeometry.Shape.SQUARE:
 				property.usage |= PROPERTY_USAGE_READ_ONLY
+		"advanced_empty_flag_auto_bindings":
+			if _terrains.size() == 0:
+				property.usage = PROPERTY_USAGE_STORAGE
 		"advanced_empty_flag_bindings":
 			if advanced_empty_flag_auto_bindings or _terrains.size() == 0:
 				property.usage = PROPERTY_USAGE_STORAGE
