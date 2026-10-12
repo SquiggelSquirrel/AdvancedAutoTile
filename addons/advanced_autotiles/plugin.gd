@@ -10,6 +10,7 @@ var dock: EditorDock
 var dock_scene :AdvancedAutotilesDockPanel
 var active_tilemap_layer: AdvancedTileMapLayer
 var active_tileset: AdvancedTileSet
+var cell_under_mouse: Vector2i
 var cell_selection: Dictionary[Vector2i, bool] = {}
 var _current_action := ActionState.NONE
 var _action_start_cell: Vector2i
@@ -77,11 +78,10 @@ func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
 		return
 	if ! dock_scene.get_editor_show_grid():
 		return
-	var area := active_tilemap_layer.get_used_rect()
+	var area := active_tilemap_layer.get_used_rect().grow(5)
 	var transform := active_tilemap_layer.get_viewport_transform()
 	var settings := EditorInterface.get_editor_settings()
 	var color: Color = settings["editors/tiles_editor/grid_color"]
-	area = area.grow(5)
 	
 	for xi in range(area.position.x, area.end.x):
 		for yi in range(area.position.y, area.end.y):
@@ -111,6 +111,28 @@ func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
 			viewport_control.draw_polyline(
 					transform * cell_transform * polyline, color
 			)
+	
+	var coord_text_position := Vector2(24, viewport_control.size.y - 24)
+	var coord_text := "(%s, %s)" % [cell_under_mouse.x, cell_under_mouse.y]
+	viewport_control.draw_string(
+			ThemeDB.fallback_font,
+			coord_text_position,# Vector2(0, viewport_control.size.y),
+			coord_text,
+			HORIZONTAL_ALIGNMENT_LEFT, 
+			-1,
+			ThemeDB.fallback_font_size,
+			Color.WHITE
+	)
+	viewport_control.draw_string_outline(
+			ThemeDB.fallback_font,
+			coord_text_position,
+			coord_text,
+			HORIZONTAL_ALIGNMENT_LEFT,
+			-1,
+			ThemeDB.fallback_font_size,
+			1,
+			Color.BLACK
+	)
 
 
 func _forward_canvas_gui_input(event: InputEvent) -> bool:
@@ -122,22 +144,22 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 		return false
 	if dock_scene.get_mode() != DockMode.PAINTING:
 		return false
-	var cell := _get_cell_under_mouse()
+	_update_cell_under_mouse()
 	if event is InputEventMouseButton:
 		if event.pressed:
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
-					_handle_lmb_press(cell)
+					_handle_lmb_press(cell_under_mouse)
 				MOUSE_BUTTON_RIGHT:
-					_handle_rmb_press(cell)
+					_handle_rmb_press(cell_under_mouse)
 		else:
 			match event.button_index:
 				MOUSE_BUTTON_LEFT:
-					_handle_lmb_release(cell)
+					_handle_lmb_release(cell_under_mouse)
 				MOUSE_BUTTON_RIGHT:
-					_handle_rmb_release(cell)
+					_handle_rmb_release(cell_under_mouse)
 	elif event is InputEventMouseMotion:
-		_handle_motion(cell)
+		_handle_motion(cell_under_mouse)
 	return true
 
 
@@ -219,10 +241,13 @@ func _perform_current_rmb_action(cells: Array[Vector2i]) -> void:
 				cell_selection.erase(cell)
 
 
-func _get_cell_under_mouse() -> Vector2i:
-	return active_tilemap_layer.local_to_map(
+func _update_cell_under_mouse() -> void:
+	var new := active_tilemap_layer.local_to_map(
 			active_tilemap_layer.get_local_mouse_position()
 	)
+	if new != cell_under_mouse:
+		cell_under_mouse = new
+		update_overlays()
 
 
 func _on_dock_scene_overlay_changed() -> void:
