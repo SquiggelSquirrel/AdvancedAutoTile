@@ -1,0 +1,296 @@
+[gd_scene format=4 uid="uid://bcg5wsjjxgaae"]
+
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_r78df"]
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_yjcyk"]
+[ext_resource type="Texture2D" uid="uid://c7lgyv6dv8c8y" path="res://examples/03 - Single Terrain Hexagon and Triangle Grids/06 - Hexagon to Triangle Subgrid/tileset.png" id="2_k1q65"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_f6kwb"]
+texture = ExtResource("2_k1q65")
+texture_region_size = Vector2i(16, 8)
+0:0/0 = 0
+0:0/0/custom_data_0 = {
+"mask": {
+6: -1,
+9: 0,
+17: 0,
+26: 0,
+33: -1,
+50: -1
+},
+"terrain_index": 0
+}
+0:1/0 = 0
+0:1/0/custom_data_0 = {
+"mask": {
+6: -1,
+9: 0,
+17: 0,
+26: 0,
+33: 0,
+50: -1
+},
+"terrain_index": 0
+}
+0:2/0 = 0
+0:2/0/custom_data_0 = {
+"mask": {
+6: 0,
+9: 0,
+17: 0,
+26: 0,
+33: 0,
+50: -1
+},
+"terrain_index": 0
+}
+0:3/0 = 0
+0:3/0/custom_data_0 = {
+"mask": {
+6: 0,
+9: 0,
+17: 0,
+26: 0,
+33: 0,
+50: 0
+},
+"terrain_index": 0
+}
+0:4/0 = 0
+0:4/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+18: 0,
+33: 0,
+38: -1
+},
+"orientation": 1,
+"terrain_index": 0
+}
+0:5/0 = 0
+0:5/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+18: 0,
+33: 0,
+38: -1
+},
+"orientation": 1,
+"terrain_index": 0
+}
+0:6/0 = 0
+0:6/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+18: 0,
+33: 0,
+38: -1
+},
+"orientation": 1,
+"terrain_index": 0
+}
+1:0/0 = 0
+1:0/0/custom_data_0 = {
+"mask": {
+6: -1,
+9: -1,
+17: 0,
+26: -1,
+33: 0,
+50: 0
+},
+"terrain_index": 0
+}
+1:1/0 = 0
+1:1/0/custom_data_0 = {
+"mask": {
+6: -1,
+9: 0,
+17: 0,
+26: -1,
+33: 0,
+50: 0
+},
+"terrain_index": 0
+}
+1:2/0 = 0
+1:2/0/custom_data_0 = {
+"mask": {
+6: -1,
+9: 0,
+17: 0,
+26: 0,
+33: 0,
+50: 0
+},
+"terrain_index": 0
+}
+1:4/0 = 0
+1:4/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+18: -1,
+33: 0,
+38: 0
+},
+"orientation": 1,
+"terrain_index": 0
+}
+1:5/0 = 0
+1:5/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+18: -1,
+33: 0,
+38: -1
+},
+"orientation": 1,
+"terrain_index": 0
+}
+1:6/0 = 0
+1:6/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+18: -1,
+33: -1,
+38: -1
+},
+"orientation": 1,
+"terrain_index": 0
+}
+2:0/0 = 0
+2:0/0/custom_data_0 = {
+"mask": {
+6: 0,
+9: 0,
+17: -1,
+26: -1,
+33: 0,
+50: -1
+},
+"terrain_index": 0
+}
+2:1/0 = 0
+2:1/0/custom_data_0 = {
+"mask": {
+6: 0,
+9: 0,
+17: 0,
+26: -1,
+33: 0,
+50: -1
+},
+"terrain_index": 0
+}
+2:2/0 = 0
+2:2/0/custom_data_0 = {
+"mask": {
+6: 0,
+9: 0,
+17: 0,
+26: -1,
+33: 0,
+50: 0
+},
+"terrain_index": 0
+}
+2:3/0 = 0
+2:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+18: 0,
+33: 0,
+38: 0
+},
+"orientation": 1,
+"terrain_index": 0
+}
+2:4/0 = 0
+2:4/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+18: 0,
+33: 0,
+38: 0
+},
+"orientation": 1,
+"terrain_index": 0
+}
+2:5/0 = 0
+2:5/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+18: -1,
+33: 0,
+38: 0
+},
+"orientation": 1,
+"terrain_index": 0
+}
+2:6/0 = 0
+2:6/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+18: -1,
+33: 0,
+38: 0
+},
+"orientation": 1,
+"terrain_index": 0
+}
+
+[sub_resource type="TileSet" id="TileSet_xkkia"]
+tile_size = Vector2i(8, 8)
+custom_data_layer_0/name = "_advanced_autotiles"
+custom_data_layer_0/type = 27
+sources/0 = SubResource("TileSetAtlasSource_f6kwb")
+script = ExtResource("1_yjcyk")
+advanced_shape = 4
+advanced_tile_size = Vector2i(16, 8)
+advanced_empty_flag_bindings = 3
+_empty_flag_priority = 1
+_tile_match_priority_bonus = 48
+_need_recalc = false
+advanced_terrain_count = 1
+advanced_terrain_0/name = "Grass"
+advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
+advanced_terrain_0/mode = 3
+advanced_terrain_0/priority = 2
+advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 2
+metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
+
+[sub_resource type="TileSet" id="TileSet_ynxr4"]
+tile_shape = 3
+tile_offset_axis = 1
+tile_size = Vector2i(32, 16)
+
+[node name="Tilemap" type="TileMapLayer" unique_id=2037059793]
+tile_map_data = PackedByteArray("AAAEAAEAAAABAAIAAAADAAIAAAAAAAMAAAAEAAIAAAACAAMAAAAAAAAAAAAAAAYAAAD//wAAAAAAAAAAAAD//wEAAAABAAYAAAABAAAAAAABAAAAAAACAAEAAAABAAIAAAAAAAIAAAAAAAQAAAABAAIAAAAAAAMAAAABAAEAAAACAAQAAAAAAAEAAAAAAAIAAAACAAIAAAACAAMAAAADAAEAAAAAAAYAAAABAAMAAAABAAQAAAAFAAMAAAACAAMAAAAFAAIAAAAAAAMAAAAGAAIAAAACAAQAAAAGAAEAAAACAAIAAAAFAAEAAAAAAAQAAAAFAAAAAAAAAAAAAAAAAAMAAAACAAAAAAD//wMAAAABAAYAAAD//wIAAAAAAAAAAAAGAAAAAAAAAAYAAAAHAAAAAAABAAAAAAAHAAEAAAACAAYAAAAHAAIAAAABAAAAAAAHAAMAAAACAAYAAAAGAAMAAAACAAIAAAAEAAMAAAAAAAMAAAADAAMAAAACAAMAAAACAAMAAAAAAAIAAAACAAQAAAABAAYAAAADAAQAAAACAAAAAAAEAAQAAAABAAQAAAAGAAQAAAACAAQAAAAFAAQAAAAAAAIAAAAGAAUAAAACAAAAAAAHAAUAAAACAAYAAAAHAAQAAAABAAAAAAAFAAUAAAABAAYAAAAAAAYAAAAAAAYAAAD//wYAAAAAAAAAAAD//wcAAAABAAYAAAAAAAcAAAACAAAAAAABAAcAAAACAAYAAAABAAYAAAABAAAAAAA=")
+tile_set = SubResource("TileSet_xkkia")
+script = ExtResource("1_r78df")
+advanced_tile_set = SubResource("TileSet_xkkia")
+metadata/_custom_type_script = "uid://ddwcn185b61k0"
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=895554491]
+position = Vector2(-11, 0)
+tile_set = SubResource("TileSet_ynxr4")

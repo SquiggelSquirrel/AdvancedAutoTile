@@ -73,6 +73,7 @@ func advanced_autotile_choose_tile(
 	var terrain := advanced_get_final_cell_terrain(cell)
 	if terrain == -1:
 		return AdvancedTileSet.TileKey.EMPTY
+	print("Choosing tile ", cell, " ", deprioritize_flags, " ", preserve_flags)
 	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
 	var existing_mask := advanced_get_existing_cell_mask(cell)
 	var max_priority := -1 * advanced_tile_set.get_tile_match_priority_bonus()
@@ -119,13 +120,16 @@ func _tile_match_priority(
 	var mask: Dictionary = advanced_tile_set.get_advanced_mask(tile)
 	for flag in mask.keys():
 		var flag_priority := advanced_tile_set.get_advanced_terrain_priority(mask[flag])
-		if flag in preserve_flags and mask[flag] == existing_mask.get(flag, -1):
-			tile_priority += flag_priority
-			continue
-		if ! _flag_matches_neighbors(cell, mask, flag, mode):
+		if not _flag_matches_neighbors(cell, mask, flag, mode):
 			tile_is_match = false
 			tile_priority -= flag_priority
-		elif flag in deprioritize_flags:
+		elif (
+				flag in deprioritize_flags
+				and not (
+					flag in preserve_flags
+					and mask[flag] == existing_mask.get(flag, -1)
+				)
+		):
 			tile_priority -= flag_priority
 		else:
 			tile_priority += flag_priority
