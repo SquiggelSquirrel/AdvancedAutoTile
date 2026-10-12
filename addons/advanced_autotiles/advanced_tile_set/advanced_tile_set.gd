@@ -274,8 +274,10 @@ func set_advanced_orientation(
 
 ## Get the orientation of a tile
 func get_advanced_orientation(tile: TileKey) -> TileGeometry.Orientation:
-	return _get_advanced_tile_data(
-			tile, "orientation", TileGeometry.Orientation.UP)
+	var orientation := _get_advanced_tile_data(tile, "orientation", -1)
+	if orientation == -1:
+		return TileGeometry.get_orientations(advanced_shape, advanced_axis)[0]
+	return orientation
 
 
 ## Set the terrain index of a tile
@@ -460,11 +462,11 @@ func _advanced_terrain_update_auto_bindings() -> void:
 		var center_terrain_index: int = get_advanced_terrain(tile)
 		if center_terrain_index < 0:
 			continue
-		if ! _terrains[center_terrain_index].auto_binding:
-			continue
 		var mask := get_advanced_mask(tile)
 		for flag in mask:
 			var flag_terrain_index: int = mask[flag]
+			if ! _terrains[flag_terrain_index].auto_binding:
+				continue
 			if flag_terrain_index == TileGeometry.FLAG_IGNORE:
 				continue
 			if flag_terrain_index == TileGeometry.FLAG_EMPTY:
