@@ -1,6 +1,7 @@
 class_name TileGeometry
 extends Object
 
+const CENTER_FLAG_SHRINK := 0.6
 ## Reserved terrain_index values with special meaning
 const FLAG_EMPTY := -1
 const FLAG_IGNORE := -2
@@ -303,6 +304,82 @@ static func get_flags(
 #endregion
 
 
+static func get_tile_outline_points(
+		shape: Shape,
+		axis: Axis,
+		orientation: TileGeometry.Orientation
+) -> Dictionary[CellNeighbor, Vector2]:
+	# Get polygon for HORIZONTAL first, then transpose if VERTICAL.
+	var points :Dictionary[CellNeighbor, Vector2] = {}
+	match shape:
+		Shape.HEXAGON:
+			points = {
+				CellNeighbor.TOP_CORNER: Vector2(0.5, 0.0),
+				CellNeighbor.TOP_RIGHT_CORNER: Vector2(1.0, 0.25),
+				CellNeighbor.BOTTOM_RIGHT_CORNER: Vector2(1.0, 0.75),
+				CellNeighbor.BOTTOM_CORNER: Vector2(0.5, 1.0),
+				CellNeighbor.BOTTOM_LEFT_CORNER: Vector2(0.0, 0.75),
+				CellNeighbor.TOP_LEFT_CORNER: Vector2(0.0, 0.25),
+			}
+		Shape.HALF_OFFSET_SQUARE:
+			# We don't *need* mid-points on the top and bottom edges for
+			# every purpose, but it's useful for mask shape generation
+			points = {
+				CellNeighbor.TOP_LEFT_CORNER: Vector2(0.0, 0.0),
+				CellNeighbor.TOP_CORNER: Vector2(0.5, 0.0),
+				CellNeighbor.TOP_RIGHT_CORNER: Vector2(1.0, 0.0),
+				CellNeighbor.BOTTOM_RIGHT_CORNER: Vector2(1.0, 1.0),
+				CellNeighbor.BOTTOM_CORNER: Vector2(0.5, 1.0),
+				CellNeighbor.BOTTOM_LEFT_CORNER: Vector2(0.0, 1.0),
+			}
+		Shape.ISOMETRIC:
+			points = {
+				CellNeighbor.TOP_CORNER: Vector2(0.5, 0.0),
+				CellNeighbor.RIGHT_CORNER: Vector2(1.0, 0.5),
+				CellNeighbor.BOTTOM_CORNER: Vector2(0.5, 1.0),
+				CellNeighbor.LEFT_CORNER: Vector2(0.0, 0.5),
+			}
+		Shape.TRIANGLE:
+			# Start by assuming axis is HORIZONTAL, orientation is UP
+			# If axis is VERTICAL, polygon will be transposed, UP becomes LEFT
+			# For DOWN or RIGHT, mirror the polygon vertically first
+			points = {
+				CellNeighbor.BOTTOM_LEFT_CORNER: Vector2(0.0, 1.0),
+				CellNeighbor.TOP_CORNER: Vector2(0.5, 0.0),
+				CellNeighbor.BOTTOM_RIGHT_CORNER: Vector2(1.0, 1.0),
+			}
+			if orientation in [
+				Orientation.DOWN,
+				Orientation.RIGHT,
+			]:
+				var mirrored_points: Dictionary[CellNeighbor, Vector2] = {}
+				for flag in points.keys():
+					mirrored_points[
+							cell_neighbor_flip_v(flag)
+							] = Vector2(points[flag].x, 1.0 - points[flag].y)
+				points = mirrored_points
+		_:
+			assert(shape == Shape.SQUARE)
+			points = {
+				CellNeighbor.TOP_LEFT_CORNER: Vector2(0.0, 0.0),
+				CellNeighbor.TOP_RIGHT_CORNER: Vector2(1.0, 0.0),
+				CellNeighbor.BOTTOM_RIGHT_CORNER: Vector2(1.0, 1.0),
+				CellNeighbor.BOTTOM_LEFT_CORNER: Vector2(0.0, 1.0),
+			}
+	
+	# Transpose axes if VERTICAL.
+	if axis == Axis.VERTICAL:
+		var transposed_points: Dictionary[CellNeighbor, Vector2] = {}
+		for flag in points.keys():
+			transposed_points[
+					cell_neighbor_transpose(flag)
+					] = Vector2(points[flag].y, points[flag].x)
+		points = transposed_points
+	
+	return points
+	
+
+
 ## Get outline polygon for given tile shape, axis, and orientation
 ## For tile size(1.0, 1.0) - scale as needed.
 ## (n.b. half-offset squares get 6 points, to guarantee every polygon has
@@ -312,64 +389,7 @@ static func get_tile_polygon(
 		axis: Axis,
 		orientation: TileGeometry.Orientation
 ) -> PackedVector2Array:
-	# Get polygon for HORIZONTAL first, then transpose if VERTICAL.
-	var polygon: PackedVector2Array
-	match shape:
-		Shape.HEXAGON:
-			polygon = [
-				Vector2(0.5, 0.0),
-				Vector2(1.0, 0.25),
-				Vector2(1.0, 0.75),
-				Vector2(0.5, 1.0),
-				Vector2(0.0, 0.75),
-				Vector2(0.0, 0.25),
-			]
-		Shape.HALF_OFFSET_SQUARE:
-			# We don't *need* mid-points on the top and bottom edges for
-			# every purpose, but it's useful for mask shape generation
-			polygon = [
-				Vector2(0.0, 0.0),
-				Vector2(0.5, 0.0),
-				Vector2(1.0, 0.0),
-				Vector2(1.0, 1.0),
-				Vector2(0.5, 1.0),
-				Vector2(0.0, 1.0),
-			]
-		Shape.ISOMETRIC:
-			polygon = [
-					Vector2(0.5, 0.0),
-					Vector2(1.0, 0.5),
-					Vector2(0.5, 1.0),
-					Vector2(0.0, 0.5)]
-		Shape.TRIANGLE:
-			# Start by assuming axis is HORIZONTAL, orientation is UP
-			# If axis is VERTICAL, polygon will be transposed, UP becomes LEFT
-			# For DOWN or RIGHT, mirror the polygon vertically first
-			polygon = [
-				Vector2(0.0, 1.0),
-				Vector2(0.5, 0.0),
-				Vector2(1.0, 1.0),
-			]
-			if orientation in [
-				Orientation.DOWN,
-				Orientation.RIGHT,
-			]:
-				for i in polygon.size():
-					polygon[i] = Vector2(polygon[i].x, 1.0 - polygon[i].y)
-		_:
-			assert(shape == Shape.SQUARE)
-			polygon = [
-					Vector2(0.0, 0.0),
-					Vector2(1.0, 0.0),
-					Vector2(1.0, 1.0),
-					Vector2(0.0, 1.0)]
-	
-	# Transpose axes if VERTICAL.
-	if axis == Axis.VERTICAL:
-		for i in polygon.size():
-			polygon[i] = Vector2(polygon[i].y, polygon[i].x)
-	
-	return polygon
+	return get_tile_outline_points(shape, axis, orientation).values()
 
 
 static func _setup_triangle_offsets() -> void:
@@ -386,22 +406,6 @@ static func _setup_triangle_offsets() -> void:
 					TileGeometry.cell_neighbor_transpose(neighbor)
 				)] = Vector2i(- offset.y, offset.x)
 	_triangle_offsets_setup = true
-
-
-#static func _triangle_offsets_debug_string(
-		#offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i]
-#) -> String:
-	#var pairs: PackedStringArray = []
-	#for key in offsets:
-		#pairs.append(
-				#TileGeometry.CellNeighbor.find_key(key)
-				#+ "=("
-				#+ String.num_int64(offsets[key].x)
-				#+ ":"
-				#+ String.num_int64(offsets[key].y)
-				#+ ")"
-		#)
-	#return "[" + ", ".join(pairs) + "]"
 
 
 static func cell_neighbor_flip_h(neighbor_in: CellNeighbor) -> CellNeighbor:
@@ -473,6 +477,140 @@ static func get_triangle_neighbor_cell(
 			offsets = _left_triangle_neighbor_offsets
 		OR.RIGHT:
 			offsets = _right_triangle_neighbor_offsets
-	assert(offsets.has(neighbor), "Invalid neighbor flag from cell")
+	assert(
+			offsets.has(neighbor),
+			"Invalid neighbor flag from cell %s %s" % [coords, neighbor]
+	)
 	return coords + offsets[neighbor]
-	return coords
+
+
+static func get_flag_polygons(
+		shape: TileGeometry.Shape,
+		axis: TileGeometry.Axis,
+		mode: TileGeometry.ConnectionMode,
+		orientation: TileGeometry.Orientation,
+) -> Dictionary:
+	var outline := TileGeometry.get_tile_polygon(
+			shape, axis, orientation
+	)
+	var center_point := _points_average(outline)
+	var polygons: Dictionary[TileGeometry.CellNeighbor, PackedVector2Array]
+	polygons = {
+		TileGeometry.CellNeighbor.SELF: _shrink_polygon(
+				outline, center_point, CENTER_FLAG_SHRINK
+		)
+	}
+	match mode:
+		TileGeometry.ConnectionMode.NONE:
+			pass
+		TileGeometry.ConnectionMode.CORNERS:
+			for i in outline.size():
+				var point := outline[i]
+				var previous := outline[i - 1]
+				var next := outline[wrapi(i + 1, 0.0, outline.size())]
+				var key := _point_to_corner(outline[i])
+				polygons[key] = [
+					previous.lerp(point, 0.5),
+					point,
+					point.lerp(next, 0.5),
+					point.lerp(next, 0.5).lerp(
+						center_point, CENTER_FLAG_SHRINK),
+					point.lerp(
+						center_point, CENTER_FLAG_SHRINK),
+					previous.lerp(point, 0.5).lerp(
+						center_point, CENTER_FLAG_SHRINK),
+				]
+		TileGeometry.ConnectionMode.EDGES:
+			for i in outline.size():
+				var point := outline[i]
+				var previous := outline[i - 1]
+				var key := _side_between_points(previous, point)
+				polygons[key] = [
+					previous,
+					point,
+					point.lerp(
+						center_point, CENTER_FLAG_SHRINK),
+					previous.lerp(
+						center_point, CENTER_FLAG_SHRINK),
+				]
+		_:
+			for i in outline.size():
+				var point := outline[i]
+				var previous := outline[i - 1]
+				var next := outline[wrapi(i + 1, 0.0, outline.size())]
+				var corner_key := _point_to_corner(outline[i])
+				var side_key := _side_between_points(previous, point)
+				polygons[corner_key] = [
+					previous.lerp(point, 0.75),
+					point,
+					point.lerp(next, 0.25),
+					point.lerp(next, 0.25).lerp(
+						center_point, CENTER_FLAG_SHRINK),
+					point.lerp(
+						center_point, CENTER_FLAG_SHRINK),
+					previous.lerp(point, 0.75).lerp(
+						center_point, CENTER_FLAG_SHRINK),
+				]
+				polygons[side_key] = [
+					previous.lerp(point, 0.25),
+					previous.lerp(point, 0.75),
+					previous.lerp(point, 0.75).lerp(
+						center_point, CENTER_FLAG_SHRINK),
+					previous.lerp(point, 0.25).lerp(
+						center_point, CENTER_FLAG_SHRINK),
+				]
+	return polygons
+
+
+# Return the flag of the side between the points
+static func _side_between_points(
+		point1 :Vector2, point2 :Vector2
+) -> TileGeometry.CellNeighbor:
+	var CN := TileGeometry.CellNeighbor
+	var sum := point1 + point2
+	var key := CN.SIDE
+	
+	if sum.y < 0.999:
+		key |= CN.TOP
+	elif sum.y > 1.001:
+		key |= CN.BOTTOM
+	
+	if sum.x < 0.999:
+		key |= CN.LEFT
+	elif sum.x > 1.001:
+		key |= CN.RIGHT
+	
+	return key
+
+
+static func _point_to_corner(
+		point: Vector2
+) -> TileGeometry.CellNeighbor:
+	var CN := TileGeometry.CellNeighbor
+	var key := TileGeometry.CellNeighbor.CORNER
+	if point.y < 0.4:
+		key |= CN.TOP
+	elif point.y > 0.6:
+		key |= CN.BOTTOM
+	if point.x > 0.6:
+		key |= CN.RIGHT
+	elif point.x < 0.4:
+		key |= CN.LEFT
+	return key
+
+
+# Return the average point from an array of points
+static func _points_average(points: PackedVector2Array) -> Vector2:
+	var sum := Vector2.ZERO
+	for point in points:
+		sum += point
+	return sum / points.size()
+
+
+static func _shrink_polygon(
+		polygon: PackedVector2Array, center: Vector2, ratio: float
+) -> PackedVector2Array:
+	var points := polygon.duplicate()
+	for i in points.size():
+		points[i] = points[i].lerp(center, ratio)
+	return points

@@ -4,7 +4,6 @@ extends Control
 const IGNORE_TEXTURE: Texture2D = preload(
 		"res://addons/advanced_autotiles/assets/checkered.png"
 )
-const CENTER_FLAG_SHRINK := 0.6
 enum Mode {
 	SETUP_TERRAIN = 0,
 	SETUP_MASKS = 1,
@@ -224,10 +223,12 @@ func _draw_editable_tiles() -> void:
 		var src_rect := _get_tile_src_rect(tile)
 		var local_rect := local_transform * Rect2(Vector2.ZERO, Vector2.ONE)
 		var outline := _get_tile_outline(tile)
-		var center_point := _points_average(outline)
-		var center_shape := _shrink_polygon(
-				outline, center_point, CENTER_FLAG_SHRINK
-		)		
+		var center_shape: PackedVector2Array = TileGeometry.get_flag_polygons(
+				tile_set.advanced_shape,
+				tile_set.advanced_axis,
+				TileGeometry.ConnectionMode.NONE,
+				tile_set.get_advanced_orientation(tile)
+		)[TileGeometry.CellNeighbor.SELF]
 		draw_texture_rect_region(atlas.texture, local_rect, src_rect)
 		if tile.equals(tile_under_mouse) and mode in [
 				Mode.SETUP_TERRAIN,
@@ -293,13 +294,12 @@ func _draw_editable_tiles() -> void:
 func _get_tile_flag_polygons(tile: AdvancedTileSet.TileKey) -> Dictionary:
 	var terrain_index: int = tile_set.get_advanced_terrain(tile)
 	var orientation := tile_set.get_advanced_orientation(tile)
-	return _get_flag_polygons(
+	return TileGeometry.get_flag_polygons(
 			tile_set.advanced_shape,
 			tile_set.advanced_axis,
 			tile_set.get_advanced_terrain_mode(terrain_index),
 			orientation,
 	)
-	
 
 
 func _get_tile_outline(tile: AdvancedTileSet.TileKey) -> PackedVector2Array:
@@ -319,15 +319,6 @@ func _get_tile_src_rect(tile: AdvancedTileSet.TileKey) -> Rect2:
 			_coords_to_src_px(tile.coords),
 			_tile_size_to_src_px(atlas.get_tile_size_in_atlas(tile.coords))
 	)
-
-
-func _shrink_polygon(
-		polygon: PackedVector2Array, center: Vector2, ratio: float
-) -> PackedVector2Array:
-	var points := polygon.duplicate()
-	for i in points.size():
-		points[i] = points[i].lerp(center, ratio)
-	return points
 
 
 func _polygon_to_polyline(polygon: PackedVector2Array) -> PackedVector2Array:
@@ -402,7 +393,7 @@ func _point_to_flag(point: Vector2) -> TileGeometry.CellNeighbor:
 	var axis := tile_set.advanced_axis
 	var mode := tile_set.get_advanced_terrain_mode(terrain_index)
 	var orientation := tile_set.get_advanced_orientation(tile)
-	var flag_polygons := _get_flag_polygons(
+	var flag_polygons := TileGeometry.get_flag_polygons(
 			shape,
 			axis,
 			mode,
@@ -414,115 +405,6 @@ func _point_to_flag(point: Vector2) -> TileGeometry.CellNeighbor:
 			return flag
 	return TileGeometry.CellNeighbor.SELF
 
-
-static func _get_flag_polygons(
-		shape: TileGeometry.Shape,
-		axis: TileGeometry.Axis,
-		mode: TileGeometry.ConnectionMode,
-		orientation: TileGeometry.Orientation,
-) -> Dictionary:
-	var polygons := {}
-	var outline := TileGeometry.get_tile_polygon(
-			shape, axis, orientation
-	)
-	var center_point := _points_average(outline)
-	match mode:
-		TileGeometry.ConnectionMode.NONE:
-			pass
-		TileGeometry.ConnectionMode.CORNERS:
-			for i in outline.size():
-				var point := outline[i]
-				var previous := outline[i - 1]
-				var next := outline[wrapi(i + 1, 0.0, outline.size())]
-				var key := _point_to_corner(outline[i])
-				polygons[key] = [
-					previous.lerp(point, 0.5),
-					point,
-					point.lerp(next, 0.5),
-					point.lerp(next, 0.5).lerp(
-						center_point, CENTER_FLAG_SHRINK),
-					point.lerp(
-						center_point, CENTER_FLAG_SHRINK),
-					previous.lerp(point, 0.5).lerp(
-						center_point, CENTER_FLAG_SHRINK),
-				]
-		TileGeometry.ConnectionMode.EDGES:
-			for i in outline.size():
-				var point := outline[i]
-				var previous := outline[i - 1]
-				var key := _side_between_points(previous, point)
-				polygons[key] = [
-					previous,
-					point,
-					point.lerp(
-						center_point, CENTER_FLAG_SHRINK),
-					previous.lerp(
-						center_point, CENTER_FLAG_SHRINK),
-				]
-		_:
-			for i in outline.size():
-				var point := outline[i]
-				var previous := outline[i - 1]
-				var next := outline[wrapi(i + 1, 0.0, outline.size())]
-				var corner_key := _point_to_corner(outline[i])
-				var side_key := _side_between_points(previous, point)
-				polygons[corner_key] = [
-					previous.lerp(point, 0.75),
-					point,
-					point.lerp(next, 0.25),
-					point.lerp(next, 0.25).lerp(
-						center_point, CENTER_FLAG_SHRINK),
-					point.lerp(
-						center_point, CENTER_FLAG_SHRINK),
-					previous.lerp(point, 0.75).lerp(
-						center_point, CENTER_FLAG_SHRINK),
-				]
-				polygons[side_key] = [
-					previous.lerp(point, 0.25),
-					previous.lerp(point, 0.75),
-					previous.lerp(point, 0.75).lerp(
-						center_point, CENTER_FLAG_SHRINK),
-					previous.lerp(point, 0.25).lerp(
-						center_point, CENTER_FLAG_SHRINK),
-				]
-	return polygons
-
-
-static func _point_to_corner(
-		point: Vector2
-) -> TileGeometry.CellNeighbor:
-	var CN := TileGeometry.CellNeighbor
-	var key := TileGeometry.CellNeighbor.CORNER
-	if point.y < 0.4:
-		key |= CN.TOP
-	elif point.y > 0.6:
-		key |= CN.BOTTOM
-	if point.x > 0.6:
-		key |= CN.RIGHT
-	elif point.x < 0.4:
-		key |= CN.LEFT
-	return key
-
-
-# Return the flag of the side between the points
-static func _side_between_points(
-		point1 :Vector2, point2 :Vector2
-) -> TileGeometry.CellNeighbor:
-	var CN := TileGeometry.CellNeighbor
-	var sum := point1 + point2
-	var key := CN.SIDE
-	
-	if sum.y < 0.999:
-		key |= CN.TOP
-	elif sum.y > 1.001:
-		key |= CN.BOTTOM
-	
-	if sum.x < 0.999:
-		key |= CN.LEFT
-	elif sum.x > 1.001:
-		key |= CN.RIGHT
-	
-	return key
 
 
 # Return the average point from an array of points

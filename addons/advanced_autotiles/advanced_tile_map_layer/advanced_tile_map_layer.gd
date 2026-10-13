@@ -24,7 +24,7 @@ func advanced_autotile_paint_cells(
 		terrain_id: int,
 		cells: Array[Vector2i],
 		preserve_surrounding_connections := true
-) -> void:	
+) -> void:
 	assert(tile_set is AdvancedTileSet)
 	if ! tile_set is AdvancedTileSet:
 		return
@@ -43,7 +43,8 @@ func advanced_autotile_paint_cells(
 		var terrain := advanced_get_final_cell_terrain(cell)
 		if terrain == -1:
 			continue
-		var preserve_flags: PackedInt32Array = []
+		var existing_mask := advanced_get_existing_cell_mask(cell)
+		var preserve_mask: Dictionary
 		if preserve_surrounding_connections:
 			for flag in advanced_get_existing_cell_mask(cell):
 				var preserve_flag := true
@@ -54,27 +55,133 @@ func advanced_autotile_paint_cells(
 				):
 					if adjacent in cells:
 						preserve_flag = false
+						break
 				if preserve_flag:
-					preserve_flags.append(flag)
-		var tile := advanced_autotile_choose_tile(
-				cell,
-				preserve_flags,
-				preserve_flags
-		)
+					preserve_mask[flag] = existing_mask[flag]
+		var tile := advanced_autotile_choose_tile(cell, preserve_mask)
 		set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
 	_incoming_terrains.clear()
 
 
+func advanced_autotile_paint_corners(
+		terrain: int,
+		cells: Array[Vector2i],
+		flags: Array[TileGeometry.CellNeighbor]
+) -> void:
+	var cells_to_update := cells.duplicate()
+	var constraints: Dictionary[Vector2i, Dictionary] = {}
+	for i in cells.size():
+		var cell: Vector2i = cells[i]
+		var flag: TileGeometry.CellNeighbor = flags[wrapi(i, 0, flags.size())]
+		var control := _get_control_flag(cell, flag)
+		constraints[control[0]] = constraints.get(control[0], {})
+		constraints[control[0]][control[1]] = terrain
+		for neighbor in advanced_get_neighbor_cells_for_flag(
+				cell,
+				flag,
+				TileGeometry.ConnectionMode.CORNERS
+		):
+			if not neighbor in cells_to_update:
+				cells_to_update.append(neighbor)
+	
+	for cell in cells_to_update:
+		var cell_terrain := advanced_get_final_cell_terrain(cell)
+		var mask := advanced_get_existing_cell_mask(cell).duplicate()
+		for flag in mask.keys():
+			var control := _get_control_flag(cell, flag)
+			if constraints.get(control[0], {}).has(control[1]):
+				mask[flag] = constraints[control[0]][control[1]]
+		var tile := advanced_autotile_choose_tile(cell, mask)
+		set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+
+
+func _get_control_flag(cell: Vector2i, flag: int) -> Array:
+	var CN := TileGeometry.CellNeighbor
+	match advanced_tile_set.advanced_shape:
+		TileGeometry.Shape.SQUARE:
+			return [
+					cell + {
+						CN.TOP_LEFT_CORNER: Vector2i(0,0),
+						CN.TOP_RIGHT_CORNER: Vector2i(1,0),
+						CN.BOTTOM_LEFT_CORNER: Vector2i(0, 1),
+						CN.BOTTOM_RIGHT_CORNER: Vector2i(1, 1)
+					}[flag],
+					CN.TOP_LEFT_CORNER,
+			]
+		TileGeometry.Shape.ISOMETRIC:
+			return [
+					advanced_get_neighbor_cell(cell, {
+						CN.TOP_CORNER: CN.SELF,
+						CN.RIGHT_CORNER: CN.BOTTOM_RIGHT_SIDE,
+						CN.BOTTOM_CORNER: CN.BOTTOM_CORNER,
+						CN.LEFT_CORNER: CN.BOTTOM_LEFT_SIDE,
+					}[flag]),
+					CN.TOP_CORNER,
+			]
+		TileGeometry.Shape.HALF_OFFSET_SQUARE, TileGeometry.Shape.HEXAGON:
+			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+				flag = TileGeometry.cell_neighbor_transpose(flag)
+			var return_flag: TileGeometry.CellNeighbor
+			var neighbor_flag: TileGeometry.CellNeighbor
+			match flag:
+				CN.TOP_CORNER, CN.TOP_LEFT_CORNER:
+					return_flag = flag
+					neighbor_flag = CN.SELF
+				CN.TOP_RIGHT_CORNER:
+					return_flag = CN.TOP_LEFT_CORNER
+					neighbor_flag = CN.RIGHT_SIDE
+				CN.BOTTOM_RIGHT_SIDE:
+					return_flag = CN.TOP_CORNER
+					neighbor_flag = CN.BOTTOM_RIGHT_SIDE
+				CN.BOTTOM_CORNER:
+					return_flag = CN.TOP_LEFT_CORNER
+					neighbor_flag = CN.BOTTOM_RIGHT_SIDE
+				CN.BOTTOM_LEFT_CORNER:
+					return_flag = CN.TOP_CORNER
+					neighbor_flag = CN.BOTTOM_LEFT_SIDE
+			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+				return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
+				neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
+			return [
+					advanced_get_neighbor_cell(cell, neighbor_flag),
+					return_flag,
+			]
+		TileGeometry.Shape.TRIANGLE:
+			var return_flag := CN.TOP_CORNER
+			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+				flag = TileGeometry.cell_neighbor_transpose(flag)
+				return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
+			var neighbor_flag: TileGeometry.CellNeighbor
+			match flag:
+				CN.TOP_CORNER:
+					neighbor_flag = CN.SELF
+				CN.TOP_RIGHT_CORNER:
+					neighbor_flag = CN.RIGHT_SIDE
+				CN.BOTTOM_RIGHT_CORNER:
+					neighbor_flag = CN.BOTTOM_RIGHT_CLOCKWISE_CORNER
+				CN.BOTTOM_CORNER:
+					neighbor_flag = CN.BOTTOM_CORNER
+				CN.BOTTOM_LEFT_CORNER:
+					neighbor_flag = CN.BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER
+				CN.TOP_LEFT_CORNER:
+					neighbor_flag = CN.LEFT_SIDE
+			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+				neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
+			return [
+					advanced_get_neighbor_cell(cell, neighbor_flag),
+					return_flag,
+			]
+	assert(false, "Invalid tile shape")
+	return [cell, flag]
+
+
 func advanced_autotile_choose_tile(
 		cell: Vector2i,
-		deprioritize_flags: PackedInt32Array = [],
-		preserve_flags: PackedInt32Array = []
+		prioritize_mask: Dictionary = {}
 ) -> AdvancedTileSet.TileKey:
 	var terrain := advanced_get_final_cell_terrain(cell)
 	if terrain == -1:
 		return AdvancedTileSet.TileKey.EMPTY
-	print("Choosing tile ", cell, " ", deprioritize_flags, " ", preserve_flags)
-	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
 	var existing_mask := advanced_get_existing_cell_mask(cell)
 	var max_priority := -1 * advanced_tile_set.get_tile_match_priority_bonus()
 	var candidates: Array[AdvancedTileSet.TileKey] = []
@@ -88,10 +195,7 @@ func advanced_autotile_choose_tile(
 		var tile_priority := _tile_match_priority(
 				cell,
 				tile,
-				mode,
-				existing_mask,
-				deprioritize_flags,
-				preserve_flags
+				prioritize_mask
 		)
 		if tile_priority > max_priority:
 			max_priority = tile_priority
@@ -110,11 +214,10 @@ func advanced_autotile_choose_tile(
 func _tile_match_priority(
 		cell: Vector2i,
 		tile: AdvancedTileSet.TileKey,
-		mode: TileGeometry.ConnectionMode,
-		existing_mask: Dictionary,
-		deprioritize_flags: PackedInt32Array,
-		preserve_flags: PackedInt32Array
+		priotitize_mask: Dictionary,
 ) -> int:
+	var terrain := advanced_tile_set.get_advanced_terrain(tile)
+	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
 	var tile_is_match := true
 	var tile_priority := 0
 	var mask: Dictionary = advanced_tile_set.get_advanced_mask(tile)
@@ -124,11 +227,8 @@ func _tile_match_priority(
 			tile_is_match = false
 			tile_priority -= flag_priority
 		elif (
-				flag in deprioritize_flags
-				and not (
-					flag in preserve_flags
-					and mask[flag] == existing_mask.get(flag, -1)
-				)
+				flag in priotitize_mask.keys()
+				and priotitize_mask[flag] != mask[flag]
 		):
 			tile_priority -= flag_priority
 		else:
@@ -186,7 +286,9 @@ func advanced_get_final_cell_terrain(cell: Vector2i) -> int:
 	return advanced_tile_set.get_advanced_terrain(tile)
 
 
-func advanced_get_existing_cell_mask(cell: Vector2i) -> Dictionary:
+func advanced_get_existing_cell_mask(
+		cell: Vector2i
+) -> Dictionary:
 	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
 	var source_id := get_cell_source_id(cell)
 	var atlas_coords := get_cell_atlas_coords(cell)
@@ -238,6 +340,8 @@ func advanced_get_neighbor_cell(
 		coords: Vector2i,
 		neighbor: TileGeometry.CellNeighbor
 ) -> Vector2i:
+	if neighbor == TileGeometry.CellNeighbor.SELF:
+		return coords
 	var CN := TileGeometry.CellNeighbor
 	var OR := TileGeometry.Orientation
 	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:

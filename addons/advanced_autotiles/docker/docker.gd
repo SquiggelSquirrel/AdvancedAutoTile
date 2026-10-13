@@ -39,5 +39,9 @@ func get_paint_shape() -> int:
 	return %Painting.paint_shape
 
 
+func get_paint_constraint() -> int:
+	return %Painting.paint_constraint
+
+
 func get_paint_terrain() -> int:
 	return %Painting.paint_terrain
