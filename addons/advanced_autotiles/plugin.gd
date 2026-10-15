@@ -237,28 +237,55 @@ func _handle_motion() -> void:
 
 
 func _perform_current_lmb_action(cells: Array[Vector2i]) -> void:
+	var undo_redo := get_undo_redo()
+	var changes: Dictionary = {}
 	match dock_scene.get_paint_action():
 		PaintAction.PAINT:
 			match dock_scene.get_paint_constraint():
 				PaintConstraint.CELLS:
-					active_tilemap_layer.advanced_autotile_paint_cells(
+					undo_redo.create_action("Paint Terrain to Cells")
+					changes = active_tilemap_layer.advanced_autotile_paint_cells(
 							dock_scene.get_paint_terrain(),
 							cells
 					)
 				PaintConstraint.CORNERS:
-					active_tilemap_layer.advanced_autotile_paint_corners(
+					undo_redo.create_action("Paint Terrain to Corners")
+					changes = active_tilemap_layer.advanced_autotile_paint_corners(
 							dock_scene.get_paint_terrain(),
 							cells,
 							[flag_under_mouse]
 					)
 		PaintAction.ERASE:
-			active_tilemap_layer.advanced_autotile_paint_cells(
+			undo_redo.create_action("Erase Terrain from Cells")
+			changes = active_tilemap_layer.advanced_autotile_paint_cells(
 					TileGeometry.FLAG_EMPTY,
 					cells
 			)
 		PaintAction.SELECT:
 			for cell in cells:
 				cell_selection[cell] = true
+	if changes.is_empty():
+		return
+	for cell in changes.keys():
+		var old: AdvancedTileSet.TileKey = changes[cell]["old"]
+		var new: AdvancedTileSet.TileKey = changes[cell]["new"]
+		undo_redo.add_do_method(
+				active_tilemap_layer,
+				"set_cell",
+				cell,
+				new.source_id,
+				new.coords,
+				new.alternative_id
+		)
+		undo_redo.add_undo_method(
+				active_tilemap_layer,
+				"set_cell",
+				cell,
+				old.source_id,
+				old.coords,
+				old.alternative_id
+		)
+	undo_redo.commit_action(false)
 
 
 func _perform_current_rmb_action(cells: Array[Vector2i]) -> void:

@@ -23,11 +23,12 @@ func _validate_property(property: Dictionary) -> void:
 func advanced_autotile_paint_cells(
 		terrain_id: int,
 		cells: Array[Vector2i],
-		preserve_surrounding_connections := true
-) -> void:
-	assert(tile_set is AdvancedTileSet)
+		preserve_surrounding_connections := true,
+		dry_run := false
+) -> Dictionary:
 	if ! tile_set is AdvancedTileSet:
-		return
+		return {}
+	var changes := {}
 	for cell in cells:
 		_incoming_terrains[cell] = terrain_id
 	var surrounding_cells:Array[Vector2i] = []
@@ -36,15 +37,25 @@ func advanced_autotile_paint_cells(
 		for neighbor in advanced_get_surrounding_cells(cell, true):
 			if ! neighbor in cells and ! neighbor in surrounding_cells:
 				surrounding_cells.append(neighbor)
+		
 		var tile := advanced_autotile_choose_tile(cell)
-		set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+		changes[cell] = {
+			"old": AdvancedTileSet.TileKey.new(
+				get_cell_source_id(cell),
+				get_cell_atlas_coords(cell),
+				get_cell_alternative_tile(cell)
+			),
+			"new": tile
+		}
+		if not dry_run:
+			set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
 	
 	for cell in surrounding_cells:
 		var terrain := advanced_get_final_cell_terrain(cell)
 		if terrain == -1:
 			continue
 		var existing_mask := advanced_get_existing_cell_mask(cell)
-		var preserve_mask: Dictionary
+		var preserve_mask := {}
 		if preserve_surrounding_connections:
 			for flag in advanced_get_existing_cell_mask(cell):
 				var preserve_flag := true
@@ -59,15 +70,30 @@ func advanced_autotile_paint_cells(
 				if preserve_flag:
 					preserve_mask[flag] = existing_mask[flag]
 		var tile := advanced_autotile_choose_tile(cell, preserve_mask)
-		set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+		changes[cell] = {
+			"old": AdvancedTileSet.TileKey.new(
+				get_cell_source_id(cell),
+				get_cell_atlas_coords(cell),
+				get_cell_alternative_tile(cell)
+			),
+			"new": tile
+		}
+		if not dry_run:
+			set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
 	_incoming_terrains.clear()
+	return changes
 
 
 func advanced_autotile_paint_corners(
 		terrain: int,
 		cells: Array[Vector2i],
-		flags: Array[TileGeometry.CellNeighbor]
-) -> void:
+		flags: Array[TileGeometry.CellNeighbor],
+		dry_run := false
+) -> Dictionary:
+	var changes := {}
+	
+	# Determine which cells actually need updating,
+	# and set up dictioary of unambiguous constraints
 	var cells_to_update := cells.duplicate()
 	var constraints: Dictionary[Vector2i, Dictionary] = {}
 	for i in cells.size():
@@ -84,6 +110,7 @@ func advanced_autotile_paint_corners(
 			if not neighbor in cells_to_update:
 				cells_to_update.append(neighbor)
 	
+	# Actually update the cells
 	for cell in cells_to_update:
 		var cell_terrain := advanced_get_final_cell_terrain(cell)
 		var mask := advanced_get_existing_cell_mask(cell).duplicate()
@@ -92,7 +119,18 @@ func advanced_autotile_paint_corners(
 			if constraints.get(control[0], {}).has(control[1]):
 				mask[flag] = constraints[control[0]][control[1]]
 		var tile := advanced_autotile_choose_tile(cell, mask)
-		set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+		changes[cell] = {
+			"old": AdvancedTileSet.TileKey.new(
+				get_cell_source_id(cell),
+				get_cell_atlas_coords(cell),
+				get_cell_alternative_tile(cell)
+			),
+			"new": tile
+		}
+		if not dry_run:
+			set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+	
+	return changes
 
 
 func _get_control_flag(cell: Vector2i, flag: int) -> Array:
