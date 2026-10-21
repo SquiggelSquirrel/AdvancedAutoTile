@@ -27,7 +27,7 @@ func _on_tile_set_update() -> void:
 				)
 				] = i
 	select(0)
-	item_selected.emit()
+	item_selected.emit(0)
 
 
 func _create_icon(color: Color) -> Texture2D:

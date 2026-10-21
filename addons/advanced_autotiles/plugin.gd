@@ -12,8 +12,7 @@ var active_tilemap_layer: AdvancedTileMapLayer
 var active_tileset: AdvancedTileSet
 var cell_under_mouse: Vector2i
 var flag_under_mouse: TileGeometry.CellNeighbor
-var _current_action := ActionState.NONE
-var _action_start_cell: Vector2i
+var current_action: PaintAction
 
 
 func _enter_tree() -> void:
@@ -164,8 +163,6 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 		return false
 	if dock_scene.get_mode() != DockMode.PAINTING:
 		return false
-	if dock_scene.get_paint_mode() == PaintMode.PATH:
-		_action_start_cell = cell_under_mouse
 	_update_cell_and_flag_under_mouse()
 	if event is InputEventMouseButton:
 		if event.pressed:
@@ -186,114 +183,71 @@ func _forward_canvas_gui_input(event: InputEvent) -> bool:
 
 
 func _handle_lmb_press() -> void:
-	if _current_action == ActionState.RMB:
-		_current_action = ActionState.NONE
-		return
+	if current_action is PaintAction:
+		if current_action.paint_trigger == PaintAction.PaintTrigger.RMB:
+			current_action.revert()
+			current_action = null
+			return
+	
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
 		return
-	if (
-			dock_scene.get_paint_shape() != PaintShape.FILL
-			and _current_action == ActionState.NONE
-	):
-		_current_action = ActionState.LMB
-		_action_start_cell = cell_under_mouse
-	_perform_current_lmb_action([cell_under_mouse])
+	
+	if current_action == null:
+		current_action = PaintAction.new(
+				dock_scene.get_paint_mode(),
+				dock_scene.get_paint_shape(),
+				PaintAction.PaintTrigger.LMB,
+				cell_under_mouse,
+				flag_under_mouse,
+				active_tilemap_layer,
+				dock_scene.get_paint_terrain()
+		)
+	current_action.update()
 
 
 func _handle_lmb_release() -> void:
-	_current_action = ActionState.NONE
+	if current_action is PaintAction:
+		if current_action.paint_trigger == PaintAction.PaintTrigger.LMB:
+			current_action.commit(get_undo_redo())
+	current_action = null
 
 
 func _handle_rmb_press() -> void:
-	if _current_action == ActionState.LMB:
-		_current_action = ActionState.NONE
+	if current_action is PaintAction:
+		if current_action.paint_trigger == PaintAction.PaintTrigger.LMB:
+			current_action.revert()
+			current_action = null
+			return
+	
 	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 		return
-	if (
-			dock_scene.get_paint_shape() != PaintShape.FILL
-			and _current_action == ActionState.NONE
-	):
-		_current_action = ActionState.RMB
-		_action_start_cell = cell_under_mouse
-	_perform_current_rmb_action([cell_under_mouse])
+	
+	if current_action == null:
+		current_action = PaintAction.new(
+				dock_scene.get_paint_mode(),
+				dock_scene.get_paint_shape(),
+				PaintAction.PaintTrigger.RMB,
+				cell_under_mouse,
+				flag_under_mouse,
+				active_tilemap_layer,
+				dock_scene.get_rmb_terrain()
+		)
+	current_action.update()
 
 
 func _handle_rmb_release() -> void:
-	_current_action = ActionState.NONE
+	if current_action is PaintAction:
+		if current_action.paint_trigger == PaintAction.PaintTrigger.RMB:
+			current_action.commit(get_undo_redo())
+	current_action = null
 
 
 func _handle_motion() -> void:
-	var action_cells: Array[Vector2i]
-	match dock_scene.get_paint_shape():
-		PaintShape.POINT:
-			match dock_scene.get_paint_mode():
-				PaintMode.PATH:
-					action_cells = [_action_start_cell, cell_under_mouse]
-				_:
-					action_cells = [cell_under_mouse]
-	match _current_action:
-		ActionState.NONE:
-			return
-		ActionState.LMB:
-			_perform_current_lmb_action(action_cells)
-		ActionState.RMB:
-			_perform_current_rmb_action(action_cells)
-
-
-func _perform_current_lmb_action(cells: Array[Vector2i]) -> void:
-	var undo_redo := get_undo_redo()
-	var changes: Dictionary = {}
-	match dock_scene.get_paint_shape():
-		PaintShape.POINT:
-			match dock_scene.get_paint_mode():
-				PaintMode.CELLS:
-					undo_redo.create_action("Paint Terrain to Cells")
-					changes = active_tilemap_layer.advanced_autotile_paint_cells(
-							dock_scene.get_paint_terrain(),
-							cells
-					)
-				PaintMode.CORNERS:
-					undo_redo.create_action("Paint Terrain to Corners")
-					changes = active_tilemap_layer.advanced_autotile_paint_corners(
-							dock_scene.get_paint_terrain(),
-							cells,
-							[flag_under_mouse]
-					)
-				PaintMode.PATH:
-					undo_redo.create_action("Paint Terrain to Path")
-					changes = active_tilemap_layer.advanced_autotile_paint_path(
-							dock_scene.get_paint_terrain(),
-							cells
-					)
-	if changes.is_empty():
+	if current_action == null:
 		return
-	for cell in changes.keys():
-		var old: AdvancedTileSet.TileKey = changes[cell]["old"]
-		var new: AdvancedTileSet.TileKey = changes[cell]["new"]
-		undo_redo.add_do_method(
-				active_tilemap_layer,
-				"set_cell",
-				cell,
-				new.source_id,
-				new.coords,
-				new.alternative_id
-		)
-		undo_redo.add_undo_method(
-				active_tilemap_layer,
-				"set_cell",
-				cell,
-				old.source_id,
-				old.coords,
-				old.alternative_id
-		)
-	undo_redo.commit_action(false)
-
-
-func _perform_current_rmb_action(cells: Array[Vector2i]) -> void:
-	active_tilemap_layer.advanced_autotile_paint_cells(
-			dock_scene.get_rmb_terrain(),
-			cells
-	)
+	current_action.set_current_cell(cell_under_mouse)
+	current_action.set_current_flag(flag_under_mouse)
+	current_action.update()
 
 
 func _update_cell_and_flag_under_mouse() -> void:
@@ -333,3 +287,156 @@ func _update_cell_and_flag_under_mouse() -> void:
 
 func _on_dock_scene_overlay_changed() -> void:
 	update_overlays()
+
+
+class PaintAction:
+	enum PaintMode {CELLS, CORNERS, PATH}
+	enum PaintShape {POINT, LINE, RECTANGLE, FILL}
+	enum PaintTrigger {NONE, LMB, RMB}
+	var paint_mode: PaintMode
+	var paint_shape: PaintShape
+	var paint_trigger: PaintTrigger
+	var current_cell: Vector2i
+	var previous_cell: Vector2i
+	var start_cell: Vector2i
+	var changes := {}
+	var terrain_id: int
+	var current_flag: int
+	var tile_map_layer: AdvancedTileMapLayer
+	
+	
+	func _init(
+			paint_mode: PaintMode,
+			paint_shape: PaintShape,
+			paint_trigger: PaintTrigger,
+			start_cell: Vector2i,
+			flag: int,
+			tile_map_layer: AdvancedTileMapLayer,
+			terrain_id: int
+	) -> void:
+		self.paint_mode = paint_mode
+		self.paint_shape = paint_shape
+		self.paint_trigger = paint_trigger
+		self.start_cell = start_cell
+		self.previous_cell = start_cell
+		self.current_cell = start_cell
+		self.current_flag = flag
+		self.tile_map_layer = tile_map_layer
+		self.terrain_id = terrain_id
+	
+	
+	func set_current_cell(cell: Vector2i) -> void:
+		previous_cell = current_cell
+		current_cell = cell
+	
+	
+	func set_current_flag(flag: int) -> void:
+		current_flag = flag
+	
+	
+	func add_changes(new_changes: Dictionary) -> void:
+		for cell in new_changes:
+			if changes.has(cell):
+				changes[cell]["new"] = new_changes[cell]["new"]
+			else:
+				changes[cell] = new_changes[cell]
+	
+	
+	func update() -> void:
+		match paint_shape:
+			PaintShape.POINT:
+				match paint_mode:
+					PaintMode.CELLS:
+						add_changes(
+								tile_map_layer.advanced_autotile_paint_cells(
+									terrain_id,
+									[current_cell]
+								)
+						)
+					PaintMode.CORNERS:
+						add_changes(
+								tile_map_layer.advanced_autotile_paint_corners(
+									terrain_id,
+									[current_cell],
+									[current_flag]
+								)
+						)
+					PaintMode.PATH:
+						add_changes(
+								tile_map_layer.advanced_autotile_paint_path(
+									terrain_id,
+									[previous_cell, current_cell]
+								)
+						)
+	
+	
+	func commit(undo_redo: EditorUndoRedoManager) -> void:
+		if changes.is_empty():
+			return
+		undo_redo.create_action(
+				_commit_name(
+					tile_map_layer.advanced_tile_set.get_advanced_terrain_name(
+						terrain_id
+					)
+				)
+		)
+		for cell in changes.keys():
+			var old: AdvancedTileSet.TileKey = changes[cell]["old"]
+			var new: AdvancedTileSet.TileKey = changes[cell]["new"]
+			undo_redo.add_do_method(
+					tile_map_layer,
+					"set_cell",
+					cell,
+					new.source_id,
+					new.coords,
+					new.alternative_id
+			)
+			undo_redo.add_undo_method(
+					tile_map_layer,
+					"set_cell",
+					cell,
+					old.source_id,
+					old.coords,
+					old.alternative_id
+			)
+		undo_redo.commit_action(false)
+	
+	
+	func revert() -> void:
+		for cell in changes.keys():
+			var old: AdvancedTileSet.TileKey = changes[cell]["old"]
+			tile_map_layer.set_cell(
+					cell,
+					old.source_id,
+					old.coords,
+					old.alternative_id
+			)
+	
+	
+	func _commit_name(terrain_name: String) -> String:
+		var verb: String
+		if terrain_name == "Erase":
+			verb = "Erase"
+		else:
+			verb = "Paint %s to" % terrain_name
+		var noun: String
+		match paint_mode:
+			PaintMode.CORNERS:
+				noun = "corners"
+			PaintMode.PATH:
+				match paint_shape:
+					PaintShape.LINE:
+						noun = "path line"
+					_:
+						noun = "path"
+			_:
+				match paint_shape:
+					PaintShape.LINE:
+						noun = "line"
+					PaintShape.RECTANGLE:
+						noun = "rectangle"
+					PaintShape.FILL:
+						noun = "fill region"
+					_:
+						noun = "cells"
+		return "%s %s" % [verb, noun]
