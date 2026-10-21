@@ -368,6 +368,31 @@ class PaintAction:
 									[previous_cell, current_cell]
 								)
 						)
+			PaintShape.LINE:
+				revert()
+				match paint_mode:
+					PaintMode.CELLS:
+						changes = tile_map_layer.advanced_autotile_paint_cells(
+								terrain_id,
+								Geometry2D.bresenham_line(start_cell, current_cell)
+						)
+					PaintMode.PATH:
+						changes = tile_map_layer.advanced_autotile_paint_path(
+								terrain_id,
+								Geometry2D.bresenham_line(start_cell, current_cell)
+						)
+			PaintShape.RECTANGLE:
+				revert()
+				var cells: Array[Vector2i] = []
+				var rect := Rect2i(start_cell, Vector2i.ZERO)
+				rect = rect.expand(current_cell)
+				for x in range(rect.position.x, rect.end.x + 1):
+					for y in range(rect.position.y, rect.end.y + 1):
+						cells.append(Vector2i(x, y))
+				changes = tile_map_layer.advanced_autotile_paint_cells(
+						terrain_id,
+						cells
+				)
 	
 	
 	func commit(undo_redo: EditorUndoRedoManager) -> void:
