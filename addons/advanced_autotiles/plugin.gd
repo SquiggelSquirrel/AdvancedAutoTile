@@ -393,6 +393,38 @@ class PaintAction:
 						terrain_id,
 						cells
 				)
+			PaintShape.FILL:
+				var used := tile_map_layer.get_used_rect()
+				var cells: Array[Vector2i] = []
+				var start_terrain := tile_map_layer.advanced_get_final_cell_terrain(
+						current_cell
+				)
+				if start_terrain == terrain_id:
+					return
+				var queue: Array[Vector2i] = [current_cell]
+				for safety_limit in used.size.x * used.size.y:
+					if queue.is_empty():
+						break
+					var cell := queue.pop_front()
+					cells.append(cell)
+					for neighbor in tile_map_layer.advanced_get_surrounding_cells(cell):
+						if (
+								used.has_point(neighbor)
+								and
+								tile_map_layer.advanced_get_final_cell_terrain(neighbor)
+								== start_terrain
+								and not
+								cells.has(neighbor)
+								and not
+								queue.has(neighbor)
+						):
+							queue.append(neighbor)
+				add_changes(
+						tile_map_layer.advanced_autotile_paint_cells(
+							terrain_id,
+							cells
+						)
+				)
 	
 	
 	func commit(undo_redo: EditorUndoRedoManager) -> void:
