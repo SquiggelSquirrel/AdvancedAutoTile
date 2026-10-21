@@ -80,6 +80,13 @@ texture = ExtResource("1_obl7g")
 [sub_resource type="TileSet" id="TileSet_t6efk"]
 tile_shape = 3
 tile_size = Vector2i(32, 32)
+terrain_set_0/mode = 0
+terrain_set_0/terrain_0/name = "Terrain 0"
+terrain_set_0/terrain_0/color = Color(0.5, 0.34375, 0.25, 1)
+terrain_set_0/terrain_1/name = "Terrain 1"
+terrain_set_0/terrain_1/color = Color(0.5, 0.4375, 0.25, 1)
+terrain_set_0/terrain_2/name = "Terrain 2"
+terrain_set_0/terrain_2/color = Color(0.46875, 0.5, 0.25, 1)
 custom_data_layer_0/name = "Test Layer"
 custom_data_layer_0/type = 27
 sources/0 = SubResource("TileSetAtlasSource_dpgl4")

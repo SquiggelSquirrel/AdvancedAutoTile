@@ -31,17 +31,17 @@ func get_mode() -> Mode:
 	return get_node("TabContainer").current_tab
 
 
-func get_paint_action() -> int:
-	return %Painting.paint_action
+func get_paint_mode() -> int:
+	return %Painting.paint_mode
 
 
 func get_paint_shape() -> int:
 	return %Painting.paint_shape
 
 
-func get_paint_constraint() -> int:
-	return %Painting.paint_constraint
-
-
 func get_paint_terrain() -> int:
 	return %Painting.paint_terrain
+
+
+func get_rmb_terrain() -> int:
+	return %Painting.rmb_terrain

@@ -15,14 +15,14 @@ script = ExtResource("1_txssj")
 [node name="TabContainer" type="TabContainer" parent="." unique_id=1854340370]
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 0
+current_tab = 1
 switch_on_drag_hover = false
 
 [node name="Setup" parent="TabContainer" unique_id=721241819 instance=ExtResource("2_qa76d")]
 unique_name_in_owner = true
+visible = false
 layout_mode = 2
 
 [node name="Painting" parent="TabContainer" unique_id=1946510370 instance=ExtResource("3_lsv0f")]
 unique_name_in_owner = true
-visible = false
 layout_mode = 2

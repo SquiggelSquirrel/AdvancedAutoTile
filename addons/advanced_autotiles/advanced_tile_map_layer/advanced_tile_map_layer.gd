@@ -113,7 +113,7 @@ func advanced_autotile_paint_corners(
 	# Actually update the cells
 	for cell in cells_to_update:
 		var cell_terrain := advanced_get_final_cell_terrain(cell)
-		var mask := advanced_get_existing_cell_mask(cell).duplicate()
+		var mask := advanced_get_existing_cell_mask(cell)
 		for flag in mask.keys():
 			var control := _get_control_flag(cell, flag)
 			if constraints.get(control[0], {}).has(control[1]):
@@ -130,6 +130,90 @@ func advanced_autotile_paint_corners(
 		if not dry_run:
 			set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
 	
+	return changes
+
+
+func advanced_autotile_paint_path(
+		terrain_id: int,
+		path: Array[Vector2i],
+		dry_run := false
+) -> Dictionary:
+	for cell in path:
+		_incoming_terrains[cell] = terrain_id
+		
+	var surrounding_cells:Array[Vector2i] = []
+	for cell in path:
+		for neighbor in advanced_get_surrounding_cells(cell, true):
+			if ! neighbor in path and ! neighbor in surrounding_cells:
+				surrounding_cells.append(neighbor)
+	
+	var changes := {}
+	
+	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain_id)
+	for i in path.size():
+		var cell := path[i]
+		var orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
+		var preserve_mask := advanced_tile_set.get_terrain_empty_mask(
+				terrain_id, orientation
+		)
+		var existing_mask := advanced_get_existing_cell_mask(cell)
+		for flag in existing_mask:
+			if preserve_mask.has(flag):
+				preserve_mask[flag] = existing_mask[flag]
+		if i > 0:
+			for flag in preserve_mask.keys():
+				if not (
+						flag & TileGeometry.CellNeighbor.SIDE
+						or (
+							mode & TileGeometry.ConnectionMode.DIAGONALS
+							and flag & TileGeometry.CellNeighbor.CORNER
+						)
+				):
+					continue
+				if path[i-1] == advanced_get_neighbor_cell(cell, flag):
+					preserve_mask.erase(flag)
+					break
+		if i + 1 < path.size():
+			for flag in preserve_mask.keys():
+				if not (
+						flag & TileGeometry.CellNeighbor.SIDE
+						or (
+							mode & TileGeometry.ConnectionMode.DIAGONALS
+							and flag & TileGeometry.CellNeighbor.CORNER
+						)
+				):
+					continue
+				if path[i+1] == advanced_get_neighbor_cell(cell, flag):
+					preserve_mask.erase(flag)
+					break
+		
+		var tile := advanced_autotile_choose_tile(cell, preserve_mask)
+		changes[cell] = {
+			"old": AdvancedTileSet.TileKey.new(
+				get_cell_source_id(cell),
+				get_cell_atlas_coords(cell),
+				get_cell_alternative_tile(cell)
+			),
+			"new": tile
+		}
+		if not dry_run:
+			set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+	
+	for cell in surrounding_cells:
+		var preserve_mask := advanced_get_existing_cell_mask(cell)
+		var tile := advanced_autotile_choose_tile(cell, preserve_mask)
+		changes[cell] = {
+			"old": AdvancedTileSet.TileKey.new(
+				get_cell_source_id(cell),
+				get_cell_atlas_coords(cell),
+				get_cell_alternative_tile(cell)
+			),
+			"new": tile
+		}
+		if not dry_run:
+			set_cell(cell, tile.source_id, tile.coords, tile.alternative_id)
+	
+	_incoming_terrains.clear()
 	return changes
 
 

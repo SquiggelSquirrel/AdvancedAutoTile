@@ -348,8 +348,8 @@ func get_advanced_mask(tile: TileKey) -> Dictionary:
 			{}
 	)
 	if mask.is_empty():
-		return _get_terrain_empty_mask(terrain_index, orientation)
-	return mask
+		return get_terrain_empty_mask(terrain_index, orientation)
+	return mask.duplicate()
 
 
 ## Returns an array of tile keys in all the atlas sources of this tile set.
@@ -443,6 +443,13 @@ func get_tile_match_priority_bonus() -> int:
 	if _need_recalc:
 		_recalc()
 	return _tile_match_priority_bonus
+
+
+func get_advanced_terrain_has_tiles(terrain_id: int) -> bool:
+	for tile in get_advanced_tiles():
+		if get_advanced_terrain(tile) == terrain_id:
+			return true
+	return false
 
 
 func _recalc() -> void:
@@ -570,7 +577,7 @@ func _apply_base_overrides() -> void:
 	)
 
 
-func _get_terrain_empty_mask(
+func get_terrain_empty_mask(
 		terrain_index: int,
 		orientation: TileGeometry.Orientation
 ) -> Dictionary:
@@ -654,6 +661,7 @@ class Terrain:
 	var auto_binding := true
 	var bindings: int = 0 #(bitmask)
 	var priority: int = 0
+	var has_tiles := false
 	
 	
 	func _init(init_name: String, init_color: Color) -> void:
