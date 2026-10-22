@@ -1,9 +1,6 @@
 @tool
 extends Control
 
-const IGNORE_TEXTURE: Texture2D = preload(
-		"res://addons/advanced_autotiles/assets/checkered.png"
-)
 enum Mode {
 	SETUP_TERRAIN = 0,
 	SETUP_MASKS = 1,
@@ -255,19 +252,7 @@ func _draw_editable_tiles() -> void:
 					var polygon: PackedVector2Array = flag_polygons[flag_key]
 					var scaled_polygon := local_transform * polygon
 					var flag_value := mask.get(flag_key, TileGeometry.FLAG_EMPTY)
-					if flag_value == TileGeometry.FLAG_IGNORE:
-						draw_colored_polygon(
-								scaled_polygon,
-								Color.WHITE,
-								Transform2D(
-										0,
-										Vector2(8.0, 8.0),
-										0,
-										Vector2.ZERO
-								) * polygon,
-								IGNORE_TEXTURE
-						)
-					elif flag_value != TileGeometry.FLAG_EMPTY:
+					if flag_value != TileGeometry.FLAG_EMPTY:
 						draw_colored_polygon(
 								scaled_polygon,
 								tile_set.get_advanced_terrain_color(flag_value),

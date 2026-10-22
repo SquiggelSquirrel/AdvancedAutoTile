@@ -4,7 +4,6 @@ extends Object
 const CENTER_FLAG_SHRINK := 0.6
 ## Reserved terrain_index values with special meaning
 const FLAG_EMPTY := -1
-const FLAG_IGNORE := -2
 const _UP_TRIANGLE_NEIGHBOR_OFFSETS: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {
 	TileGeometry.CellNeighbor.TOP_COUNTERCLOCKWISE_CORNER:
 		Vector2i(-1, -1),

@@ -40,6 +40,7 @@ button_pressed = true
 text = "Show Grid"
 
 [node name="PaintMode" type="HBoxContainer" parent="VBoxContainer" unique_id=1865640108]
+unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("2_57cp5")
 button_group = SubResource("ButtonGroup_mts8s")
@@ -51,19 +52,20 @@ button_pressed = true
 button_group = SubResource("ButtonGroup_mts8s")
 text = "Cells"
 
-[node name="Corners" type="Button" parent="VBoxContainer/PaintMode" unique_id=1020284365]
-layout_mode = 2
-toggle_mode = true
-button_group = SubResource("ButtonGroup_mts8s")
-text = "Corners"
-
 [node name="Path" type="Button" parent="VBoxContainer/PaintMode" unique_id=590691066]
 layout_mode = 2
 toggle_mode = true
 button_group = SubResource("ButtonGroup_mts8s")
 text = "Path"
 
+[node name="Corners" type="Button" parent="VBoxContainer/PaintMode" unique_id=1020284365]
+layout_mode = 2
+toggle_mode = true
+button_group = SubResource("ButtonGroup_mts8s")
+text = "Corners"
+
 [node name="PaintShape" type="HBoxContainer" parent="VBoxContainer" unique_id=7835994]
+unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("2_57cp5")
 button_group = SubResource("ButtonGroup_ynxr4")

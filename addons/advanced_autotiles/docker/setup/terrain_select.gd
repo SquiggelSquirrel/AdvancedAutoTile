@@ -3,7 +3,6 @@ extends OptionButton
 
 
 @export var include_empty := false
-@export var include_ignore := false
 @export var default_index := 0
 var tile_set: AdvancedTileSet = null:
 	set(value):
@@ -28,10 +27,7 @@ func _update_terrains() -> void:
 		return
 	if include_empty:
 		add_item("Empty")
-		item_terrain_indices.append(-1)
-	if include_ignore:
-		add_item("Ignore")
-		item_terrain_indices.append(-2)
+		item_terrain_indices.append(TileGeometry.FLAG_EMPTY)
 	for terrain_index in tile_set.get_advanced_terrains_count():
 		add_item(tile_set.get_advanced_terrain_name(terrain_index))
 		item_terrain_indices.append(terrain_index)
