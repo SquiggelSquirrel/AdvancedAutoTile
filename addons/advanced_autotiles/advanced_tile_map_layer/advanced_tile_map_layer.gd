@@ -37,10 +37,12 @@ func advanced_autotile_paint_cells(
 		for neighbor in advanced_get_surrounding_cells(cell, true):
 			if ! neighbor in cells and ! neighbor in surrounding_cells:
 				surrounding_cells.append(neighbor)
-		
-		var change := advanced_autotile_choose_tile(cell)
-		if not change.is_empty():
-			changes[cell] = change
+
+		changes = _merge_changes(
+				changes,
+				cell,
+				advanced_autotile_choose_tile(cell)
+		)
 	
 	for cell in surrounding_cells:
 		var terrain := advanced_get_final_cell_terrain(cell)
@@ -61,9 +63,12 @@ func advanced_autotile_paint_cells(
 						break
 				if preserve_flag:
 					preserve_mask[flag] = existing_mask[flag]
-		var change := advanced_autotile_choose_tile(cell, preserve_mask)
-		if not change.is_empty():
-			changes[cell] = change
+					
+		changes = _merge_changes(
+				changes,
+				cell,
+				advanced_autotile_choose_tile(cell, preserve_mask)
+		)
 	_incoming_terrains.clear()
 	return changes
 
@@ -106,10 +111,12 @@ func advanced_autotile_paint_corners(
 			var control := _get_control_flag(cell, flag)
 			if constraints.get(control[0], {}).has(control[1]):
 				mask[flag] = constraints[control[0]][control[1]]
-		var change := advanced_autotile_choose_tile(cell, mask)
-		if not change.is_empty():
-			changes[cell] = change
-	
+
+		changes = _merge_changes(
+				changes,
+				cell,
+				advanced_autotile_choose_tile(cell, mask)
+		)	
 	return changes
 
 
@@ -167,15 +174,19 @@ func advanced_autotile_paint_path(
 					preserve_mask.erase(flag)
 					break
 		
-		var change := advanced_autotile_choose_tile(cell, preserve_mask)
-		if not change.is_empty():
-			changes[cell] = change
+		changes = _merge_changes(
+				changes,
+				cell,
+				advanced_autotile_choose_tile(cell, preserve_mask)
+		)
 	
 	for cell in surrounding_cells:
 		var preserve_mask := advanced_get_existing_cell_mask(cell)
-		var change := advanced_autotile_choose_tile(cell, preserve_mask)
-		if not change.is_empty():
-			changes[cell] = change
+		changes = _merge_changes(
+				changes,
+				cell,
+				advanced_autotile_choose_tile(cell, preserve_mask)
+		)
 	
 	_incoming_terrains.clear()
 	return changes
@@ -457,6 +468,17 @@ func advanced_get_neighbor_cell(
 	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
 
 
+func advanced_get_existing_tile(cell: Vector2i) -> AdvancedTileSet.TileKey:
+	var source_id := get_cell_source_id(cell)
+	if source_id == -1:
+		return AdvancedTileSet.TileKey.EMPTY
+	return AdvancedTileSet.TileKey.new(
+			source_id,
+			get_cell_atlas_coords(cell),
+			get_cell_alternative_tile(cell)
+	)
+
+
 func advanced_get_neighbor_cells_for_flag(
 		cell: Vector2i,
 		flag: TileGeometry.CellNeighbor,
@@ -573,6 +595,16 @@ func advanced_get_neighbor_flags_for_flag(
 					side_flag,
 					side_flag & ~ (CN.TOP | CN.BOTTOM),
 				]
+
+
+func _merge_changes(
+		changes: Dictionary, cell: Vector2i, change: Dictionary
+) -> Dictionary:
+	if change.is_empty():
+		return changes
+	else:
+		changes[cell] = change
+		return changes
 
 
 class TilePriority:
