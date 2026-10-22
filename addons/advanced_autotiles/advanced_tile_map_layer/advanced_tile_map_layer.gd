@@ -490,17 +490,6 @@ func advanced_get_neighbor_cells_for_flag(
 	return result_cells
 
 
-func advanced_get_existing_tile(cell: Vector2i) -> AdvancedTileSet.TileKey:
-	var source_id := get_cell_source_id(cell)
-	if source_id == -1:
-		return AdvancedTileSet.TileKey.EMPTY
-	return AdvancedTileSet.TileKey.new(
-			source_id,
-			get_cell_atlas_coords(cell),
-			get_cell_alternative_tile(cell)
-	)
-
-
 func advanced_get_neighbor_flags_for_flag(
 		cell: Vector2i,
 		flag: TileGeometry.CellNeighbor,
