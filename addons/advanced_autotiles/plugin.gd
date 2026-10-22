@@ -1,4 +1,5 @@
 @tool
+class_name AdvancedAutoTilePlugin
 extends EditorPlugin
 
 const DOCK_SCENE := preload("res://addons/advanced_autotiles/docker/docker.tscn")
@@ -430,13 +431,14 @@ class PaintAction:
 	func commit(undo_redo: EditorUndoRedoManager) -> void:
 		if changes.is_empty():
 			return
-		undo_redo.create_action(
-				_commit_name(
-					tile_map_layer.advanced_tile_set.get_advanced_terrain_name(
-						terrain_id
-					)
-				)
-		)
+		var terrain_name: String
+		if terrain_id == -1:
+			terrain_name = "Erase"
+		else:
+			terrain_name = tile_map_layer.advanced_tile_set.get_advanced_terrain_name(
+					terrain_id
+			)
+		undo_redo.create_action(_commit_name(terrain_name))
 		for cell in changes.keys():
 			var old: AdvancedTileSet.TileKey = changes[cell]["old"]
 			var new: AdvancedTileSet.TileKey = changes[cell]["new"]

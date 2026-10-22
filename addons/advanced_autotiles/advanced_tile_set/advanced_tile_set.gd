@@ -66,12 +66,16 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		if _is_loaded:
 			_apply_base_overrides()
 			changed.emit()
-## If enabled, properties of the base [class TileSet] will not show in the
-## editor if intended to be replaced by Advanced Autotiles properties.
-## (Note that this only affects the inspector and not the underlying API)
-@export var hide_base_class_features := true:
+
+@export var advanced_auto_priorities := false:
 	set(value):
-		hide_base_class_features = value
+		if value == advanced_auto_priorities:
+			return
+		if value:
+			_need_recalc = true
+		elif _need_recalc:
+			_recalc()
+		advanced_auto_priorities = value
 		notify_property_list_changed()
 @export var advanced_empty_flag_auto_bindings := true:
 	set(value):
@@ -80,12 +84,18 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		advanced_empty_flag_auto_bindings = value
 		notify_property_list_changed()
 @export var advanced_empty_flag_bindings: int = 0
-@export_storage var _empty_flag_priority := 0
-@export_storage var _tile_match_priority_bonus := 0
+@export var empty_flag_priority := 0
 
+## If enabled, properties of the base [class TileSet] will not show in the
+## editor if intended to be replaced by Advanced Autotiles properties.
+## (Note that this only affects the inspector and not the underlying API)
+@export var hide_base_class_features := true:
+	set(value):
+		hide_base_class_features = value
+		notify_property_list_changed()
+@export_storage var _tile_match_priority_bonus := 0
 @export_storage var _need_recalc := true
 var _is_loaded := false
-
 var _terrains: Array[Terrain] = []
 
 
@@ -123,7 +133,10 @@ func _get_property_list() -> Array[Dictionary]:
 			}, {
 				"name": "advanced_terrain_%d/priority" % i,
 				"type": TYPE_INT,
-				"usage": PROPERTY_USAGE_STORAGE,
+				"usage": (
+						PROPERTY_USAGE_STORAGE if advanced_auto_priorities
+						else PROPERTY_USAGE_DEFAULT
+				),
 			}, {
 				"name": "advanced_terrain_%d/auto_binding" % i,
 				"type": TYPE_BOOL,
@@ -401,9 +414,8 @@ func get_advanced_terrain_auto_binding(terrain_index: int) -> bool:
 func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool:
 	if _need_recalc:
 		_recalc()
-	if terrain_index == TileGeometry.FLAG_IGNORE:
-		return true
-	elif terrain_index == TileGeometry.FLAG_EMPTY:
+	
+	if terrain_index == TileGeometry.FLAG_EMPTY:
 		return _binding_matches_terrain_index(
 				advanced_empty_flag_bindings, other_index
 		)
@@ -414,12 +426,10 @@ func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool
 
 
 func get_advanced_terrain_priority(terrain_index: int) -> int:
-	if terrain_index == TileGeometry.FLAG_IGNORE:
-		return 0
 	if _need_recalc:
 		_recalc()
 	if terrain_index == TileGeometry.FLAG_EMPTY:
-		return _empty_flag_priority
+		return empty_flag_priority
 	return _terrains[terrain_index].priority
 
 
@@ -454,7 +464,8 @@ func get_advanced_terrain_has_tiles(terrain_id: int) -> bool:
 
 func _recalc() -> void:
 	_advanced_terrain_update_auto_bindings()
-	_advanced_terrain_update_priorities()
+	if advanced_auto_priorities:
+		_advanced_terrain_update_priorities()
 	_need_recalc = false
 
 
@@ -473,8 +484,6 @@ func _advanced_terrain_update_auto_bindings() -> void:
 		for flag in mask:
 			var flag_terrain_index: int = mask[flag]
 			if ! _terrains[flag_terrain_index].auto_binding:
-				continue
-			if flag_terrain_index == TileGeometry.FLAG_IGNORE:
 				continue
 			if flag_terrain_index == TileGeometry.FLAG_EMPTY:
 				if advanced_empty_flag_auto_bindings:
@@ -512,7 +521,7 @@ func _advanced_terrain_update_priorities() -> void:
 	graph.sort()
 	for i in graph.t_sort.size():
 		if graph.t_sort[i] == empty_node_index:
-			_empty_flag_priority = i + 1
+			empty_flag_priority = i + 1
 		else:
 			_terrains[graph.t_sort[i]].priority = i + 1
 	_tile_match_priority_bonus = (graph.t_sort.size() + 1) * 16
