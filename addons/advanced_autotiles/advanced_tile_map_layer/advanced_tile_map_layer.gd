@@ -26,97 +26,32 @@ func advanced_autotile_paint_cells(
 		preserve_surrounding_connections := true,
 		dry_run := false
 ) -> Dictionary:
-	if ! tile_set is AdvancedTileSet:
-		return {}
-	var changes := {}
+	var changes: Dictionary[Vector2i, Dictionary] = {}
+	add_incoming_terrain(terrain_id, cells)
+
 	for cell in cells:
-		_incoming_terrains[cell] = terrain_id
-	var surrounding_cells:Array[Vector2i] = []
+		var change := advanced_autotile_choose_tile(cell)
+		_merge_changes(changes, cell, change)
+	
+	for cell in get_cells_surrounding_cells(cells, true):
+		var prioritise_mask := {}
 		
-	for cell in cells:
-		for neighbor in advanced_get_surrounding_cells(cell, true):
-			if ! neighbor in cells and ! neighbor in surrounding_cells:
-				surrounding_cells.append(neighbor)
-
-		changes = _merge_changes(
-				changes,
-				cell,
-				advanced_autotile_choose_tile(cell)
-		)
-	
-	for cell in surrounding_cells:
-		var terrain := advanced_get_final_cell_terrain(cell)
-		if terrain == -1:
-			continue
-		var existing_mask := advanced_get_existing_cell_mask(cell)
-		var preserve_mask := {}
 		if preserve_surrounding_connections:
+			var existing_mask := advanced_get_existing_cell_mask(cell)
 			for flag in advanced_get_existing_cell_mask(cell):
-				var preserve_flag := true
-				for adjacent in advanced_get_neighbor_cells_for_flag(
-						cell,
-						flag,
-						TileGeometry.ConnectionMode.CORNERS_AND_EDGES
-				):
-					if adjacent in cells:
-						preserve_flag = false
-						break
-				if preserve_flag:
-					preserve_mask[flag] = existing_mask[flag]
-					
+				if ! _cell_flag_touches_region(cell, flag, cells):
+					prioritise_mask[flag] = existing_mask[flag]
+		
 		changes = _merge_changes(
 				changes,
 				cell,
-				advanced_autotile_choose_tile(cell, preserve_mask)
+				advanced_autotile_choose_tile(
+					cell,
+					prioritise_mask
+				)
 		)
-	_incoming_terrains.clear()
-	return changes
-
-
-func advanced_autotile_paint_corners(
-		terrain: int,
-		cells: Array[Vector2i],
-		flags: Array[TileGeometry.CellNeighbor],
-		dry_run := false
-) -> Dictionary:
-	var changes := {}
-	for flag in flags:
-		assert(flag & TileGeometry.CellNeighbor.CORNER)
 	
-	# Determine which cells actually need updating,
-	# and set up dictioary of unambiguous constraints
-	var cells_to_update := cells.duplicate()
-	var constraints: Dictionary[Vector2i, Dictionary] = {}
-	for i in cells.size():
-		var cell: Vector2i = cells[i]
-		var flag: TileGeometry.CellNeighbor = flags[wrapi(i, 0, flags.size())]
-		var control := _get_control_flag(cell, flag)
-		constraints[control[0]] = constraints.get(control[0], {})
-		constraints[control[0]][control[1]] = terrain
-		for neighbor in advanced_get_neighbor_cells_for_flag(
-				cell,
-				flag,
-				TileGeometry.ConnectionMode.CORNERS
-		):
-			if not neighbor in cells_to_update:
-				cells_to_update.append(neighbor)
-	
-	# Actually update the cells
-	for cell in cells_to_update:
-		var cell_terrain := advanced_get_final_cell_terrain(cell)
-		var mask := advanced_get_existing_cell_mask(cell)
-		for flag in mask.keys():
-			if not flag & TileGeometry.CellNeighbor.CORNER:
-				continue
-			var control := _get_control_flag(cell, flag)
-			if constraints.get(control[0], {}).has(control[1]):
-				mask[flag] = constraints[control[0]][control[1]]
-
-		changes = _merge_changes(
-				changes,
-				cell,
-				advanced_autotile_choose_tile(cell, mask)
-		)	
+	clear_incoming_terrains()
 	return changes
 
 
@@ -125,74 +60,205 @@ func advanced_autotile_paint_path(
 		path: Array[Vector2i],
 		dry_run := false
 ) -> Dictionary:
-	for cell in path:
-		_incoming_terrains[cell] = terrain_id
-		
-	var surrounding_cells:Array[Vector2i] = []
-	for cell in path:
-		for neighbor in advanced_get_surrounding_cells(cell, true):
-			if ! neighbor in path and ! neighbor in surrounding_cells:
-				surrounding_cells.append(neighbor)
-	
+	add_incoming_terrain(terrain_id, path)	
 	var changes := {}
 	
-	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain_id)
+	var has_diagonals := bool(
+			advanced_tile_set.get_advanced_terrain_mode(terrain_id)
+			& TileGeometry.ConnectionMode.DIAGONALS
+	)
 	for i in path.size():
 		var cell := path[i]
-		var orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
-		var preserve_mask := advanced_tile_set.get_terrain_empty_mask(
-				terrain_id, orientation
-		)
 		var existing_mask := advanced_get_existing_cell_mask(cell)
+		var preserve_mask := advanced_tile_set.get_terrain_empty_mask(
+				terrain_id,
+				advanced_tile_set.get_advanced_cell_orientation(cell)
+		)
 		for flag in existing_mask:
 			if preserve_mask.has(flag):
 				preserve_mask[flag] = existing_mask[flag]
+		
+		var path_flags: PackedInt32Array
+		if has_diagonals:
+			path_flags = preserve_mask.keys()
+		else:
+			path_flags = preserve_mask.keys().filter(
+				func(flag): return flag & TileGeometry.CellNeighbor.SIDE
+			)
 		if i > 0:
-			for flag in preserve_mask.keys():
-				if not (
-						flag & TileGeometry.CellNeighbor.SIDE
-						or (
-							mode & TileGeometry.ConnectionMode.DIAGONALS
-							and flag & TileGeometry.CellNeighbor.CORNER
-						)
-				):
-					continue
+			for flag in path_flags:
 				if path[i-1] == advanced_get_neighbor_cell(cell, flag):
 					preserve_mask.erase(flag)
 					break
 		if i + 1 < path.size():
-			for flag in preserve_mask.keys():
-				if not (
-						flag & TileGeometry.CellNeighbor.SIDE
-						or (
-							mode & TileGeometry.ConnectionMode.DIAGONALS
-							and flag & TileGeometry.CellNeighbor.CORNER
-						)
-				):
-					continue
+			for flag in path_flags:
 				if path[i+1] == advanced_get_neighbor_cell(cell, flag):
 					preserve_mask.erase(flag)
 					break
 		
-		changes = _merge_changes(
-				changes,
-				cell,
-				advanced_autotile_choose_tile(cell, preserve_mask)
-		)
+		var change := advanced_autotile_choose_tile(cell, preserve_mask)
+		_merge_changes(changes, cell, change)
 	
-	for cell in surrounding_cells:
+	for cell in get_cells_surrounding_cells(path, true):
 		var preserve_mask := advanced_get_existing_cell_mask(cell)
-		changes = _merge_changes(
-				changes,
-				cell,
-				advanced_autotile_choose_tile(cell, preserve_mask)
-		)
+		var change := advanced_autotile_choose_tile(cell, preserve_mask)
+		_merge_changes(changes, cell, change)
 	
-	_incoming_terrains.clear()
+	clear_incoming_terrains()
 	return changes
 
 
-func _get_control_flag(cell: Vector2i, flag: int) -> Array:
+func advanced_autotile_paint_corners(
+		terrain_id: int,
+		cells: Array[Vector2i],
+		flags: Array[TileGeometry.CellNeighbor],
+		dry_run := false
+) -> Dictionary:
+	var changes: Dictionary[Vector2i, Dictionary] = {}
+	var constraints := _normalise_constraints(
+			terrain_id,
+			cells,
+			flags
+	)
+	for cell in _get_cells_around_constraints(constraints):
+		var mask := advanced_get_existing_cell_mask(cell)
+		for flag in mask.keys().filter(
+				func(flag): return flag & TileGeometry.CellNeighbor.CORNER
+		):
+			var constraint := _get_constraint_cell_and_flag(cell, flag)
+			var constraint_cell: Vector2i = constraint[0]
+			var constraint_flag: TileGeometry.CellNeighbor = constraint[1]
+			if constraints.get(constraint_cell, {}).has(constraint_flag):
+				mask[flag] = constraints[constraint_cell][constraint_flag]
+		
+		var change = advanced_autotile_choose_tile(cell, mask)
+		_merge_changes(changes, cell, change)
+	return changes
+
+
+func add_incoming_terrain(terrain_id: int, cells: Array[Vector2i]) -> void:
+	for cell in cells:
+		_incoming_terrains[cell] = terrain_id
+
+
+func clear_incoming_terrains() -> void:
+	_incoming_terrains.clear()
+
+
+func advanced_autotile_choose_tile(
+		cell: Vector2i,
+		prioritize_mask: Dictionary = {},
+		dry_run := false
+) -> Dictionary:
+	var existing := advanced_get_existing_tile(cell)
+	var terrain := advanced_get_final_cell_terrain(cell)
+	if terrain == -1:
+		if existing.equals(AdvancedTileSet.TileKey.EMPTY):
+			return {}
+		else:
+			if ! dry_run:
+				set_cell(cell, -1)
+			return {
+					"old": existing,
+					"new": AdvancedTileSet.TileKey.EMPTY
+			}
+	var existing_mask := advanced_get_existing_cell_mask(cell)
+	var max_priority := TilePriority.new()
+	max_priority.matching_tile = false
+	var candidates: Array[AdvancedTileSet.TileKey] = []
+	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
+	for tile in advanced_tile_set.get_advanced_tiles():
+		if advanced_tile_set.get_advanced_terrain(tile) != terrain:
+			continue
+		var tile_orientation := advanced_tile_set.get_advanced_orientation(tile)
+		if tile_orientation != cell_orientation:
+			continue
+		var tile_priority := _tile_match_priority(
+				cell,
+				tile,
+				prioritize_mask
+		)
+		match tile_priority.compare(max_priority):
+			TilePriority.Comparison.OTHER_IS_LESSER:
+				max_priority = tile_priority
+				candidates = [tile]
+			TilePriority.Comparison.EQUAL:
+				candidates.append(tile)
+	
+	# Should only be empty if no tiles exist for the given terrain
+	# (with the correct orientation)
+	# - not sure what the best behaviour is, in this situation.
+	if candidates.is_empty():
+		if ! dry_run:
+			set_cell(cell, -1)
+		return {
+				"old": existing,
+				"new": AdvancedTileSet.TileKey.EMPTY
+		}
+	var new := _tile_select_random(candidates)
+	if new.equals(existing):
+		return {}
+	else:
+		if ! dry_run:
+			set_cell(cell, new.source_id, new.coords, new.alternative_id)
+		return {
+				"old": existing,
+				"new": new
+		}
+
+
+func _cell_flag_touches_region(
+		cell: Vector2i,
+		flag: TileGeometry.CellNeighbor,
+		region: Array[Vector2i]
+) -> bool:
+	for adjacent in advanced_get_neighbor_cells_for_flag(
+			cell,
+			flag,
+			TileGeometry.ConnectionMode.CORNERS_AND_EDGES
+	):
+		if adjacent in region:
+			return true
+	return false
+
+
+func _get_cells_around_constraints(
+		constraints: Dictionary
+) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for cell in constraints:
+		if cell not in cells:
+			cells.append(cell)
+		for flag in constraints[cell]:
+			for neighbor in advanced_get_neighbor_cells_for_flag(
+					cell,
+					flag,
+					TileGeometry.ConnectionMode.CORNERS
+			):
+				if neighbor not in cells:
+					cells.append(neighbor)
+	return cells
+
+
+func _normalise_constraints(
+		terrain_id: int,
+		cells: Array[Vector2i],
+		flags: Array[TileGeometry.CellNeighbor]
+) -> Dictionary:
+	var constraints: Dictionary[Vector2i, Dictionary] = {}
+	for i in cells.size():
+		var constraint := _get_constraint_cell_and_flag(
+				cells[i],
+				flags[wrapi(i, 0, flags.size())]
+		)
+		var cell: Vector2i = constraint[0]
+		var flag: TileGeometry.CellNeighbor = constraint[1]
+		constraints[cell] = constraints.get(cell, {})
+		constraints[cell][flag] = terrain_id
+	return constraints
+
+
+func _get_constraint_cell_and_flag(cell: Vector2i, flag: int) -> Array:
 	var CN := TileGeometry.CellNeighbor
 	match advanced_tile_set.advanced_shape:
 		TileGeometry.Shape.SQUARE:
@@ -270,68 +336,6 @@ func _get_control_flag(cell: Vector2i, flag: int) -> Array:
 			]
 	assert(false, "Invalid tile shape")
 	return [cell, flag]
-
-
-func advanced_autotile_choose_tile(
-		cell: Vector2i,
-		prioritize_mask: Dictionary = {},
-		dry_run := false
-) -> Dictionary:
-	var existing := advanced_get_existing_tile(cell)
-	var terrain := advanced_get_final_cell_terrain(cell)
-	if terrain == -1:
-		if existing.equals(AdvancedTileSet.TileKey.EMPTY):
-			return {}
-		else:
-			if ! dry_run:
-				set_cell(cell, -1)
-			return {
-					"old": existing,
-					"new": AdvancedTileSet.TileKey.EMPTY
-			}
-	var existing_mask := advanced_get_existing_cell_mask(cell)
-	var max_priority := TilePriority.new()
-	max_priority.matching_tile = false
-	var candidates: Array[AdvancedTileSet.TileKey] = []
-	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
-	for tile in advanced_tile_set.get_advanced_tiles():
-		if advanced_tile_set.get_advanced_terrain(tile) != terrain:
-			continue
-		var tile_orientation := advanced_tile_set.get_advanced_orientation(tile)
-		if tile_orientation != cell_orientation:
-			continue
-		var tile_priority := _tile_match_priority(
-				cell,
-				tile,
-				prioritize_mask
-		)
-		match tile_priority.compare(max_priority):
-			TilePriority.Comparison.OTHER_IS_LESSER:
-				max_priority = tile_priority
-				candidates = [tile]
-			TilePriority.Comparison.EQUAL:
-				candidates.append(tile)
-	
-	# Should only be empty if no tiles exist for the given terrain
-	# (with the correct orientation)
-	# - not sure what the best behaviour is, in this situation.
-	if candidates.is_empty():
-		if ! dry_run:
-			set_cell(cell, -1)
-		return {
-				"old": existing,
-				"new": AdvancedTileSet.TileKey.EMPTY
-		}
-	var new := _tile_select_random(candidates)
-	if new.equals(existing):
-		return {}
-	else:
-		if ! dry_run:
-			set_cell(cell, new.source_id, new.coords, new.alternative_id)
-		return {
-				"old": existing,
-				"new": new
-		}
 
 
 func _tile_match_priority(
@@ -416,6 +420,18 @@ func advanced_get_existing_cell_mask(
 	if advanced_tile_set.get_advanced_orientation(tile) != cell_orientation:
 		return {}
 	return advanced_tile_set.get_advanced_mask(tile)
+
+
+func get_cells_surrounding_cells(
+		cells: Array[Vector2i],
+		include_diagonals := false
+) -> Array[Vector2i]:
+	var surrounding_cells:Array[Vector2i] = []
+	for cell in cells:
+		for neighbor in advanced_get_surrounding_cells(cell, include_diagonals):
+			if ! neighbor in cells and ! neighbor in surrounding_cells:
+				surrounding_cells.append(neighbor)
+	return surrounding_cells
 
 
 func advanced_get_surrounding_cells(
