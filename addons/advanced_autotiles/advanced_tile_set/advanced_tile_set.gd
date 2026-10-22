@@ -129,7 +129,10 @@ func _get_property_list() -> Array[Dictionary]:
 				"name": "advanced_terrain_%d/mode" % i,
 				"type": TYPE_INT,
 				"hint": PROPERTY_HINT_ENUM,
-				"hint_string": _get_enum_hint_string(TileGeometry.ConnectionMode),
+				"hint_string": _get_enum_hint_string(
+						TileGeometry.ConnectionMode,
+						TileGeometry.get_connection_modes(advanced_shape)
+				),
 			}, {
 				"name": "advanced_terrain_%d/priority" % i,
 				"type": TYPE_INT,
@@ -261,11 +264,23 @@ func _get_bindings_hint_string(include_empty := true) -> String:
 	return ",".join(names)
 
 
-func _get_enum_hint_string(enum_dict: Dictionary) -> String:
+func _get_enum_hint_string(
+		enum_dict: Dictionary,
+		values: PackedInt32Array = []
+) -> String:
 	var hint_strings: PackedStringArray = []
-	for key: String in enum_dict.keys():
-		hint_strings.append(
-			"%s:%s" % [key.capitalize(), enum_dict[key]])
+	if values.is_empty():
+		for key: String in enum_dict.keys():
+			hint_strings.append(
+				"%s:%s" % [key.capitalize(), enum_dict[key]])
+	else:
+		for value in values:
+			hint_strings.append(
+				"%s:%s" % [
+					enum_dict.find_key(value).capitalize(),
+					value
+				]
+			)
 	return ",".join(hint_strings)
 #endregion
 

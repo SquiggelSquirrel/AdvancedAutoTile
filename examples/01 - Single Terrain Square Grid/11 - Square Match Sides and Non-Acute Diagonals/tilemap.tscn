@@ -680,19 +680,6 @@ advanced_empty_flag_bindings = 7
 empty_flag_priority = 1
 _tile_match_priority_bonus = 64
 _need_recalc = false
-advanced_terrain_count = 2
-advanced_terrain_0/name = "Grass"
-advanced_terrain_0/color = Color(4.764944e-06, 0.70660746, 0.18932709, 1)
-advanced_terrain_0/mode = 6
-advanced_terrain_0/priority = 2
-advanced_terrain_0/auto_binding = false
-advanced_terrain_0/bindings = 2
-advanced_terrain_1/name = "True Empty"
-advanced_terrain_1/color = Color(0.8039216, 0.4937255, 0.36078432, 1)
-advanced_terrain_1/mode = 0
-advanced_terrain_1/priority = 1
-advanced_terrain_1/auto_binding = false
-advanced_terrain_1/bindings = 1
 metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
 
 [node name="Tilemap" type="TileMapLayer" unique_id=187271269]
