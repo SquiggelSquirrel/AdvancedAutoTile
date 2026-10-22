@@ -5,6 +5,14 @@ extends TileSet
 ## Key used for storing per-tile plugin data on TileSet custom data layer
 const DATA_LAYER_NAME := "_advanced_autotiles"
 
+## If enabled, properties of the base [class TileSet] will not show in the
+## editor if intended to be replaced by Advanced Autotiles properties.
+## (Note that this only affects the inspector and not the underlying API)
+@export var hide_base_class_features := true:
+	set(value):
+		hide_base_class_features = value
+		notify_property_list_changed()
+@export_group("Grid properties", "advanced_")
 ## The tile shape used by the Advanced Autotiles plugin.
 ## In most cases, this is the same as the base [member tile_shape],
 ## but triangles are supported (and will use square shape on the base class)
@@ -67,32 +75,26 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 			_apply_base_overrides()
 			changed.emit()
 
-@export var advanced_auto_priorities := false:
+@export_group("Autotiling")
+@export var auto_priorities := false:
 	set(value):
-		if value == advanced_auto_priorities:
+		if value == auto_priorities:
 			return
 		if value:
 			_need_recalc = true
 		elif _need_recalc:
 			_recalc()
-		advanced_auto_priorities = value
+		auto_priorities = value
 		notify_property_list_changed()
-@export var advanced_empty_flag_auto_bindings := true:
+@export_subgroup("Empty tile", "empty_terrain_")
+@export var empty_terrain_auto_bindings := true:
 	set(value):
-		if value and not advanced_empty_flag_auto_bindings:
+		if value and not empty_terrain_auto_bindings:
 			_need_recalc = true
-		advanced_empty_flag_auto_bindings = value
+		empty_terrain_auto_bindings = value
 		notify_property_list_changed()
-@export var advanced_empty_flag_bindings: int = 0
-@export var empty_flag_priority := 0
-
-## If enabled, properties of the base [class TileSet] will not show in the
-## editor if intended to be replaced by Advanced Autotiles properties.
-## (Note that this only affects the inspector and not the underlying API)
-@export var hide_base_class_features := true:
-	set(value):
-		hide_base_class_features = value
-		notify_property_list_changed()
+@export var empty_terrain_bindings: int = 0
+@export var empty_terrain_priority := 0
 @export_storage var _tile_match_priority_bonus := 0
 @export_storage var _need_recalc := true
 var _is_loaded := false
@@ -129,12 +131,15 @@ func _get_property_list() -> Array[Dictionary]:
 				"name": "advanced_terrain_%d/mode" % i,
 				"type": TYPE_INT,
 				"hint": PROPERTY_HINT_ENUM,
-				"hint_string": _get_enum_hint_string(TileGeometry.ConnectionMode),
+				"hint_string": _get_enum_hint_string(
+						TileGeometry.ConnectionMode,
+						TileGeometry.get_connection_modes(advanced_shape)
+				),
 			}, {
 				"name": "advanced_terrain_%d/priority" % i,
 				"type": TYPE_INT,
 				"usage": (
-						PROPERTY_USAGE_STORAGE if advanced_auto_priorities
+						PROPERTY_USAGE_STORAGE if auto_priorities
 						else PROPERTY_USAGE_DEFAULT
 				),
 			}, {
@@ -159,11 +164,11 @@ func _validate_property(property: Dictionary) -> void:
 		"advanced_layout", "advanced_axis":
 			if advanced_shape == TileGeometry.Shape.SQUARE:
 				property.usage |= PROPERTY_USAGE_READ_ONLY
-		"advanced_empty_flag_auto_bindings":
+		"empty_terrain_auto_bindings":
 			if _terrains.size() == 0:
 				property.usage = PROPERTY_USAGE_STORAGE
-		"advanced_empty_flag_bindings":
-			if advanced_empty_flag_auto_bindings or _terrains.size() == 0:
+		"empty_terrain_bindings":
+			if empty_terrain_auto_bindings or _terrains.size() == 0:
 				property.usage = PROPERTY_USAGE_STORAGE
 			else:
 				property.hint = PROPERTY_HINT_FLAGS
@@ -261,11 +266,23 @@ func _get_bindings_hint_string(include_empty := true) -> String:
 	return ",".join(names)
 
 
-func _get_enum_hint_string(enum_dict: Dictionary) -> String:
+func _get_enum_hint_string(
+		enum_dict: Dictionary,
+		values: PackedInt32Array = []
+) -> String:
 	var hint_strings: PackedStringArray = []
-	for key: String in enum_dict.keys():
-		hint_strings.append(
-			"%s:%s" % [key.capitalize(), enum_dict[key]])
+	if values.is_empty():
+		for key: String in enum_dict.keys():
+			hint_strings.append(
+				"%s:%s" % [key.capitalize(), enum_dict[key]])
+	else:
+		for value in values:
+			hint_strings.append(
+				"%s:%s" % [
+					enum_dict.find_key(value).capitalize(),
+					value
+				]
+			)
 	return ",".join(hint_strings)
 #endregion
 
@@ -417,7 +434,7 @@ func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool
 	
 	if terrain_index == TileGeometry.FLAG_EMPTY:
 		return _binding_matches_terrain_index(
-				advanced_empty_flag_bindings, other_index
+				empty_terrain_bindings, other_index
 		)
 	else:
 		return _binding_matches_terrain_index(
@@ -429,7 +446,7 @@ func get_advanced_terrain_priority(terrain_index: int) -> int:
 	if _need_recalc:
 		_recalc()
 	if terrain_index == TileGeometry.FLAG_EMPTY:
-		return empty_flag_priority
+		return empty_terrain_priority
 	return _terrains[terrain_index].priority
 
 
@@ -464,15 +481,15 @@ func get_advanced_terrain_has_tiles(terrain_id: int) -> bool:
 
 func _recalc() -> void:
 	_advanced_terrain_update_auto_bindings()
-	if advanced_auto_priorities:
+	if auto_priorities:
 		_advanced_terrain_update_priorities()
 	_need_recalc = false
 
 
 func _advanced_terrain_update_auto_bindings() -> void:
 	# Re-calculate terrain auto bindings
-	if advanced_empty_flag_auto_bindings:
-		advanced_empty_flag_bindings = _binding_set_terrain_index(0, -1, true)
+	if empty_terrain_auto_bindings:
+		empty_terrain_bindings = _binding_set_terrain_index(0, -1, true)
 	for index in _terrains.size():
 		if _terrains[index].auto_binding:
 			_terrains[index].bindings = 0
@@ -486,9 +503,9 @@ func _advanced_terrain_update_auto_bindings() -> void:
 			if ! _terrains[flag_terrain_index].auto_binding:
 				continue
 			if flag_terrain_index == TileGeometry.FLAG_EMPTY:
-				if advanced_empty_flag_auto_bindings:
-					advanced_empty_flag_bindings = _binding_set_terrain_index(
-						advanced_empty_flag_bindings,
+				if empty_terrain_auto_bindings:
+					empty_terrain_bindings = _binding_set_terrain_index(
+						empty_terrain_bindings,
 						center_terrain_index,
 						true
 					)
@@ -507,7 +524,7 @@ func _advanced_terrain_update_priorities() -> void:
 	for i in _terrains.size():
 		graph.add_node()
 	var empty_node_index := graph.add_node()
-	for i in _binding_get_matched_terrains(advanced_empty_flag_bindings):
+	for i in _binding_get_matched_terrains(empty_terrain_bindings):
 		if i != TileGeometry.FLAG_EMPTY:
 			graph.add_edge(empty_node_index, i)
 	for i in _terrains.size():
@@ -521,7 +538,7 @@ func _advanced_terrain_update_priorities() -> void:
 	graph.sort()
 	for i in graph.t_sort.size():
 		if graph.t_sort[i] == empty_node_index:
-			empty_flag_priority = i + 1
+			empty_terrain_priority = i + 1
 		else:
 			_terrains[graph.t_sort[i]].priority = i + 1
 	_tile_match_priority_bonus = (graph.t_sort.size() + 1) * 16
