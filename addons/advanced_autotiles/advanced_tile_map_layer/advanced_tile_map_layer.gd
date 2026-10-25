@@ -20,6 +20,52 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage &= ~ PROPERTY_USAGE_EDITOR
 
 
+func advanced_get_neighbor_cell(
+		coords: Vector2i,
+		neighbor: TileGeometry.CellNeighbor
+) -> Vector2i:
+	if neighbor == TileGeometry.CellNeighbor.SELF:
+		return coords
+	var CN := TileGeometry.CellNeighbor
+	var OR := TileGeometry.Orientation
+	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
+		var base_neighbor := TileGeometry.advanced_neighbor_to_base_neighbor(neighbor)
+		return get_neighbor_cell(coords, base_neighbor)
+	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
+	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
+
+
+func advanced_local_to_map(local: Vector2) -> Vector2i:
+	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
+		return local_to_map(local)
+	var base := local_to_map(local)
+	var orientation := advanced_tile_set.get_advanced_cell_orientation(base)
+	var center := map_to_local(base)
+	var in_cell := local - center
+	match orientation:
+		TileGeometry.Orientation.UP:
+			if (in_cell.x * 2.0) + in_cell.y < 1.0:
+				return base + Vector2i(-1, 0)
+			if (in_cell.x * 2.0) - in_cell.y >= 1.0:
+				return base + Vector2i(1, 0)
+		TileGeometry.Orientation.DOWN:
+			if (in_cell.x * 2.0) - in_cell.y < 0.0:
+				return base + Vector2i(-1, 0)
+			if (in_cell.x * 2.0) + in_cell.y >= 2.0:
+				return base + Vector2i(1, 0)
+		TileGeometry.Orientation.LEFT:
+			if (in_cell.y * 2.0) + in_cell.x < 1.0:
+				return base + Vector2i(0, -1)
+			if (in_cell.y * 2.0) - in_cell.x >= 1.0:
+				return base + Vector2i(0, 1)
+		TileGeometry.Orientation.RIGHT:
+			if (in_cell.y * 2.0) - in_cell.x < 0.0:
+				return base + Vector2i(0, -1)
+			if (in_cell.y * 2.0) + in_cell.x >= 2.0:
+				return base + Vector2i(0, 1)
+	return base
+
+
 func advanced_autotile_paint_cells(
 		terrain_id: int,
 		cells: Array[Vector2i],
@@ -33,14 +79,22 @@ func advanced_autotile_paint_cells(
 		var change := advanced_autotile_choose_tile(cell)
 		_merge_changes(changes, cell, change)
 	
+	var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+			terrain_id
+	)
+	
 	for cell in get_cells_surrounding_cells(cells, true):
 		var prioritise_mask := {}
 		
 		if preserve_surrounding_connections:
+			var orientation := advanced_tile_set.get_advanced_cell_orientation(
+					cell
+			)
 			var existing_mask := advanced_get_existing_cell_mask(cell)
 			for flag in advanced_get_existing_cell_mask(cell):
 				if ! _cell_flag_touches_region(cell, flag, cells):
 					prioritise_mask[flag] = existing_mask[flag]
+					continue
 		
 		changes = _merge_changes(
 				changes,
@@ -58,54 +112,126 @@ func advanced_autotile_paint_cells(
 func advanced_autotile_paint_path(
 		terrain_id: int,
 		path: Array[Vector2i],
+		background_terrain_id := -1,
 		dry_run := false
 ) -> Dictionary:
-	add_incoming_terrain(terrain_id, path)	
+	add_incoming_terrain(terrain_id, path)
 	var changes := {}
 	
+	var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+			terrain_id
+	)
 	var has_diagonals := bool(
-			advanced_tile_set.get_advanced_terrain_mode(terrain_id)
-			& TileGeometry.ConnectionMode.DIAGONALS
+			connection_mode & TileGeometry.ConnectionMode.DIAGONALS
+	)
+	var non_acute := has_diagonals and bool(
+			connection_mode & TileGeometry.ConnectionMode.NON_ACUTE
 	)
 	for i in path.size():
 		var cell := path[i]
-		var existing_mask := advanced_get_existing_cell_mask(cell)
-		var preserve_mask := advanced_tile_set.get_terrain_empty_mask(
-				terrain_id,
-				advanced_tile_set.get_advanced_cell_orientation(cell)
-		)
-		for flag in existing_mask:
-			if preserve_mask.has(flag):
-				preserve_mask[flag] = existing_mask[flag]
+		var is_first := bool(i == 0)
+		var is_last := bool(i == path.size() - 1)
 		
-		var path_flags: PackedInt32Array
+		var orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
+		var empty_mask := advanced_tile_set.get_terrain_empty_mask(
+				terrain_id, orientation
+		)
+		var preserve_mask := advanced_get_existing_cell_mask(cell)
+		for flag in empty_mask:
+			if not preserve_mask.has(flag):
+				preserve_mask[flag] = empty_mask[flag]
+		
+		var pathable_flags: PackedInt32Array
 		if has_diagonals:
-			path_flags = preserve_mask.keys()
+			pathable_flags = preserve_mask.keys()
 		else:
-			path_flags = preserve_mask.keys().filter(
+			pathable_flags = preserve_mask.keys().filter(
 				func(flag): return flag & TileGeometry.CellNeighbor.SIDE
 			)
-		if i > 0:
-			for flag in path_flags:
-				if path[i-1] == advanced_get_neighbor_cell(cell, flag):
-					preserve_mask.erase(flag)
-					break
-		if i + 1 < path.size():
-			for flag in path_flags:
-				if path[i+1] == advanced_get_neighbor_cell(cell, flag):
-					preserve_mask.erase(flag)
-					break
-		
+		if not is_first:
+			_mask_apply_path(
+					preserve_mask,
+					cell,
+					path[i-1],
+					pathable_flags,
+					non_acute,
+					terrain_id
+			)
+		if not is_last:
+			_mask_apply_path(
+					preserve_mask,
+					cell,
+					path[i+1],
+					pathable_flags,
+					non_acute,
+					terrain_id
+			)
 		var change := advanced_autotile_choose_tile(cell, preserve_mask)
 		_merge_changes(changes, cell, change)
 	
 	for cell in get_cells_surrounding_cells(path, true):
 		var preserve_mask := advanced_get_existing_cell_mask(cell)
+		if non_acute:
+			for diagonal_flag in preserve_mask.keys().filter(
+				func(flag): return flag & TileGeometry.CellNeighbor.CORNER
+			):
+				var between_two_sides := true
+				var count_path_neighbors := 0
+				if advanced_get_neighbor_cell(cell, diagonal_flag) in path:
+					count_path_neighbors += 1
+				for side_flag in advanced_get_side_flags_for_diagonal(
+						cell, diagonal_flag
+				):
+					if advanced_get_neighbor_cell(cell, side_flag) not in path:
+						between_two_sides = false
+					else:
+						count_path_neighbors += 1
+				if between_two_sides:
+					for side_flag in advanced_get_side_flags_for_diagonal(
+							cell, diagonal_flag
+					):
+						preserve_mask[side_flag] = TileGeometry.FLAG_EMPTY
+				if count_path_neighbors > 1:
+					preserve_mask[diagonal_flag] = TileGeometry.FLAG_EMPTY
+		
 		var change := advanced_autotile_choose_tile(cell, preserve_mask)
 		_merge_changes(changes, cell, change)
 	
 	clear_incoming_terrains()
 	return changes
+
+
+func _mask_apply_path(
+		mask: Dictionary,
+		cell: Vector2i,
+		neighbor_cell:Vector2i,
+		pathable_flags: Array[TileGeometry.CellNeighbor],
+		non_acute: bool,
+		terrain_id: int
+) -> void:
+	var connection_flag := TileGeometry.CellNeighbor.SELF
+	for flag in pathable_flags:
+		if advanced_get_neighbor_cell(cell, flag) == neighbor_cell:
+			connection_flag = flag
+			break
+	if connection_flag == TileGeometry.CellNeighbor.SELF:
+		return
+	mask[connection_flag] = terrain_id
+	if not non_acute:
+		return
+	if bool(connection_flag & TileGeometry.CellNeighbor.CORNER):
+		for side_flag in advanced_get_side_flags_for_diagonal(
+				cell, connection_flag
+		):
+			mask[side_flag] = TileGeometry.FLAG_EMPTY
+	else:
+		for diagonal_flag in TileGeometry.get_corners_of_side(
+				connection_flag,
+				advanced_tile_set.advanced_shape,
+				advanced_tile_set.advanced_axis,
+				advanced_tile_set.get_advanced_cell_orientation(cell)
+		):
+			mask[diagonal_flag] = TileGeometry.FLAG_EMPTY
 
 
 func advanced_autotile_paint_corners(
@@ -115,21 +241,42 @@ func advanced_autotile_paint_corners(
 		dry_run := false
 ) -> Dictionary:
 	var changes: Dictionary[Vector2i, Dictionary] = {}
-	var constraints := _normalise_constraints(
-			terrain_id,
-			cells,
-			flags
+	var constraints := ConstraintSet.new(
+			advanced_tile_set.advanced_shape,
+			advanced_tile_set.advanced_axis
 	)
+	for i in cells.size():
+		var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+				advanced_get_final_cell_terrain(cells[i])
+		)
+		constraints.add_constraint(
+				self,
+				cells[i],
+				flags[wrapi(i, 0, flags.size())],
+				connection_mode,
+				terrain_id
+		)
+	
 	for cell in _get_cells_around_constraints(constraints):
+		var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+				advanced_get_final_cell_terrain(cell)
+		)
 		var mask := advanced_get_existing_cell_mask(cell)
 		for flag in mask.keys().filter(
 				func(flag): return flag & TileGeometry.CellNeighbor.CORNER
 		):
-			var constraint := _get_constraint_cell_and_flag(cell, flag)
-			var constraint_cell: Vector2i = constraint[0]
-			var constraint_flag: TileGeometry.CellNeighbor = constraint[1]
-			if constraints.get(constraint_cell, {}).has(constraint_flag):
-				mask[flag] = constraints[constraint_cell][constraint_flag]
+			if constraints.has_constraint(
+					self,
+					cell,
+					flag,
+					connection_mode
+			):
+				mask[flag] = constraints.get_constraint(
+						self,
+						cell,
+						flag,
+						connection_mode
+				)
 		
 		var change = advanced_autotile_choose_tile(cell, mask)
 		_merge_changes(changes, cell, change)
@@ -223,138 +370,55 @@ func _cell_flag_touches_region(
 
 
 func _get_cells_around_constraints(
-		constraints: Dictionary
+		constraints: ConstraintSet
 ) -> Array[Vector2i]:
+	#n.b. support for side constraint not implemented
 	var cells: Array[Vector2i] = []
-	for cell in constraints:
+	for i in constraints.get_count():
+		var cell := constraints.get_cell(i)
 		if cell not in cells:
 			cells.append(cell)
-		for flag in constraints[cell]:
-			for neighbor in advanced_get_neighbor_cells_for_flag(
-					cell,
-					flag,
-					TileGeometry.ConnectionMode.CORNERS
-			):
-				if neighbor not in cells:
-					cells.append(neighbor)
+		var flag := constraints.get_flag(i)
+		for neighbor in advanced_get_neighbor_cells_for_flag(
+				cell,
+				flag,
+				TileGeometry.ConnectionMode.CORNERS
+		):
+			if neighbor not in cells:
+				cells.append(neighbor)
 	return cells
-
-
-func _normalise_constraints(
-		terrain_id: int,
-		cells: Array[Vector2i],
-		flags: Array[TileGeometry.CellNeighbor]
-) -> Dictionary:
-	var constraints: Dictionary[Vector2i, Dictionary] = {}
-	for i in cells.size():
-		var constraint := _get_constraint_cell_and_flag(
-				cells[i],
-				flags[wrapi(i, 0, flags.size())]
-		)
-		var cell: Vector2i = constraint[0]
-		var flag: TileGeometry.CellNeighbor = constraint[1]
-		constraints[cell] = constraints.get(cell, {})
-		constraints[cell][flag] = terrain_id
-	return constraints
-
-
-func _get_constraint_cell_and_flag(cell: Vector2i, flag: int) -> Array:
-	var CN := TileGeometry.CellNeighbor
-	match advanced_tile_set.advanced_shape:
-		TileGeometry.Shape.SQUARE:
-			return [
-					cell + {
-						CN.TOP_LEFT_CORNER: Vector2i(0,0),
-						CN.TOP_RIGHT_CORNER: Vector2i(1,0),
-						CN.BOTTOM_LEFT_CORNER: Vector2i(0, 1),
-						CN.BOTTOM_RIGHT_CORNER: Vector2i(1, 1)
-					}[flag],
-					CN.TOP_LEFT_CORNER,
-			]
-		TileGeometry.Shape.ISOMETRIC:
-			return [
-					advanced_get_neighbor_cell(cell, {
-						CN.TOP_CORNER: CN.SELF,
-						CN.RIGHT_CORNER: CN.BOTTOM_RIGHT_SIDE,
-						CN.BOTTOM_CORNER: CN.BOTTOM_CORNER,
-						CN.LEFT_CORNER: CN.BOTTOM_LEFT_SIDE,
-					}[flag]),
-					CN.TOP_CORNER,
-			]
-		TileGeometry.Shape.HALF_OFFSET_SQUARE, TileGeometry.Shape.HEXAGON:
-			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
-				flag = TileGeometry.cell_neighbor_transpose(flag)
-			var return_flag: TileGeometry.CellNeighbor
-			var neighbor_flag: TileGeometry.CellNeighbor
-			match flag:
-				CN.TOP_CORNER, CN.TOP_LEFT_CORNER:
-					return_flag = flag
-					neighbor_flag = CN.SELF
-				CN.TOP_RIGHT_CORNER:
-					return_flag = CN.TOP_LEFT_CORNER
-					neighbor_flag = CN.RIGHT_SIDE
-				CN.BOTTOM_RIGHT_SIDE:
-					return_flag = CN.TOP_CORNER
-					neighbor_flag = CN.BOTTOM_RIGHT_SIDE
-				CN.BOTTOM_CORNER:
-					return_flag = CN.TOP_LEFT_CORNER
-					neighbor_flag = CN.BOTTOM_RIGHT_SIDE
-				CN.BOTTOM_LEFT_CORNER:
-					return_flag = CN.TOP_CORNER
-					neighbor_flag = CN.BOTTOM_LEFT_SIDE
-			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
-				return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
-				neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
-			return [
-					advanced_get_neighbor_cell(cell, neighbor_flag),
-					return_flag,
-			]
-		TileGeometry.Shape.TRIANGLE:
-			var return_flag := CN.TOP_CORNER
-			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
-				flag = TileGeometry.cell_neighbor_transpose(flag)
-				return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
-			var neighbor_flag: TileGeometry.CellNeighbor
-			match flag:
-				CN.TOP_CORNER:
-					neighbor_flag = CN.SELF
-				CN.TOP_RIGHT_CORNER:
-					neighbor_flag = CN.RIGHT_SIDE
-				CN.BOTTOM_RIGHT_CORNER:
-					neighbor_flag = CN.BOTTOM_RIGHT_CLOCKWISE_CORNER
-				CN.BOTTOM_CORNER:
-					neighbor_flag = CN.BOTTOM_CORNER
-				CN.BOTTOM_LEFT_CORNER:
-					neighbor_flag = CN.BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER
-				CN.TOP_LEFT_CORNER:
-					neighbor_flag = CN.LEFT_SIDE
-			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
-				neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
-			return [
-					advanced_get_neighbor_cell(cell, neighbor_flag),
-					return_flag,
-			]
-	assert(false, "Invalid tile shape")
-	return [cell, flag]
 
 
 func _tile_match_priority(
 		cell: Vector2i,
 		tile: AdvancedTileSet.TileKey,
-		priotitize_mask: Dictionary,
+		priotitize_mask: Dictionary
 ) -> TilePriority:
 	var terrain := advanced_tile_set.get_advanced_terrain(tile)
 	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
 	var tile_priority := TilePriority.new()
 	var mask: Dictionary = advanced_tile_set.get_advanced_mask(tile)
 	for flag in mask.keys():
-		var flag_priority := advanced_tile_set.get_advanced_terrain_priority(mask[flag])
+		var flag_priority := advanced_tile_set.get_advanced_terrain_priority(
+				mask[flag]
+		)
+		
 		if not _flag_matches_neighbors(cell, mask, flag, mode):
 			tile_priority.matching_tile = false
 			tile_priority.add_priorty(-1 * flag_priority)
 		elif (
-				flag in priotitize_mask.keys()
+				priotitize_mask.has(flag)
 				and priotitize_mask[flag] != mask[flag]
+		):
+			tile_priority.add_priorty(-1 * flag_priority)
+		elif (
+				flag & TileGeometry.CellNeighbor.CORNER
+				and
+				mode & TileGeometry.ConnectionMode.NON_ACUTE
+				and not
+				priotitize_mask.has(flag)
+				and not
+				_flag_matches_one_neighbor(cell, mask, flag)
 		):
 			tile_priority.add_priorty(-1 * flag_priority)
 		else:
@@ -377,6 +441,23 @@ func _flag_matches_neighbors(
 		):
 			return false
 	return true
+
+
+func _flag_matches_one_neighbor(
+		cell: Vector2i,
+		mask: Dictionary,
+		flag: int
+) -> bool:
+	var matches := 0
+	for neighbor in advanced_get_neighbor_cells_for_flag(
+			cell, flag, TileGeometry.ConnectionMode.CORNERS_AND_EDGES
+	):
+		var neighbor_terrain := advanced_get_final_cell_terrain(neighbor)
+		if advanced_tile_set.get_advanced_terrain_binds_to(
+				mask[flag], neighbor_terrain
+		):
+			matches += 1
+	return bool(matches == 1)
 
 
 func _tile_select_random(
@@ -467,21 +548,6 @@ func advanced_get_surrounding_cells(
 					flag | TileGeometry.CellNeighbor.CLOCKWISE
 			))
 	return cells
-
-
-func advanced_get_neighbor_cell(
-		coords: Vector2i,
-		neighbor: TileGeometry.CellNeighbor
-) -> Vector2i:
-	if neighbor == TileGeometry.CellNeighbor.SELF:
-		return coords
-	var CN := TileGeometry.CellNeighbor
-	var OR := TileGeometry.Orientation
-	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
-		var base_neighbor := TileGeometry.advanced_neighbor_to_base_neighbor(neighbor)
-		return get_neighbor_cell(coords, base_neighbor)
-	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
-	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
 
 
 func advanced_get_existing_tile(cell: Vector2i) -> AdvancedTileSet.TileKey:
@@ -602,6 +668,17 @@ func advanced_get_neighbor_flags_for_flag(
 				]
 
 
+func advanced_get_side_flags_for_diagonal(
+		cell: Vector2i,
+		diagonal_flag: TileGeometry.CellNeighbor
+) -> Array[TileGeometry.CellNeighbor]:
+	return advanced_get_neighbor_flags_for_flag(
+			cell, diagonal_flag, TileGeometry.ConnectionMode.CORNERS
+	).filter(
+		func(flag): return flag != diagonal_flag
+	)
+
+
 func _merge_changes(
 		changes: Dictionary, cell: Vector2i, change: Dictionary
 ) -> Dictionary:
@@ -652,3 +729,288 @@ class TilePriority:
 				return Comparison.OTHER_IS_GREATER
 		
 		return Comparison.EQUAL
+
+
+class ConstraintSet:
+	const CN := TileGeometry.CellNeighbor
+	enum FlagType {CORNER, SIDE, DIAGONAL_POS, DIAGONAL_NEG}
+	var shape: TileGeometry.Shape
+	var axis: TileGeometry.Axis
+	var data: Dictionary[String, int] = {}
+	
+	
+	func _init(
+			shape: TileGeometry.Shape,
+			axis: TileGeometry.Axis
+	):
+		self.shape = shape
+		self.axis = axis
+	
+	
+	func add_constraint(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: TileGeometry.CellNeighbor,
+			mode: TileGeometry.ConnectionMode,
+			terrain_id: int
+	) -> void:
+		var key := _get_key(
+				tilemap,
+				cell,
+				flag,
+				mode
+		)
+		data[key] = terrain_id
+	
+	
+	func has_constraint(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: TileGeometry.CellNeighbor,
+			mode: TileGeometry.ConnectionMode
+	) -> bool:
+		var key := _get_key(
+				tilemap,
+				cell,
+				flag,
+				mode
+		)
+		return data.has(key)
+	
+	
+	func get_constraint(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: TileGeometry.CellNeighbor,
+			mode: TileGeometry.ConnectionMode
+	) -> int:
+		var key := _get_key(
+				tilemap,
+				cell,
+				flag,
+				mode
+		)
+		return data[key]
+	
+	
+	func get_count() -> int:
+		return data.size()
+	
+	
+	func get_cell(index: int) -> Vector2i:
+		var parts: PackedStringArray = data.keys()[index].split(":")
+		return Vector2i(
+				parts[0].to_int(),
+				parts[1].to_int()
+		)
+	
+	
+	func get_flag(index: int) -> TileGeometry.CellNeighbor:
+		var parts: PackedStringArray = data.keys()[index].split(":")
+		return parts[2].to_int()
+	
+	
+	func get_is_diagonal(index: int) -> bool:
+		var parts: PackedStringArray = data.keys()[index].split(":")
+		return parts[3] == "true"
+	
+	
+	func _get_key(
+			tilemap: AdvancedTileMapLayer,
+			in_cell: Vector2i,
+			in_flag: TileGeometry.CellNeighbor,
+			mode: TileGeometry.ConnectionMode
+	) -> String:
+		var is_diagonal := mode & TileGeometry.ConnectionMode.DIAGONALS
+		var constraint := _get_constraint_cell_and_flag(
+				tilemap,
+				in_cell,
+				in_flag,
+				is_diagonal
+		)
+		var key_cell: Vector2i = constraint[0]
+		var key_flag: TileGeometry.CellNeighbor = constraint[1]
+		return "%s:%s:%s:%s" % [key_cell.x, key_cell.y, key_flag, is_diagonal]
+
+
+	func _get_constraint_cell_and_flag(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: int,
+			is_diagonal: bool
+	) -> Array:
+		if flag & TileGeometry.CellNeighbor.SIDE:
+			return _get_side_constraint_cell_and_flag(tilemap, cell, flag)
+		elif is_diagonal:
+			return _get_diagonal_constraint_cell_and_flag(tilemap, cell, flag)
+		else:
+			return _get_corner_constraint_cell_and_flag(tilemap, cell, flag)
+	
+	
+	func _get_diagonal_constraint_cell_and_flag(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: TileGeometry.CellNeighbor
+	) -> Array:
+		var CN := TileGeometry.CellNeighbor
+		if flag in [CN.TOP_LEFT_CORNER, CN.TOP_RIGHT_CORNER]:
+			return [cell, flag]
+		return [
+				tilemap.advanced_get_neighbor_cell(cell, flag),
+				TileGeometry.cell_neighbor_flip_h(
+					TileGeometry.cell_neighbor_flip_v(flag)
+				)
+		]
+
+
+	func _get_corner_constraint_cell_and_flag(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: int
+	) -> Array:
+		var CN := TileGeometry.CellNeighbor
+		match tilemap.advanced_tile_set.advanced_shape:
+			TileGeometry.Shape.SQUARE:
+				return [
+						cell + {
+							CN.TOP_LEFT_CORNER: Vector2i(0,0),
+							CN.TOP_RIGHT_CORNER: Vector2i(1,0),
+							CN.BOTTOM_LEFT_CORNER: Vector2i(0, 1),
+							CN.BOTTOM_RIGHT_CORNER: Vector2i(1, 1)
+						}[flag],
+						CN.TOP_LEFT_CORNER,
+				]
+			TileGeometry.Shape.ISOMETRIC:
+				return [
+						tilemap.advanced_get_neighbor_cell(
+								cell,
+								{
+									CN.TOP_CORNER: CN.SELF,
+									CN.RIGHT_CORNER: CN.BOTTOM_RIGHT_SIDE,
+									CN.BOTTOM_CORNER: CN.BOTTOM_CORNER,
+									CN.LEFT_CORNER: CN.BOTTOM_LEFT_SIDE,
+								}[flag]
+						),
+						CN.TOP_CORNER,
+				]
+			TileGeometry.Shape.HALF_OFFSET_SQUARE, TileGeometry.Shape.HEXAGON:
+				if tilemap.advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+					flag = TileGeometry.cell_neighbor_transpose(flag)
+				var return_flag: TileGeometry.CellNeighbor
+				var neighbor_flag: TileGeometry.CellNeighbor
+				match flag:
+					CN.TOP_CORNER, CN.TOP_LEFT_CORNER:
+						return_flag = flag
+						neighbor_flag = CN.SELF
+					CN.TOP_RIGHT_CORNER:
+						return_flag = CN.TOP_LEFT_CORNER
+						neighbor_flag = CN.RIGHT_SIDE
+					CN.BOTTOM_RIGHT_SIDE:
+						return_flag = CN.TOP_CORNER
+						neighbor_flag = CN.BOTTOM_RIGHT_SIDE
+					CN.BOTTOM_CORNER:
+						return_flag = CN.TOP_LEFT_CORNER
+						neighbor_flag = CN.BOTTOM_RIGHT_SIDE
+					CN.BOTTOM_LEFT_CORNER:
+						return_flag = CN.TOP_CORNER
+						neighbor_flag = CN.BOTTOM_LEFT_SIDE
+				if tilemap.advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+					return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
+					neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
+				return [
+						tilemap.advanced_get_neighbor_cell(cell, neighbor_flag),
+						return_flag,
+				]
+			TileGeometry.Shape.TRIANGLE:
+				var return_flag := CN.TOP_CORNER
+				if tilemap.advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+					flag = TileGeometry.cell_neighbor_transpose(flag)
+					return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
+				var neighbor_flag: TileGeometry.CellNeighbor
+				match flag:
+					CN.TOP_CORNER:
+						neighbor_flag = CN.SELF
+					CN.TOP_RIGHT_CORNER:
+						neighbor_flag = CN.RIGHT_SIDE
+					CN.BOTTOM_RIGHT_CORNER:
+						neighbor_flag = CN.BOTTOM_RIGHT_CLOCKWISE_CORNER
+					CN.BOTTOM_CORNER:
+						neighbor_flag = CN.BOTTOM_CORNER
+					CN.BOTTOM_LEFT_CORNER:
+						neighbor_flag = CN.BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER
+					CN.TOP_LEFT_CORNER:
+						neighbor_flag = CN.LEFT_SIDE
+				if tilemap.advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+					neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
+				return [
+						tilemap.advanced_get_neighbor_cell(cell, neighbor_flag),
+						return_flag,
+				]
+		assert(false, "Invalid tile shape")
+		return [cell, flag]
+
+
+	func _get_side_constraint_cell_and_flag(
+			tilemap: AdvancedTileMapLayer,
+			cell: Vector2i,
+			flag: int
+	) -> Array:
+		var CN := TileGeometry.CellNeighbor
+		match tilemap.advanced_tile_set.advanced_shape:
+			TileGeometry.Shape.SQUARE, TileGeometry.Shape.TRIANGLE:
+				var return_flag: TileGeometry.CellNeighbor
+				var neighbor_flag: TileGeometry.CellNeighbor
+				match flag:
+					CN.TOP_SIDE, CN.LEFT_SIDE:
+						return [cell, flag]
+					CN.RIGHT_SIDE:
+						return_flag = CN.LEFT_SIDE
+						neighbor_flag = CN.RIGHT_SIDE
+					CN.BOTTOM_SIDE:
+						return_flag = CN.TOP_SIDE
+						neighbor_flag = CN.BOTTOM_SIDE
+				return [
+						tilemap.advanced_get_neighbor_cell(cell, neighbor_flag),
+						return_flag,
+				]
+			TileGeometry.Shape.ISOMETRIC:
+				var return_flag: TileGeometry.CellNeighbor
+				var neighbor_flag: TileGeometry.CellNeighbor
+				match flag:
+					CN.TOP_RIGHT_SIDE, CN.TOP_LEFT_SIDE:
+						return [cell, flag]
+					CN.BOTTOM_RIGHT_SIDE:
+						return_flag = CN.TOP_LEFT_SIDE
+						neighbor_flag = CN.BOTTOM_RIGHT_SIDE
+					CN.BOTTOM_LEFT_SIDE:
+						return_flag = CN.TOP_RIGHT_SIDE
+						neighbor_flag = CN.BOTTOM_LEFT_SIDE
+				return [
+						tilemap.advanced_get_neighbor_cell(cell, neighbor_flag),
+						return_flag,
+				]
+			TileGeometry.Shape.HALF_OFFSET_SQUARE, TileGeometry.Shape.HEXAGON:
+				if tilemap.advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+					flag = TileGeometry.cell_neighbor_transpose(flag)
+				var return_flag: TileGeometry.CellNeighbor
+				var neighbor_flag: TileGeometry.CellNeighbor
+				match flag:
+					CN.TOP_LEFT_SIDE, CN.BOTTOM_LEFT_SIDE, CN.LEFT_SIDE:
+						return_flag = flag
+						neighbor_flag = CN.SELF
+					_:
+						return_flag = TileGeometry.cell_neighbor_flip_h(
+								TileGeometry.cell_neighbor_flip_v(
+									flag
+								)
+						)
+						neighbor_flag = flag
+				if tilemap.advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+					return_flag = TileGeometry.cell_neighbor_transpose(return_flag)
+					neighbor_flag = TileGeometry.cell_neighbor_transpose(neighbor_flag)
+				return [
+						tilemap.advanced_get_neighbor_cell(cell, neighbor_flag),
+						return_flag,
+				]
+		assert(false, "Invalid tile shape")
+		return [cell, flag]

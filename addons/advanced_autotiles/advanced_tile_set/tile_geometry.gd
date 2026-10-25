@@ -75,8 +75,10 @@ enum ConnectionMode {
 	CORNERS = 1,
 	EDGES = 2,
 	DIAGONALS = 4,
+	NON_ACUTE = 8,
 	CORNERS_AND_EDGES = 1 | 2,
 	EDGES_AND_DIAGONALS = 2 | 4,
+	EDGES_AND_NON_ACUTE_DIAGONALS = 2 | 4 | 8
 }
 ## Cell Neighbor flags, defined to support triangle layouts
 ## and bit-wise logic
@@ -129,6 +131,8 @@ enum CellNeighbor {
 # (e.g. terrain modes avaliable for a given shape)
 
 
+## Convert an TileGeometry.CellNeighbor (Advanced Autotiles Plugin)
+## to a TileSet.CellNeighbor (base Godot engine)
 static func advanced_neighbor_to_base_neighbor(
 	advanced_neighbor: CellNeighbor
 ) -> TileSet.CellNeighbor:
@@ -144,6 +148,7 @@ static func advanced_neighbor_to_base_neighbor(
 	return -1
 
 
+## Check whether diagonals make sense for a grid of given shape.
 static func shape_has_diagonals(shape: Shape) -> bool:
 	match shape:
 		Shape.SQUARE, Shape.ISOMETRIC, Shape.TRIANGLE:
@@ -155,20 +160,21 @@ static func shape_has_diagonals(shape: Shape) -> bool:
 
 ## Returns an array of connection modes supported for the given shape
 static func get_connection_modes(shape: Shape) -> Array[ConnectionMode]:
-	if shape in [Shape.SQUARE, Shape.ISOMETRIC]:
+	if shape_has_diagonals(shape):
 		return [
 			ConnectionMode.NONE,
 			ConnectionMode.CORNERS,
 			ConnectionMode.EDGES,
 			ConnectionMode.CORNERS_AND_EDGES,
-			ConnectionMode.EDGES_AND_DIAGONALS
+			ConnectionMode.EDGES_AND_DIAGONALS,
+			ConnectionMode.EDGES_AND_NON_ACUTE_DIAGONALS,
 		]
 	else:
 		return [
 			ConnectionMode.NONE,
 			ConnectionMode.CORNERS,
 			ConnectionMode.EDGES,
-			ConnectionMode.CORNERS_AND_EDGES
+			ConnectionMode.CORNERS_AND_EDGES,
 		]
 
 
@@ -561,7 +567,7 @@ static func get_flag_polygons(
 	return polygons
 
 
-# Return the flag of the side between the points
+# Return the flag of the side between the given points
 static func _side_between_points(
 		point1 :Vector2, point2 :Vector2
 ) -> TileGeometry.CellNeighbor:
@@ -613,3 +619,20 @@ static func _shrink_polygon(
 	for i in points.size():
 		points[i] = points[i].lerp(center, ratio)
 	return points
+
+
+static func get_corners_of_side(
+		side_flag: TileGeometry.CellNeighbor,
+		shape: TileGeometry.Shape,
+		axis: TileGeometry.Axis,
+		orientation: TileGeometry.Orientation
+) -> Array[TileGeometry.CellNeighbor]:
+	var corner_points := get_tile_outline_points(shape, axis, orientation)
+	var keys := corner_points.keys()
+	for i in corner_points.size() - 1:
+		if _side_between_points(
+				corner_points[keys[i]],
+				corner_points[keys[i + 1]]
+		) == side_flag:
+			return [keys[i], keys[i+1]]
+	return [keys[-1], keys[0]]

@@ -238,7 +238,7 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
 38: -1,
 50: -1
@@ -255,7 +255,7 @@ texture_region_size = Vector2i(32, 32)
 26: -1,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -268,7 +268,7 @@ texture_region_size = Vector2i(32, 32)
 17: -1,
 26: -1,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -278,7 +278,7 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
 26: -1,
 33: -1,
@@ -294,10 +294,10 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -310,8 +310,8 @@ texture_region_size = Vector2i(32, 32)
 17: -1,
 26: -1,
 33: -1,
-38: 1,
-50: 1
+38: 0,
+50: 0
 },
 "terrain_index": 0
 }
@@ -320,11 +320,11 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
 26: -1,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -334,9 +334,9 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
 38: -1,
 50: -1
@@ -350,9 +350,9 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -362,12 +362,12 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
 26: -1,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -376,12 +376,12 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
-38: 1,
-50: 1
+38: 0,
+50: 0
 },
 "terrain_index": 0
 }
@@ -394,11 +394,11 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -408,12 +408,12 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
 26: -1,
 33: -1,
-38: 1,
-50: 1
+38: 0,
+50: 0
 },
 "terrain_index": 0
 }
@@ -424,10 +424,10 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
-38: 1,
-50: 1
+38: 0,
+50: 0
 },
 "terrain_index": 0
 }
@@ -436,12 +436,12 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -452,10 +452,10 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -468,8 +468,8 @@ texture_region_size = Vector2i(32, 32)
 17: -1,
 26: -1,
 33: -1,
-38: 1,
-50: 1
+38: 0,
+50: 0
 },
 "terrain_index": 0
 }
@@ -478,11 +478,11 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: 0,
 26: -1,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -492,9 +492,9 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
-26: 1,
+26: 0,
 33: 0,
 38: -1,
 50: -1
@@ -508,7 +508,7 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: -1,
 38: -1,
 50: -1
@@ -525,7 +525,7 @@ texture_region_size = Vector2i(32, 32)
 26: -1,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -538,7 +538,7 @@ texture_region_size = Vector2i(32, 32)
 17: 0,
 26: -1,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -548,7 +548,7 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: -1,
 26: -1,
 33: 0,
@@ -564,7 +564,7 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: 0,
 38: -1,
 50: -1
@@ -581,7 +581,7 @@ texture_region_size = Vector2i(32, 32)
 26: -1,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -594,7 +594,7 @@ texture_region_size = Vector2i(32, 32)
 17: -1,
 26: -1,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -604,7 +604,7 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: 0,
 26: -1,
 33: -1,
@@ -620,7 +620,7 @@ texture_region_size = Vector2i(32, 32)
 9: -1,
 14: -1,
 17: -1,
-26: 1,
+26: 0,
 33: 0,
 38: -1,
 50: -1
@@ -637,7 +637,7 @@ texture_region_size = Vector2i(32, 32)
 26: -1,
 33: -1,
 38: -1,
-50: 1
+50: 0
 },
 "terrain_index": 0
 }
@@ -650,7 +650,7 @@ texture_region_size = Vector2i(32, 32)
 17: 0,
 26: -1,
 33: -1,
-38: 1,
+38: 0,
 50: -1
 },
 "terrain_index": 0
@@ -660,7 +660,7 @@ texture_region_size = Vector2i(32, 32)
 "mask": {
 5: -1,
 9: -1,
-14: 1,
+14: 0,
 17: 0,
 26: -1,
 33: 0,
@@ -675,27 +675,22 @@ custom_data_layer_0/name = "_advanced_autotiles"
 custom_data_layer_0/type = 27
 sources/0 = SubResource("TileSetAtlasSource_4kdvw")
 script = ExtResource("1_u3dyq")
+empty_terrain_auto_bindings = false
 empty_terrain_bindings = 3
 empty_terrain_priority = 1
 _tile_match_priority_bonus = 64
 _need_recalc = false
-advanced_terrain_count = 2
+advanced_terrain_count = 1
 advanced_terrain_0/name = "Grass"
 advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
-advanced_terrain_0/mode = 6
+advanced_terrain_0/mode = 14
 advanced_terrain_0/priority = 3
 advanced_terrain_0/auto_binding = false
-advanced_terrain_0/bindings = 6
-advanced_terrain_1/name = "Grass Diagonal"
-advanced_terrain_1/color = Color(0.8039216, 0.4937255, 0.36078432, 1)
-advanced_terrain_1/mode = 0
-advanced_terrain_1/priority = 2
-advanced_terrain_1/auto_binding = true
-advanced_terrain_1/bindings = 2
+advanced_terrain_0/bindings = 2
 metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
 
 [node name="Tilemap" type="TileMapLayer" unique_id=1454759487]
-tile_map_data = PackedByteArray("AAAAAAAAAAAEAAAAAAABAAEAAAAGAAAAAAACAAIAAAAKAAIAAAAFAAUAAAAGAAAAAAAGAAYAAAAGAAAAAAAHAAcAAAAGAAAAAAAIAAgAAAAEAAIAAAABAAAAAAAEAAAAAAACAAEAAAAGAAAAAAADAAIAAAAKAAAAAAAEAAMAAAAGAAAAAAAFAAQAAAAGAAAAAAAGAAUAAAAGAAAAAAAHAAYAAAAGAAAAAAAIAAcAAAAEAAIAAAAEAAQAAAAGAAAAAAADAAMAAAAGAAAAAAA=")
+tile_map_data = PackedByteArray("AAABAAAAAAAEAAEAAAACAAEAAAADAAMAAAAAAAEAAAAEAAMAAAAAAAAAAAADAAMAAAABAAEAAAAEAAMAAAACAAAAAAAEAAEAAAAEAAIAAAAEAAAAAAAFAAMAAAAGAAAAAAAGAAQAAAAEAAIAAAAHAAUAAAAEAAAAAAAIAAYAAAAGAAAAAAAJAAcAAAAEAAIAAAAEAAcAAAAEAAMAAAAFAAYAAAAGAAEAAAAGAAUAAAAGAAEAAAAHAAQAAAAGAAEAAAAIAAMAAAAGAAEAAAAJAAIAAAAEAAEAAAA=")
 tile_set = SubResource("TileSet_54v24")
 script = ExtResource("1_70mos")
 advanced_tile_set = SubResource("TileSet_54v24")
