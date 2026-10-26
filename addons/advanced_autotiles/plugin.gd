@@ -304,6 +304,7 @@ class PaintAction:
 	var terrain_id: int
 	var current_flag: int
 	var tile_map_layer: AdvancedTileMapLayer
+	var _has_changes := true
 	
 	
 	func _init(
@@ -329,10 +330,12 @@ class PaintAction:
 	func set_current_cell(cell: Vector2i) -> void:
 		previous_cell = current_cell
 		current_cell = cell
+		_has_changes = true
 	
 	
 	func set_current_flag(flag: int) -> void:
 		current_flag = flag
+		_has_changes = true
 	
 	
 	func add_changes(new_changes: Dictionary) -> void:
@@ -344,6 +347,8 @@ class PaintAction:
 	
 	
 	func update() -> void:
+		if ! _has_changes:
+			return
 		match paint_shape:
 			PaintShape.POINT:
 				match paint_mode:
@@ -393,6 +398,7 @@ class PaintAction:
 				changes = tile_map_layer.advanced_autotile_flood_fill(
 						current_cell, terrain_id
 				)
+		_has_changes = false
 	
 	
 	func commit(undo_redo: EditorUndoRedoManager) -> void:

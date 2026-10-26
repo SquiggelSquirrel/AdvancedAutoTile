@@ -322,11 +322,15 @@ func advanced_autotile_choose_tile(
 	max_priority.matching_tile = false
 	var candidates: Array[AdvancedTileSet.TileKey] = []
 	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
+	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
 	for tile in advanced_tile_set.get_advanced_tiles():
 		if advanced_tile_set.get_advanced_terrain(tile) != terrain:
 			continue
 		var tile_orientation := advanced_tile_set.get_advanced_orientation(tile)
 		if tile_orientation != cell_orientation:
+			continue
+		if mode == TileGeometry.ConnectionMode.NONE:
+			candidates.append(tile)
 			continue
 		var tile_priority := _tile_match_priority(
 				cell,
@@ -504,6 +508,8 @@ func _flag_matches_one_neighbor(
 func _tile_select_random(
 		tiles: Array[AdvancedTileSet.TileKey]
 ) -> AdvancedTileSet.TileKey:
+	if tiles.size() == 1:
+		return tiles[0]
 	var sum_probability := 0.0
 	for tile in tiles:
 		sum_probability += advanced_tile_set.get_tile_data(tile).probability

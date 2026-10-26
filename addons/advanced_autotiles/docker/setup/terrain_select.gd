@@ -34,6 +34,9 @@ func _update_terrains() -> void:
 	if default_index < item_count:
 		select(default_index)
 		item_selected.emit(default_index)
+	else:
+		select(0)
+		item_selected.emit(0)
 
 
 func get_selected_terrain_index() -> int:

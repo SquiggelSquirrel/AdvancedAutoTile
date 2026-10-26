@@ -4,6 +4,8 @@ extends ItemList
 @export var default_index := 0
 @export var tile_set: AdvancedTileSet:
 	set(value):
+		if tile_set == value:
+			return
 		if tile_set is AdvancedTileSet:
 			if tile_set.changed.is_connected(_on_tile_set_update):
 				tile_set.changed.disconnect(_on_tile_set_update)
@@ -33,9 +35,12 @@ func _on_tile_set_update() -> void:
 							)
 					)
 					] = i
-	if item_count >= default_index:
+	if default_index < item_count:
 		select(default_index)
 		item_selected.emit(default_index)
+	else:
+		select(0)
+		item_selected.emit(0)
 
 
 func _create_icon(color: Color) -> Texture2D:
