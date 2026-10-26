@@ -289,7 +289,6 @@ func advanced_autotile_flood_fill(
 			cells,
 			dry_run
 	)
-	
 
 
 func add_incoming_terrain(terrain_id: int, cells: Array[Vector2i]) -> void:
@@ -309,7 +308,7 @@ func advanced_autotile_choose_tile(
 	var existing := advanced_get_existing_tile(cell)
 	var terrain := advanced_get_final_cell_terrain(cell)
 	if terrain == -1:
-		if existing.equals(AdvancedTileSet.TileKey.EMPTY):
+		if advanced_tile_set.get_advanced_terrain(existing) == -1:
 			return {}
 		else:
 			if ! dry_run:

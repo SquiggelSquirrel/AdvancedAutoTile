@@ -76,7 +76,7 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 			changed.emit()
 
 @export_group("Autotiling")
-@export var auto_priorities := false:
+@export var auto_priorities := true:
 	set(value):
 		if value == auto_priorities:
 			return
@@ -89,8 +89,12 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 @export_subgroup("Empty tile", "empty_terrain_")
 @export var empty_terrain_auto_bindings := true:
 	set(value):
-		if value and not empty_terrain_auto_bindings:
+		if value == empty_terrain_auto_bindings:
+			return
+		if value:
 			_need_recalc = true
+		elif _need_recalc:
+			_recalc()
 		empty_terrain_auto_bindings = value
 		notify_property_list_changed()
 @export var empty_terrain_bindings: int = 0
@@ -173,6 +177,9 @@ func _validate_property(property: Dictionary) -> void:
 			else:
 				property.hint = PROPERTY_HINT_FLAGS
 				property.hint_string = _get_bindings_hint_string()
+		"empty_terrain_priority":
+			if auto_priorities:
+				property.usage = PROPERTY_USAGE_STORAGE
 		"tile_shape", "tile_layout", "tile_offset_axis", "tile_size", "terrain_sets":
 			if hide_base_class_features:
 				property.usage &= ~ PROPERTY_USAGE_EDITOR
@@ -492,7 +499,21 @@ func _advanced_terrain_update_auto_bindings() -> void:
 		empty_terrain_bindings = _binding_set_terrain_index(0, -1, true)
 	for index in _terrains.size():
 		if _terrains[index].auto_binding:
-			_terrains[index].bindings = 0
+			_terrains[index].bindings = _binding_set_terrain_index(
+					0,
+					index,
+					true
+			)
+		if (
+				empty_terrain_auto_bindings
+				and
+				_terrains[index].mode == TileGeometry.ConnectionMode.NONE
+		):
+			empty_terrain_bindings = _binding_set_terrain_index(
+					empty_terrain_bindings,
+					index,
+					true
+			)
 	for tile in get_advanced_tiles():
 		var center_terrain_index: int = get_advanced_terrain(tile)
 		if center_terrain_index < 0:
@@ -500,8 +521,6 @@ func _advanced_terrain_update_auto_bindings() -> void:
 		var mask := get_advanced_mask(tile)
 		for flag in mask:
 			var flag_terrain_index: int = mask[flag]
-			if ! _terrains[flag_terrain_index].auto_binding:
-				continue
 			if flag_terrain_index == TileGeometry.FLAG_EMPTY:
 				if empty_terrain_auto_bindings:
 					empty_terrain_bindings = _binding_set_terrain_index(
@@ -509,6 +528,8 @@ func _advanced_terrain_update_auto_bindings() -> void:
 						center_terrain_index,
 						true
 					)
+				continue
+			if ! _terrains[flag_terrain_index].auto_binding:
 				continue
 			var flag_terrain: Terrain = _terrains[flag_terrain_index]
 			flag_terrain.bindings = _binding_set_terrain_index(
