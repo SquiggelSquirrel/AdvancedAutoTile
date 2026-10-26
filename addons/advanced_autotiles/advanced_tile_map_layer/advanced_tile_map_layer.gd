@@ -112,7 +112,6 @@ func advanced_autotile_paint_cells(
 func advanced_autotile_paint_path(
 		terrain_id: int,
 		path: Array[Vector2i],
-		background_terrain_id := -1,
 		dry_run := false
 ) -> Dictionary:
 	add_incoming_terrain(terrain_id, path)

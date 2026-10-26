@@ -201,8 +201,7 @@ func _handle_lmb_press() -> void:
 				cell_under_mouse,
 				flag_under_mouse,
 				active_tilemap_layer,
-				dock_scene.get_paint_terrain(),
-				dock_scene.get_rmb_terrain()
+				dock_scene.get_paint_terrain()
 		)
 	current_action.update()
 
@@ -232,7 +231,6 @@ func _handle_rmb_press() -> void:
 				cell_under_mouse,
 				flag_under_mouse,
 				active_tilemap_layer,
-				dock_scene.get_rmb_terrain(),
 				dock_scene.get_rmb_terrain()
 		)
 	current_action.update()
@@ -304,7 +302,6 @@ class PaintAction:
 	var start_cell: Vector2i
 	var changes := {}
 	var terrain_id: int
-	var background_terrain_id: int
 	var current_flag: int
 	var tile_map_layer: AdvancedTileMapLayer
 	
@@ -316,8 +313,7 @@ class PaintAction:
 			start_cell: Vector2i,
 			flag: int,
 			tile_map_layer: AdvancedTileMapLayer,
-			terrain_id: int,
-			background_terrain_id: int
+			terrain_id: int
 	) -> void:
 		self.paint_mode = paint_mode
 		self.paint_shape = paint_shape
@@ -328,7 +324,6 @@ class PaintAction:
 		self.current_flag = flag
 		self.tile_map_layer = tile_map_layer
 		self.terrain_id = terrain_id
-		self.background_terrain_id = background_terrain_id
 	
 	
 	func set_current_cell(cell: Vector2i) -> void:
@@ -371,8 +366,7 @@ class PaintAction:
 						add_changes(
 								tile_map_layer.advanced_autotile_paint_path(
 									terrain_id,
-									[previous_cell, current_cell],
-									background_terrain_id
+									[previous_cell, current_cell]
 								)
 						)
 			PaintShape.LINE:
