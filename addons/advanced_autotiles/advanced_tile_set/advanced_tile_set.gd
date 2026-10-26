@@ -80,9 +80,9 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 	set(value):
 		if value == auto_priorities:
 			return
-		if value:
+		if _is_loaded and value:
 			_need_recalc = true
-		elif _need_recalc:
+		if _is_loaded and _need_recalc and not value:
 			_recalc()
 		auto_priorities = value
 		notify_property_list_changed()
@@ -91,15 +91,14 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 	set(value):
 		if value == empty_terrain_auto_bindings:
 			return
-		if value:
+		if _is_loaded and value:
 			_need_recalc = true
-		elif _need_recalc:
+		if _is_loaded and _need_recalc and not value:
 			_recalc()
 		empty_terrain_auto_bindings = value
 		notify_property_list_changed()
 @export var empty_terrain_bindings: int = 0
 @export var empty_terrain_priority := 0
-@export_storage var _tile_match_priority_bonus := 0
 @export_storage var _need_recalc := true
 var _is_loaded := false
 var _terrains: Array[Terrain] = []
@@ -473,12 +472,6 @@ func get_advanced_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation
 		return TileGeometry.Orientation.UP
 
 
-func get_tile_match_priority_bonus() -> int:
-	if _need_recalc:
-		_recalc()
-	return _tile_match_priority_bonus
-
-
 func get_advanced_terrain_has_tiles(terrain_id: int) -> bool:
 	for tile in get_advanced_tiles():
 		if get_advanced_terrain(tile) == terrain_id:
@@ -542,27 +535,26 @@ func _advanced_terrain_update_auto_bindings() -> void:
 func _advanced_terrain_update_priorities() -> void:
 	# Re-calculate terrain priorities, based on bindings
 	var graph := DirectedGraph.new()
+	graph.add_node()
 	for i in _terrains.size():
 		graph.add_node()
-	var empty_node_index := graph.add_node()
 	for i in _binding_get_matched_terrains(empty_terrain_bindings):
 		if i != TileGeometry.FLAG_EMPTY:
-			graph.add_edge(empty_node_index, i)
+			graph.add_edge(0, i + 1)
 	for i in _terrains.size():
 		for j in _binding_get_matched_terrains(_terrains[i].bindings):
 			if i == j:
 				continue
 			elif j == TileGeometry.FLAG_EMPTY:
-				graph.add_edge(i, empty_node_index)
+				graph.add_edge(i + 1, 0)
 			else:
-				graph.add_edge(i, j)
+				graph.add_edge(i + 1, j + 1)
 	graph.sort()
 	for i in graph.t_sort.size():
-		if graph.t_sort[i] == empty_node_index:
+		if graph.t_sort[i] == 0:
 			empty_terrain_priority = i + 1
 		else:
-			_terrains[graph.t_sort[i]].priority = i + 1
-	_tile_match_priority_bonus = (graph.t_sort.size() + 1) * 16
+			_terrains[graph.t_sort[i] - 1].priority = i + 1
 
 
 # Set any per-tile data used by the AdvancedTileSet plugin
@@ -708,7 +700,6 @@ class Terrain:
 	var auto_binding := true
 	var bindings: int = 0 #(bitmask)
 	var priority: int = 0
-	var has_tiles := false
 	
 	
 	func _init(init_name: String, init_color: Color) -> void:

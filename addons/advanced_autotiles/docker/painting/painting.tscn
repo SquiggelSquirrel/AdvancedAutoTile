@@ -118,6 +118,7 @@ fixed_icon_size = Vector2i(16, 16)
 item_0/text = "Erase"
 item_0/icon = SubResource("GradientTexture1D_21p1r")
 script = ExtResource("3_mts8s")
+default_index = 1
 
 [node name="RMBTerrainSelect" type="ItemList" parent="GridContainer" unique_id=979880999]
 unique_name_in_owner = true

@@ -1,0 +1,755 @@
+[gd_scene format=4 uid="uid://sbwd6vivgloj"]
+
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_8xr67"]
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_yqpnh"]
+[ext_resource type="Texture2D" uid="uid://s62h6ydmuukd" path="res://examples/01 - Single Terrain Square Grid/15 - Square Match Corners and Sides with Slopes/tileset.png" id="2_18dsw"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_qjlpi"]
+texture = ExtResource("2_18dsw")
+0:0/0 = 0
+0:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:0/0 = 0
+1:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+2:0/0 = 0
+2:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:0/0 = 0
+3:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+4:0/0 = 0
+4:0/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+5:0/0 = 0
+5:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+6:0/0 = 0
+6:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+7:0/0 = 0
+7:0/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+8:0/0 = 0
+8:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: 1,
+17: 0,
+26: 0,
+33: -1,
+38: -1,
+50: 1
+},
+"terrain_index": 0
+}
+9:0/0 = 0
+9:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+10:0/0 = 0
+10:0/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+11:0/0 = 0
+11:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: 0,
+26: 1,
+33: 0,
+38: 1,
+50: 0
+},
+"terrain_index": 0
+}
+12:0/0 = 0
+12:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+0:1/0 = 0
+0:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:1/0 = 0
+1:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+2:1/0 = 0
+2:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:1/0 = 0
+3:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+4:1/0 = 0
+4:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+5:1/0 = 0
+5:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: 0,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+6:1/0 = 0
+6:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+7:1/0 = 0
+7:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+8:1/0 = 0
+8:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: 0,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+9:1/0 = 0
+9:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: 0,
+33: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+10:1/0 = 0
+10:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+11:1/0 = 0
+11:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+12:1/0 = 0
+12:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+0:2/0 = 0
+0:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:2/0 = 0
+1:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+2:2/0 = 0
+2:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:2/0 = 0
+3:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+4:2/0 = 0
+4:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+5:2/0 = 0
+5:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: 0,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+6:2/0 = 0
+6:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: -1,
+33: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+7:2/0 = 0
+7:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+8:2/0 = 0
+8:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: 0,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+10:2/0 = 0
+10:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+11:2/0 = 0
+11:2/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+12:2/0 = 0
+12:2/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+0:3/0 = 0
+0:3/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:3/0 = 0
+1:3/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: 0,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+2:3/0 = 0
+2:3/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:3/0 = 0
+3:3/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+4:3/0 = 0
+4:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: -1,
+33: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+5:3/0 = 0
+5:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+6:3/0 = 0
+6:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+7:3/0 = 0
+7:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: -1,
+17: 0,
+26: 0,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+8:3/0 = 0
+8:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: -1,
+26: 1,
+33: -1,
+38: 1,
+50: -1
+},
+"terrain_index": 0
+}
+9:3/0 = 0
+9:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: 0,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+10:3/0 = 0
+10:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: 0,
+14: 0,
+17: -1,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+11:3/0 = 0
+11:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: 1,
+17: -1,
+26: -1,
+33: 0,
+38: 0,
+50: 1
+},
+"terrain_index": 0
+}
+12:3/0 = 0
+12:3/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+
+[sub_resource type="TileSet" id="TileSet_rrit1"]
+custom_data_layer_0/name = "_advanced_autotiles"
+custom_data_layer_0/type = 27
+sources/0 = SubResource("TileSetAtlasSource_qjlpi")
+script = ExtResource("1_8xr67")
+auto_priorities = false
+empty_terrain_bindings = 7
+empty_terrain_priority = 1
+_need_recalc = false
+advanced_terrain_count = 2
+advanced_terrain_0/name = "Grass"
+advanced_terrain_0/color = Color(0.19999993, 1, 0, 1)
+advanced_terrain_0/mode = 6
+advanced_terrain_0/priority = 3
+advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 2
+advanced_terrain_1/name = "Not Grass"
+advanced_terrain_1/color = Color(0.99999994, 0.30486888, 0.1394651, 1)
+advanced_terrain_1/mode = 0
+advanced_terrain_1/priority = 2
+advanced_terrain_1/auto_binding = false
+advanced_terrain_1/bindings = 5
+metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
+
+[node name="Tilemap" type="TileMapLayer" unique_id=318361766]
+tile_map_data = PackedByteArray("AAAAAAAAAAAIAAAAAAABAAAAAAAJAAAAAAAAAAEAAAAIAAIAAAABAAEAAAAJAAEAAAACAAAAAAAJAAAAAAACAAEAAAAJAAEAAAAAAAIAAAAIAAIAAAABAAIAAAAJAAEAAAACAAIAAAAJAAEAAAADAAAAAAALAAAAAAADAAEAAAALAAEAAAADAAIAAAALAAEAAAAAAAMAAAAIAAMAAAABAAMAAAAKAAMAAAACAAMAAAAKAAMAAAADAAMAAAALAAMAAAA=")
+tile_set = SubResource("TileSet_rrit1")
+script = ExtResource("1_yqpnh")
+advanced_tile_set = SubResource("TileSet_rrit1")
+metadata/_custom_type_script = "uid://ddwcn185b61k0"
+
+[node name="Node2D" type="Node2D" parent="." unique_id=1356855915]
