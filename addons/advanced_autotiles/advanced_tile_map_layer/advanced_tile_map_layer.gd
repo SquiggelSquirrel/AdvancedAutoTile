@@ -200,39 +200,6 @@ func advanced_autotile_paint_path(
 	return changes
 
 
-func _mask_apply_path(
-		mask: Dictionary,
-		cell: Vector2i,
-		neighbor_cell:Vector2i,
-		pathable_flags: Array[TileGeometry.CellNeighbor],
-		non_acute: bool,
-		terrain_id: int
-) -> void:
-	var connection_flag := TileGeometry.CellNeighbor.SELF
-	for flag in pathable_flags:
-		if advanced_get_neighbor_cell(cell, flag) == neighbor_cell:
-			connection_flag = flag
-			break
-	if connection_flag == TileGeometry.CellNeighbor.SELF:
-		return
-	mask[connection_flag] = terrain_id
-	if not non_acute:
-		return
-	if bool(connection_flag & TileGeometry.CellNeighbor.CORNER):
-		for side_flag in advanced_get_side_flags_for_diagonal(
-				cell, connection_flag
-		):
-			mask[side_flag] = TileGeometry.FLAG_EMPTY
-	else:
-		for diagonal_flag in TileGeometry.get_corners_of_side(
-				connection_flag,
-				advanced_tile_set.advanced_shape,
-				advanced_tile_set.advanced_axis,
-				advanced_tile_set.get_advanced_cell_orientation(cell)
-		):
-			mask[diagonal_flag] = TileGeometry.FLAG_EMPTY
-
-
 func advanced_autotile_paint_corners(
 		terrain_id: int,
 		cells: Array[Vector2i],
@@ -280,6 +247,49 @@ func advanced_autotile_paint_corners(
 		var change = advanced_autotile_choose_tile(cell, mask)
 		_merge_changes(changes, cell, change)
 	return changes
+
+
+func advanced_autotile_flood_fill(
+		start_cell: Vector2i,
+		terrain_id: int,
+		dry_run := false
+) -> Dictionary:
+	var used := get_used_rect()
+	var cells: Array[Vector2i] = []
+	var start_terrain := advanced_get_final_cell_terrain(start_cell)
+	var start_tile := advanced_get_existing_tile(start_cell)
+	if start_terrain == terrain_id:
+		return {}
+	var is_match: Callable
+	if start_terrain == TileGeometry.FLAG_EMPTY:
+		is_match = func(neighbor: Vector2i) -> bool:
+			return advanced_get_existing_tile(neighbor).equals(start_tile)
+	else:
+		is_match = func(neighbor: Vector2i) -> bool:
+			return advanced_get_final_cell_terrain(neighbor) == start_terrain
+	var queue: Array[Vector2i] = [start_cell]
+	for safety_limit in used.size.x * used.size.y:
+		if queue.is_empty():
+			break
+		var cell := queue.pop_front()
+		cells.append(cell)
+		for neighbor in advanced_get_surrounding_cells(cell):
+			if (
+					used.has_point(neighbor)
+					and
+					is_match.call(neighbor)
+					and not
+					cells.has(neighbor)
+					and not
+					queue.has(neighbor)
+			):
+				queue.append(neighbor)
+	return advanced_autotile_paint_cells(
+			terrain_id,
+			cells,
+			dry_run
+	)
+	
 
 
 func add_incoming_terrain(terrain_id: int, cells: Array[Vector2i]) -> void:
@@ -386,6 +396,39 @@ func _get_cells_around_constraints(
 			if neighbor not in cells:
 				cells.append(neighbor)
 	return cells
+
+
+func _mask_apply_path(
+		mask: Dictionary,
+		cell: Vector2i,
+		neighbor_cell:Vector2i,
+		pathable_flags: Array[TileGeometry.CellNeighbor],
+		non_acute: bool,
+		terrain_id: int
+) -> void:
+	var connection_flag := TileGeometry.CellNeighbor.SELF
+	for flag in pathable_flags:
+		if advanced_get_neighbor_cell(cell, flag) == neighbor_cell:
+			connection_flag = flag
+			break
+	if connection_flag == TileGeometry.CellNeighbor.SELF:
+		return
+	mask[connection_flag] = terrain_id
+	if not non_acute:
+		return
+	if bool(connection_flag & TileGeometry.CellNeighbor.CORNER):
+		for side_flag in advanced_get_side_flags_for_diagonal(
+				cell, connection_flag
+		):
+			mask[side_flag] = TileGeometry.FLAG_EMPTY
+	else:
+		for diagonal_flag in TileGeometry.get_corners_of_side(
+				connection_flag,
+				advanced_tile_set.advanced_shape,
+				advanced_tile_set.advanced_axis,
+				advanced_tile_set.get_advanced_cell_orientation(cell)
+		):
+			mask[diagonal_flag] = TileGeometry.FLAG_EMPTY
 
 
 func _tile_match_priority(

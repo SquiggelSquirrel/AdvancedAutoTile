@@ -384,47 +384,14 @@ class PaintAction:
 						)
 			PaintShape.RECTANGLE:
 				revert()
-				var cells: Array[Vector2i] = []
-				var rect := Rect2i(start_cell, Vector2i.ZERO)
-				rect = rect.expand(current_cell)
-				for x in range(rect.position.x, rect.end.x + 1):
-					for y in range(rect.position.y, rect.end.y + 1):
-						cells.append(Vector2i(x, y))
+				var cells := get_rect_cells(start_cell, current_cell)
 				changes = tile_map_layer.advanced_autotile_paint_cells(
 						terrain_id,
 						cells
 				)
 			PaintShape.FILL:
-				var used := tile_map_layer.get_used_rect()
-				var cells: Array[Vector2i] = []
-				var start_terrain := tile_map_layer.advanced_get_final_cell_terrain(
-						current_cell
-				)
-				if start_terrain == terrain_id:
-					return
-				var queue: Array[Vector2i] = [current_cell]
-				for safety_limit in used.size.x * used.size.y:
-					if queue.is_empty():
-						break
-					var cell := queue.pop_front()
-					cells.append(cell)
-					for neighbor in tile_map_layer.advanced_get_surrounding_cells(cell):
-						if (
-								used.has_point(neighbor)
-								and
-								tile_map_layer.advanced_get_final_cell_terrain(neighbor)
-								== start_terrain
-								and not
-								cells.has(neighbor)
-								and not
-								queue.has(neighbor)
-						):
-							queue.append(neighbor)
-				add_changes(
-						tile_map_layer.advanced_autotile_paint_cells(
-							terrain_id,
-							cells
-						)
+				changes = tile_map_layer.advanced_autotile_flood_fill(
+						current_cell, terrain_id
 				)
 	
 	
@@ -499,3 +466,16 @@ class PaintAction:
 					_:
 						noun = "cells"
 		return "%s %s" % [verb, noun]
+	
+	
+	static func get_rect_cells(
+			start_cell: Vector2i,
+			current_cell: Vector2i
+	) -> Array[Vector2i]:
+		var cells: Array[Vector2i] = []
+		var rect := Rect2i(start_cell, Vector2i.ZERO)
+		rect = rect.expand(current_cell)
+		for x in range(rect.position.x, rect.end.x + 1):
+			for y in range(rect.position.y, rect.end.y + 1):
+				cells.append(Vector2i(x, y))
+		return cells
