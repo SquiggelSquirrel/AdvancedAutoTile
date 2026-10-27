@@ -1,0 +1,1192 @@
+[gd_scene format=4 uid="uid://bgjnyhhj3514p"]
+
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_babt6"]
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_vtu2y"]
+[ext_resource type="Texture2D" uid="uid://b5p8l0sqbwbca" path="res://examples/01 - Single Terrain Square Grid/06 - Square Subgrid/square subgrid.png" id="2_wq7pa"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_bwojl"]
+texture = ExtResource("2_wq7pa")
+texture_region_size = Vector2i(8, 8)
+0:0/0 = 0
+0:0/0/custom_data_511 = {
+"mask": {
+14: -1,
+26: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:0/0 = 0
+1:0/0/custom_data_511 = {
+"mask": {
+14: -1,
+26: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+2:0/0 = 0
+2:0/0/custom_data_511 = {
+"mask": {
+14: -1,
+26: -1,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+3:0/0 = 0
+3:0/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: -1,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+4:0/0 = 0
+4:0/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+0:1/0 = 0
+0:1/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:1/0 = 0
+1:1/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+2:1/0 = 0
+2:1/0/custom_data_511 = {
+"mask": {
+14: -1,
+26: -1,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+3:1/0 = 0
+3:1/0/custom_data_511 = {
+"mask": {
+14: -1,
+26: 0,
+38: 0,
+50: 0
+},
+"terrain_index": 0
+}
+4:1/0 = 0
+4:1/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: 0,
+38: -1,
+50: 0
+},
+"terrain_index": 0
+}
+0:2/0 = 0
+0:2/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:2/0 = 0
+1:2/0/custom_data_511 = {
+"mask": {
+14: 0,
+26: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+2:2/0 = 0
+2:2/0/custom_data_511 = {
+"mask": {
+14: -1,
+26: -1,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+
+[sub_resource type="TileSet" id="TileSet_3iry8"]
+tile_size = Vector2i(8, 8)
+custom_data_layer_0/name = ""
+custom_data_layer_0/type = 0
+custom_data_layer_1/name = ""
+custom_data_layer_1/type = 0
+custom_data_layer_2/name = ""
+custom_data_layer_2/type = 0
+custom_data_layer_3/name = ""
+custom_data_layer_3/type = 0
+custom_data_layer_4/name = ""
+custom_data_layer_4/type = 0
+custom_data_layer_5/name = ""
+custom_data_layer_5/type = 0
+custom_data_layer_6/name = ""
+custom_data_layer_6/type = 0
+custom_data_layer_7/name = ""
+custom_data_layer_7/type = 0
+custom_data_layer_8/name = ""
+custom_data_layer_8/type = 0
+custom_data_layer_9/name = ""
+custom_data_layer_9/type = 0
+custom_data_layer_10/name = ""
+custom_data_layer_10/type = 0
+custom_data_layer_11/name = ""
+custom_data_layer_11/type = 0
+custom_data_layer_12/name = ""
+custom_data_layer_12/type = 0
+custom_data_layer_13/name = ""
+custom_data_layer_13/type = 0
+custom_data_layer_14/name = ""
+custom_data_layer_14/type = 0
+custom_data_layer_15/name = ""
+custom_data_layer_15/type = 0
+custom_data_layer_16/name = ""
+custom_data_layer_16/type = 0
+custom_data_layer_17/name = ""
+custom_data_layer_17/type = 0
+custom_data_layer_18/name = ""
+custom_data_layer_18/type = 0
+custom_data_layer_19/name = ""
+custom_data_layer_19/type = 0
+custom_data_layer_20/name = ""
+custom_data_layer_20/type = 0
+custom_data_layer_21/name = ""
+custom_data_layer_21/type = 0
+custom_data_layer_22/name = ""
+custom_data_layer_22/type = 0
+custom_data_layer_23/name = ""
+custom_data_layer_23/type = 0
+custom_data_layer_24/name = ""
+custom_data_layer_24/type = 0
+custom_data_layer_25/name = ""
+custom_data_layer_25/type = 0
+custom_data_layer_26/name = ""
+custom_data_layer_26/type = 0
+custom_data_layer_27/name = ""
+custom_data_layer_27/type = 0
+custom_data_layer_28/name = ""
+custom_data_layer_28/type = 0
+custom_data_layer_29/name = ""
+custom_data_layer_29/type = 0
+custom_data_layer_30/name = ""
+custom_data_layer_30/type = 0
+custom_data_layer_31/name = ""
+custom_data_layer_31/type = 0
+custom_data_layer_32/name = ""
+custom_data_layer_32/type = 0
+custom_data_layer_33/name = ""
+custom_data_layer_33/type = 0
+custom_data_layer_34/name = ""
+custom_data_layer_34/type = 0
+custom_data_layer_35/name = ""
+custom_data_layer_35/type = 0
+custom_data_layer_36/name = ""
+custom_data_layer_36/type = 0
+custom_data_layer_37/name = ""
+custom_data_layer_37/type = 0
+custom_data_layer_38/name = ""
+custom_data_layer_38/type = 0
+custom_data_layer_39/name = ""
+custom_data_layer_39/type = 0
+custom_data_layer_40/name = ""
+custom_data_layer_40/type = 0
+custom_data_layer_41/name = ""
+custom_data_layer_41/type = 0
+custom_data_layer_42/name = ""
+custom_data_layer_42/type = 0
+custom_data_layer_43/name = ""
+custom_data_layer_43/type = 0
+custom_data_layer_44/name = ""
+custom_data_layer_44/type = 0
+custom_data_layer_45/name = ""
+custom_data_layer_45/type = 0
+custom_data_layer_46/name = ""
+custom_data_layer_46/type = 0
+custom_data_layer_47/name = ""
+custom_data_layer_47/type = 0
+custom_data_layer_48/name = ""
+custom_data_layer_48/type = 0
+custom_data_layer_49/name = ""
+custom_data_layer_49/type = 0
+custom_data_layer_50/name = ""
+custom_data_layer_50/type = 0
+custom_data_layer_51/name = ""
+custom_data_layer_51/type = 0
+custom_data_layer_52/name = ""
+custom_data_layer_52/type = 0
+custom_data_layer_53/name = ""
+custom_data_layer_53/type = 0
+custom_data_layer_54/name = ""
+custom_data_layer_54/type = 0
+custom_data_layer_55/name = ""
+custom_data_layer_55/type = 0
+custom_data_layer_56/name = ""
+custom_data_layer_56/type = 0
+custom_data_layer_57/name = ""
+custom_data_layer_57/type = 0
+custom_data_layer_58/name = ""
+custom_data_layer_58/type = 0
+custom_data_layer_59/name = ""
+custom_data_layer_59/type = 0
+custom_data_layer_60/name = ""
+custom_data_layer_60/type = 0
+custom_data_layer_61/name = ""
+custom_data_layer_61/type = 0
+custom_data_layer_62/name = ""
+custom_data_layer_62/type = 0
+custom_data_layer_63/name = ""
+custom_data_layer_63/type = 0
+custom_data_layer_64/name = ""
+custom_data_layer_64/type = 0
+custom_data_layer_65/name = ""
+custom_data_layer_65/type = 0
+custom_data_layer_66/name = ""
+custom_data_layer_66/type = 0
+custom_data_layer_67/name = ""
+custom_data_layer_67/type = 0
+custom_data_layer_68/name = ""
+custom_data_layer_68/type = 0
+custom_data_layer_69/name = ""
+custom_data_layer_69/type = 0
+custom_data_layer_70/name = ""
+custom_data_layer_70/type = 0
+custom_data_layer_71/name = ""
+custom_data_layer_71/type = 0
+custom_data_layer_72/name = ""
+custom_data_layer_72/type = 0
+custom_data_layer_73/name = ""
+custom_data_layer_73/type = 0
+custom_data_layer_74/name = ""
+custom_data_layer_74/type = 0
+custom_data_layer_75/name = ""
+custom_data_layer_75/type = 0
+custom_data_layer_76/name = ""
+custom_data_layer_76/type = 0
+custom_data_layer_77/name = ""
+custom_data_layer_77/type = 0
+custom_data_layer_78/name = ""
+custom_data_layer_78/type = 0
+custom_data_layer_79/name = ""
+custom_data_layer_79/type = 0
+custom_data_layer_80/name = ""
+custom_data_layer_80/type = 0
+custom_data_layer_81/name = ""
+custom_data_layer_81/type = 0
+custom_data_layer_82/name = ""
+custom_data_layer_82/type = 0
+custom_data_layer_83/name = ""
+custom_data_layer_83/type = 0
+custom_data_layer_84/name = ""
+custom_data_layer_84/type = 0
+custom_data_layer_85/name = ""
+custom_data_layer_85/type = 0
+custom_data_layer_86/name = ""
+custom_data_layer_86/type = 0
+custom_data_layer_87/name = ""
+custom_data_layer_87/type = 0
+custom_data_layer_88/name = ""
+custom_data_layer_88/type = 0
+custom_data_layer_89/name = ""
+custom_data_layer_89/type = 0
+custom_data_layer_90/name = ""
+custom_data_layer_90/type = 0
+custom_data_layer_91/name = ""
+custom_data_layer_91/type = 0
+custom_data_layer_92/name = ""
+custom_data_layer_92/type = 0
+custom_data_layer_93/name = ""
+custom_data_layer_93/type = 0
+custom_data_layer_94/name = ""
+custom_data_layer_94/type = 0
+custom_data_layer_95/name = ""
+custom_data_layer_95/type = 0
+custom_data_layer_96/name = ""
+custom_data_layer_96/type = 0
+custom_data_layer_97/name = ""
+custom_data_layer_97/type = 0
+custom_data_layer_98/name = ""
+custom_data_layer_98/type = 0
+custom_data_layer_99/name = ""
+custom_data_layer_99/type = 0
+custom_data_layer_100/name = ""
+custom_data_layer_100/type = 0
+custom_data_layer_101/name = ""
+custom_data_layer_101/type = 0
+custom_data_layer_102/name = ""
+custom_data_layer_102/type = 0
+custom_data_layer_103/name = ""
+custom_data_layer_103/type = 0
+custom_data_layer_104/name = ""
+custom_data_layer_104/type = 0
+custom_data_layer_105/name = ""
+custom_data_layer_105/type = 0
+custom_data_layer_106/name = ""
+custom_data_layer_106/type = 0
+custom_data_layer_107/name = ""
+custom_data_layer_107/type = 0
+custom_data_layer_108/name = ""
+custom_data_layer_108/type = 0
+custom_data_layer_109/name = ""
+custom_data_layer_109/type = 0
+custom_data_layer_110/name = ""
+custom_data_layer_110/type = 0
+custom_data_layer_111/name = ""
+custom_data_layer_111/type = 0
+custom_data_layer_112/name = ""
+custom_data_layer_112/type = 0
+custom_data_layer_113/name = ""
+custom_data_layer_113/type = 0
+custom_data_layer_114/name = ""
+custom_data_layer_114/type = 0
+custom_data_layer_115/name = ""
+custom_data_layer_115/type = 0
+custom_data_layer_116/name = ""
+custom_data_layer_116/type = 0
+custom_data_layer_117/name = ""
+custom_data_layer_117/type = 0
+custom_data_layer_118/name = ""
+custom_data_layer_118/type = 0
+custom_data_layer_119/name = ""
+custom_data_layer_119/type = 0
+custom_data_layer_120/name = ""
+custom_data_layer_120/type = 0
+custom_data_layer_121/name = ""
+custom_data_layer_121/type = 0
+custom_data_layer_122/name = ""
+custom_data_layer_122/type = 0
+custom_data_layer_123/name = ""
+custom_data_layer_123/type = 0
+custom_data_layer_124/name = ""
+custom_data_layer_124/type = 0
+custom_data_layer_125/name = ""
+custom_data_layer_125/type = 0
+custom_data_layer_126/name = ""
+custom_data_layer_126/type = 0
+custom_data_layer_127/name = ""
+custom_data_layer_127/type = 0
+custom_data_layer_128/name = ""
+custom_data_layer_128/type = 0
+custom_data_layer_129/name = ""
+custom_data_layer_129/type = 0
+custom_data_layer_130/name = ""
+custom_data_layer_130/type = 0
+custom_data_layer_131/name = ""
+custom_data_layer_131/type = 0
+custom_data_layer_132/name = ""
+custom_data_layer_132/type = 0
+custom_data_layer_133/name = ""
+custom_data_layer_133/type = 0
+custom_data_layer_134/name = ""
+custom_data_layer_134/type = 0
+custom_data_layer_135/name = ""
+custom_data_layer_135/type = 0
+custom_data_layer_136/name = ""
+custom_data_layer_136/type = 0
+custom_data_layer_137/name = ""
+custom_data_layer_137/type = 0
+custom_data_layer_138/name = ""
+custom_data_layer_138/type = 0
+custom_data_layer_139/name = ""
+custom_data_layer_139/type = 0
+custom_data_layer_140/name = ""
+custom_data_layer_140/type = 0
+custom_data_layer_141/name = ""
+custom_data_layer_141/type = 0
+custom_data_layer_142/name = ""
+custom_data_layer_142/type = 0
+custom_data_layer_143/name = ""
+custom_data_layer_143/type = 0
+custom_data_layer_144/name = ""
+custom_data_layer_144/type = 0
+custom_data_layer_145/name = ""
+custom_data_layer_145/type = 0
+custom_data_layer_146/name = ""
+custom_data_layer_146/type = 0
+custom_data_layer_147/name = ""
+custom_data_layer_147/type = 0
+custom_data_layer_148/name = ""
+custom_data_layer_148/type = 0
+custom_data_layer_149/name = ""
+custom_data_layer_149/type = 0
+custom_data_layer_150/name = ""
+custom_data_layer_150/type = 0
+custom_data_layer_151/name = ""
+custom_data_layer_151/type = 0
+custom_data_layer_152/name = ""
+custom_data_layer_152/type = 0
+custom_data_layer_153/name = ""
+custom_data_layer_153/type = 0
+custom_data_layer_154/name = ""
+custom_data_layer_154/type = 0
+custom_data_layer_155/name = ""
+custom_data_layer_155/type = 0
+custom_data_layer_156/name = ""
+custom_data_layer_156/type = 0
+custom_data_layer_157/name = ""
+custom_data_layer_157/type = 0
+custom_data_layer_158/name = ""
+custom_data_layer_158/type = 0
+custom_data_layer_159/name = ""
+custom_data_layer_159/type = 0
+custom_data_layer_160/name = ""
+custom_data_layer_160/type = 0
+custom_data_layer_161/name = ""
+custom_data_layer_161/type = 0
+custom_data_layer_162/name = ""
+custom_data_layer_162/type = 0
+custom_data_layer_163/name = ""
+custom_data_layer_163/type = 0
+custom_data_layer_164/name = ""
+custom_data_layer_164/type = 0
+custom_data_layer_165/name = ""
+custom_data_layer_165/type = 0
+custom_data_layer_166/name = ""
+custom_data_layer_166/type = 0
+custom_data_layer_167/name = ""
+custom_data_layer_167/type = 0
+custom_data_layer_168/name = ""
+custom_data_layer_168/type = 0
+custom_data_layer_169/name = ""
+custom_data_layer_169/type = 0
+custom_data_layer_170/name = ""
+custom_data_layer_170/type = 0
+custom_data_layer_171/name = ""
+custom_data_layer_171/type = 0
+custom_data_layer_172/name = ""
+custom_data_layer_172/type = 0
+custom_data_layer_173/name = ""
+custom_data_layer_173/type = 0
+custom_data_layer_174/name = ""
+custom_data_layer_174/type = 0
+custom_data_layer_175/name = ""
+custom_data_layer_175/type = 0
+custom_data_layer_176/name = ""
+custom_data_layer_176/type = 0
+custom_data_layer_177/name = ""
+custom_data_layer_177/type = 0
+custom_data_layer_178/name = ""
+custom_data_layer_178/type = 0
+custom_data_layer_179/name = ""
+custom_data_layer_179/type = 0
+custom_data_layer_180/name = ""
+custom_data_layer_180/type = 0
+custom_data_layer_181/name = ""
+custom_data_layer_181/type = 0
+custom_data_layer_182/name = ""
+custom_data_layer_182/type = 0
+custom_data_layer_183/name = ""
+custom_data_layer_183/type = 0
+custom_data_layer_184/name = ""
+custom_data_layer_184/type = 0
+custom_data_layer_185/name = ""
+custom_data_layer_185/type = 0
+custom_data_layer_186/name = ""
+custom_data_layer_186/type = 0
+custom_data_layer_187/name = ""
+custom_data_layer_187/type = 0
+custom_data_layer_188/name = ""
+custom_data_layer_188/type = 0
+custom_data_layer_189/name = ""
+custom_data_layer_189/type = 0
+custom_data_layer_190/name = ""
+custom_data_layer_190/type = 0
+custom_data_layer_191/name = ""
+custom_data_layer_191/type = 0
+custom_data_layer_192/name = ""
+custom_data_layer_192/type = 0
+custom_data_layer_193/name = ""
+custom_data_layer_193/type = 0
+custom_data_layer_194/name = ""
+custom_data_layer_194/type = 0
+custom_data_layer_195/name = ""
+custom_data_layer_195/type = 0
+custom_data_layer_196/name = ""
+custom_data_layer_196/type = 0
+custom_data_layer_197/name = ""
+custom_data_layer_197/type = 0
+custom_data_layer_198/name = ""
+custom_data_layer_198/type = 0
+custom_data_layer_199/name = ""
+custom_data_layer_199/type = 0
+custom_data_layer_200/name = ""
+custom_data_layer_200/type = 0
+custom_data_layer_201/name = ""
+custom_data_layer_201/type = 0
+custom_data_layer_202/name = ""
+custom_data_layer_202/type = 0
+custom_data_layer_203/name = ""
+custom_data_layer_203/type = 0
+custom_data_layer_204/name = ""
+custom_data_layer_204/type = 0
+custom_data_layer_205/name = ""
+custom_data_layer_205/type = 0
+custom_data_layer_206/name = ""
+custom_data_layer_206/type = 0
+custom_data_layer_207/name = ""
+custom_data_layer_207/type = 0
+custom_data_layer_208/name = ""
+custom_data_layer_208/type = 0
+custom_data_layer_209/name = ""
+custom_data_layer_209/type = 0
+custom_data_layer_210/name = ""
+custom_data_layer_210/type = 0
+custom_data_layer_211/name = ""
+custom_data_layer_211/type = 0
+custom_data_layer_212/name = ""
+custom_data_layer_212/type = 0
+custom_data_layer_213/name = ""
+custom_data_layer_213/type = 0
+custom_data_layer_214/name = ""
+custom_data_layer_214/type = 0
+custom_data_layer_215/name = ""
+custom_data_layer_215/type = 0
+custom_data_layer_216/name = ""
+custom_data_layer_216/type = 0
+custom_data_layer_217/name = ""
+custom_data_layer_217/type = 0
+custom_data_layer_218/name = ""
+custom_data_layer_218/type = 0
+custom_data_layer_219/name = ""
+custom_data_layer_219/type = 0
+custom_data_layer_220/name = ""
+custom_data_layer_220/type = 0
+custom_data_layer_221/name = ""
+custom_data_layer_221/type = 0
+custom_data_layer_222/name = ""
+custom_data_layer_222/type = 0
+custom_data_layer_223/name = ""
+custom_data_layer_223/type = 0
+custom_data_layer_224/name = ""
+custom_data_layer_224/type = 0
+custom_data_layer_225/name = ""
+custom_data_layer_225/type = 0
+custom_data_layer_226/name = ""
+custom_data_layer_226/type = 0
+custom_data_layer_227/name = ""
+custom_data_layer_227/type = 0
+custom_data_layer_228/name = ""
+custom_data_layer_228/type = 0
+custom_data_layer_229/name = ""
+custom_data_layer_229/type = 0
+custom_data_layer_230/name = ""
+custom_data_layer_230/type = 0
+custom_data_layer_231/name = ""
+custom_data_layer_231/type = 0
+custom_data_layer_232/name = ""
+custom_data_layer_232/type = 0
+custom_data_layer_233/name = ""
+custom_data_layer_233/type = 0
+custom_data_layer_234/name = ""
+custom_data_layer_234/type = 0
+custom_data_layer_235/name = ""
+custom_data_layer_235/type = 0
+custom_data_layer_236/name = ""
+custom_data_layer_236/type = 0
+custom_data_layer_237/name = ""
+custom_data_layer_237/type = 0
+custom_data_layer_238/name = ""
+custom_data_layer_238/type = 0
+custom_data_layer_239/name = ""
+custom_data_layer_239/type = 0
+custom_data_layer_240/name = ""
+custom_data_layer_240/type = 0
+custom_data_layer_241/name = ""
+custom_data_layer_241/type = 0
+custom_data_layer_242/name = ""
+custom_data_layer_242/type = 0
+custom_data_layer_243/name = ""
+custom_data_layer_243/type = 0
+custom_data_layer_244/name = ""
+custom_data_layer_244/type = 0
+custom_data_layer_245/name = ""
+custom_data_layer_245/type = 0
+custom_data_layer_246/name = ""
+custom_data_layer_246/type = 0
+custom_data_layer_247/name = ""
+custom_data_layer_247/type = 0
+custom_data_layer_248/name = ""
+custom_data_layer_248/type = 0
+custom_data_layer_249/name = ""
+custom_data_layer_249/type = 0
+custom_data_layer_250/name = ""
+custom_data_layer_250/type = 0
+custom_data_layer_251/name = ""
+custom_data_layer_251/type = 0
+custom_data_layer_252/name = ""
+custom_data_layer_252/type = 0
+custom_data_layer_253/name = ""
+custom_data_layer_253/type = 0
+custom_data_layer_254/name = ""
+custom_data_layer_254/type = 0
+custom_data_layer_255/name = ""
+custom_data_layer_255/type = 0
+custom_data_layer_256/name = ""
+custom_data_layer_256/type = 0
+custom_data_layer_257/name = ""
+custom_data_layer_257/type = 0
+custom_data_layer_258/name = ""
+custom_data_layer_258/type = 0
+custom_data_layer_259/name = ""
+custom_data_layer_259/type = 0
+custom_data_layer_260/name = ""
+custom_data_layer_260/type = 0
+custom_data_layer_261/name = ""
+custom_data_layer_261/type = 0
+custom_data_layer_262/name = ""
+custom_data_layer_262/type = 0
+custom_data_layer_263/name = ""
+custom_data_layer_263/type = 0
+custom_data_layer_264/name = ""
+custom_data_layer_264/type = 0
+custom_data_layer_265/name = ""
+custom_data_layer_265/type = 0
+custom_data_layer_266/name = ""
+custom_data_layer_266/type = 0
+custom_data_layer_267/name = ""
+custom_data_layer_267/type = 0
+custom_data_layer_268/name = ""
+custom_data_layer_268/type = 0
+custom_data_layer_269/name = ""
+custom_data_layer_269/type = 0
+custom_data_layer_270/name = ""
+custom_data_layer_270/type = 0
+custom_data_layer_271/name = ""
+custom_data_layer_271/type = 0
+custom_data_layer_272/name = ""
+custom_data_layer_272/type = 0
+custom_data_layer_273/name = ""
+custom_data_layer_273/type = 0
+custom_data_layer_274/name = ""
+custom_data_layer_274/type = 0
+custom_data_layer_275/name = ""
+custom_data_layer_275/type = 0
+custom_data_layer_276/name = ""
+custom_data_layer_276/type = 0
+custom_data_layer_277/name = ""
+custom_data_layer_277/type = 0
+custom_data_layer_278/name = ""
+custom_data_layer_278/type = 0
+custom_data_layer_279/name = ""
+custom_data_layer_279/type = 0
+custom_data_layer_280/name = ""
+custom_data_layer_280/type = 0
+custom_data_layer_281/name = ""
+custom_data_layer_281/type = 0
+custom_data_layer_282/name = ""
+custom_data_layer_282/type = 0
+custom_data_layer_283/name = ""
+custom_data_layer_283/type = 0
+custom_data_layer_284/name = ""
+custom_data_layer_284/type = 0
+custom_data_layer_285/name = ""
+custom_data_layer_285/type = 0
+custom_data_layer_286/name = ""
+custom_data_layer_286/type = 0
+custom_data_layer_287/name = ""
+custom_data_layer_287/type = 0
+custom_data_layer_288/name = ""
+custom_data_layer_288/type = 0
+custom_data_layer_289/name = ""
+custom_data_layer_289/type = 0
+custom_data_layer_290/name = ""
+custom_data_layer_290/type = 0
+custom_data_layer_291/name = ""
+custom_data_layer_291/type = 0
+custom_data_layer_292/name = ""
+custom_data_layer_292/type = 0
+custom_data_layer_293/name = ""
+custom_data_layer_293/type = 0
+custom_data_layer_294/name = ""
+custom_data_layer_294/type = 0
+custom_data_layer_295/name = ""
+custom_data_layer_295/type = 0
+custom_data_layer_296/name = ""
+custom_data_layer_296/type = 0
+custom_data_layer_297/name = ""
+custom_data_layer_297/type = 0
+custom_data_layer_298/name = ""
+custom_data_layer_298/type = 0
+custom_data_layer_299/name = ""
+custom_data_layer_299/type = 0
+custom_data_layer_300/name = ""
+custom_data_layer_300/type = 0
+custom_data_layer_301/name = ""
+custom_data_layer_301/type = 0
+custom_data_layer_302/name = ""
+custom_data_layer_302/type = 0
+custom_data_layer_303/name = ""
+custom_data_layer_303/type = 0
+custom_data_layer_304/name = ""
+custom_data_layer_304/type = 0
+custom_data_layer_305/name = ""
+custom_data_layer_305/type = 0
+custom_data_layer_306/name = ""
+custom_data_layer_306/type = 0
+custom_data_layer_307/name = ""
+custom_data_layer_307/type = 0
+custom_data_layer_308/name = ""
+custom_data_layer_308/type = 0
+custom_data_layer_309/name = ""
+custom_data_layer_309/type = 0
+custom_data_layer_310/name = ""
+custom_data_layer_310/type = 0
+custom_data_layer_311/name = ""
+custom_data_layer_311/type = 0
+custom_data_layer_312/name = ""
+custom_data_layer_312/type = 0
+custom_data_layer_313/name = ""
+custom_data_layer_313/type = 0
+custom_data_layer_314/name = ""
+custom_data_layer_314/type = 0
+custom_data_layer_315/name = ""
+custom_data_layer_315/type = 0
+custom_data_layer_316/name = ""
+custom_data_layer_316/type = 0
+custom_data_layer_317/name = ""
+custom_data_layer_317/type = 0
+custom_data_layer_318/name = ""
+custom_data_layer_318/type = 0
+custom_data_layer_319/name = ""
+custom_data_layer_319/type = 0
+custom_data_layer_320/name = ""
+custom_data_layer_320/type = 0
+custom_data_layer_321/name = ""
+custom_data_layer_321/type = 0
+custom_data_layer_322/name = ""
+custom_data_layer_322/type = 0
+custom_data_layer_323/name = ""
+custom_data_layer_323/type = 0
+custom_data_layer_324/name = ""
+custom_data_layer_324/type = 0
+custom_data_layer_325/name = ""
+custom_data_layer_325/type = 0
+custom_data_layer_326/name = ""
+custom_data_layer_326/type = 0
+custom_data_layer_327/name = ""
+custom_data_layer_327/type = 0
+custom_data_layer_328/name = ""
+custom_data_layer_328/type = 0
+custom_data_layer_329/name = ""
+custom_data_layer_329/type = 0
+custom_data_layer_330/name = ""
+custom_data_layer_330/type = 0
+custom_data_layer_331/name = ""
+custom_data_layer_331/type = 0
+custom_data_layer_332/name = ""
+custom_data_layer_332/type = 0
+custom_data_layer_333/name = ""
+custom_data_layer_333/type = 0
+custom_data_layer_334/name = ""
+custom_data_layer_334/type = 0
+custom_data_layer_335/name = ""
+custom_data_layer_335/type = 0
+custom_data_layer_336/name = ""
+custom_data_layer_336/type = 0
+custom_data_layer_337/name = ""
+custom_data_layer_337/type = 0
+custom_data_layer_338/name = ""
+custom_data_layer_338/type = 0
+custom_data_layer_339/name = ""
+custom_data_layer_339/type = 0
+custom_data_layer_340/name = ""
+custom_data_layer_340/type = 0
+custom_data_layer_341/name = ""
+custom_data_layer_341/type = 0
+custom_data_layer_342/name = ""
+custom_data_layer_342/type = 0
+custom_data_layer_343/name = ""
+custom_data_layer_343/type = 0
+custom_data_layer_344/name = ""
+custom_data_layer_344/type = 0
+custom_data_layer_345/name = ""
+custom_data_layer_345/type = 0
+custom_data_layer_346/name = ""
+custom_data_layer_346/type = 0
+custom_data_layer_347/name = ""
+custom_data_layer_347/type = 0
+custom_data_layer_348/name = ""
+custom_data_layer_348/type = 0
+custom_data_layer_349/name = ""
+custom_data_layer_349/type = 0
+custom_data_layer_350/name = ""
+custom_data_layer_350/type = 0
+custom_data_layer_351/name = ""
+custom_data_layer_351/type = 0
+custom_data_layer_352/name = ""
+custom_data_layer_352/type = 0
+custom_data_layer_353/name = ""
+custom_data_layer_353/type = 0
+custom_data_layer_354/name = ""
+custom_data_layer_354/type = 0
+custom_data_layer_355/name = ""
+custom_data_layer_355/type = 0
+custom_data_layer_356/name = ""
+custom_data_layer_356/type = 0
+custom_data_layer_357/name = ""
+custom_data_layer_357/type = 0
+custom_data_layer_358/name = ""
+custom_data_layer_358/type = 0
+custom_data_layer_359/name = ""
+custom_data_layer_359/type = 0
+custom_data_layer_360/name = ""
+custom_data_layer_360/type = 0
+custom_data_layer_361/name = ""
+custom_data_layer_361/type = 0
+custom_data_layer_362/name = ""
+custom_data_layer_362/type = 0
+custom_data_layer_363/name = ""
+custom_data_layer_363/type = 0
+custom_data_layer_364/name = ""
+custom_data_layer_364/type = 0
+custom_data_layer_365/name = ""
+custom_data_layer_365/type = 0
+custom_data_layer_366/name = ""
+custom_data_layer_366/type = 0
+custom_data_layer_367/name = ""
+custom_data_layer_367/type = 0
+custom_data_layer_368/name = ""
+custom_data_layer_368/type = 0
+custom_data_layer_369/name = ""
+custom_data_layer_369/type = 0
+custom_data_layer_370/name = ""
+custom_data_layer_370/type = 0
+custom_data_layer_371/name = ""
+custom_data_layer_371/type = 0
+custom_data_layer_372/name = ""
+custom_data_layer_372/type = 0
+custom_data_layer_373/name = ""
+custom_data_layer_373/type = 0
+custom_data_layer_374/name = ""
+custom_data_layer_374/type = 0
+custom_data_layer_375/name = ""
+custom_data_layer_375/type = 0
+custom_data_layer_376/name = ""
+custom_data_layer_376/type = 0
+custom_data_layer_377/name = ""
+custom_data_layer_377/type = 0
+custom_data_layer_378/name = ""
+custom_data_layer_378/type = 0
+custom_data_layer_379/name = ""
+custom_data_layer_379/type = 0
+custom_data_layer_380/name = ""
+custom_data_layer_380/type = 0
+custom_data_layer_381/name = ""
+custom_data_layer_381/type = 0
+custom_data_layer_382/name = ""
+custom_data_layer_382/type = 0
+custom_data_layer_383/name = ""
+custom_data_layer_383/type = 0
+custom_data_layer_384/name = ""
+custom_data_layer_384/type = 0
+custom_data_layer_385/name = ""
+custom_data_layer_385/type = 0
+custom_data_layer_386/name = ""
+custom_data_layer_386/type = 0
+custom_data_layer_387/name = ""
+custom_data_layer_387/type = 0
+custom_data_layer_388/name = ""
+custom_data_layer_388/type = 0
+custom_data_layer_389/name = ""
+custom_data_layer_389/type = 0
+custom_data_layer_390/name = ""
+custom_data_layer_390/type = 0
+custom_data_layer_391/name = ""
+custom_data_layer_391/type = 0
+custom_data_layer_392/name = ""
+custom_data_layer_392/type = 0
+custom_data_layer_393/name = ""
+custom_data_layer_393/type = 0
+custom_data_layer_394/name = ""
+custom_data_layer_394/type = 0
+custom_data_layer_395/name = ""
+custom_data_layer_395/type = 0
+custom_data_layer_396/name = ""
+custom_data_layer_396/type = 0
+custom_data_layer_397/name = ""
+custom_data_layer_397/type = 0
+custom_data_layer_398/name = ""
+custom_data_layer_398/type = 0
+custom_data_layer_399/name = ""
+custom_data_layer_399/type = 0
+custom_data_layer_400/name = ""
+custom_data_layer_400/type = 0
+custom_data_layer_401/name = ""
+custom_data_layer_401/type = 0
+custom_data_layer_402/name = ""
+custom_data_layer_402/type = 0
+custom_data_layer_403/name = ""
+custom_data_layer_403/type = 0
+custom_data_layer_404/name = ""
+custom_data_layer_404/type = 0
+custom_data_layer_405/name = ""
+custom_data_layer_405/type = 0
+custom_data_layer_406/name = ""
+custom_data_layer_406/type = 0
+custom_data_layer_407/name = ""
+custom_data_layer_407/type = 0
+custom_data_layer_408/name = ""
+custom_data_layer_408/type = 0
+custom_data_layer_409/name = ""
+custom_data_layer_409/type = 0
+custom_data_layer_410/name = ""
+custom_data_layer_410/type = 0
+custom_data_layer_411/name = ""
+custom_data_layer_411/type = 0
+custom_data_layer_412/name = ""
+custom_data_layer_412/type = 0
+custom_data_layer_413/name = ""
+custom_data_layer_413/type = 0
+custom_data_layer_414/name = ""
+custom_data_layer_414/type = 0
+custom_data_layer_415/name = ""
+custom_data_layer_415/type = 0
+custom_data_layer_416/name = ""
+custom_data_layer_416/type = 0
+custom_data_layer_417/name = ""
+custom_data_layer_417/type = 0
+custom_data_layer_418/name = ""
+custom_data_layer_418/type = 0
+custom_data_layer_419/name = ""
+custom_data_layer_419/type = 0
+custom_data_layer_420/name = ""
+custom_data_layer_420/type = 0
+custom_data_layer_421/name = ""
+custom_data_layer_421/type = 0
+custom_data_layer_422/name = ""
+custom_data_layer_422/type = 0
+custom_data_layer_423/name = ""
+custom_data_layer_423/type = 0
+custom_data_layer_424/name = ""
+custom_data_layer_424/type = 0
+custom_data_layer_425/name = ""
+custom_data_layer_425/type = 0
+custom_data_layer_426/name = ""
+custom_data_layer_426/type = 0
+custom_data_layer_427/name = ""
+custom_data_layer_427/type = 0
+custom_data_layer_428/name = ""
+custom_data_layer_428/type = 0
+custom_data_layer_429/name = ""
+custom_data_layer_429/type = 0
+custom_data_layer_430/name = ""
+custom_data_layer_430/type = 0
+custom_data_layer_431/name = ""
+custom_data_layer_431/type = 0
+custom_data_layer_432/name = ""
+custom_data_layer_432/type = 0
+custom_data_layer_433/name = ""
+custom_data_layer_433/type = 0
+custom_data_layer_434/name = ""
+custom_data_layer_434/type = 0
+custom_data_layer_435/name = ""
+custom_data_layer_435/type = 0
+custom_data_layer_436/name = ""
+custom_data_layer_436/type = 0
+custom_data_layer_437/name = ""
+custom_data_layer_437/type = 0
+custom_data_layer_438/name = ""
+custom_data_layer_438/type = 0
+custom_data_layer_439/name = ""
+custom_data_layer_439/type = 0
+custom_data_layer_440/name = ""
+custom_data_layer_440/type = 0
+custom_data_layer_441/name = ""
+custom_data_layer_441/type = 0
+custom_data_layer_442/name = ""
+custom_data_layer_442/type = 0
+custom_data_layer_443/name = ""
+custom_data_layer_443/type = 0
+custom_data_layer_444/name = ""
+custom_data_layer_444/type = 0
+custom_data_layer_445/name = ""
+custom_data_layer_445/type = 0
+custom_data_layer_446/name = ""
+custom_data_layer_446/type = 0
+custom_data_layer_447/name = ""
+custom_data_layer_447/type = 0
+custom_data_layer_448/name = ""
+custom_data_layer_448/type = 0
+custom_data_layer_449/name = ""
+custom_data_layer_449/type = 0
+custom_data_layer_450/name = ""
+custom_data_layer_450/type = 0
+custom_data_layer_451/name = ""
+custom_data_layer_451/type = 0
+custom_data_layer_452/name = ""
+custom_data_layer_452/type = 0
+custom_data_layer_453/name = ""
+custom_data_layer_453/type = 0
+custom_data_layer_454/name = ""
+custom_data_layer_454/type = 0
+custom_data_layer_455/name = ""
+custom_data_layer_455/type = 0
+custom_data_layer_456/name = ""
+custom_data_layer_456/type = 0
+custom_data_layer_457/name = ""
+custom_data_layer_457/type = 0
+custom_data_layer_458/name = ""
+custom_data_layer_458/type = 0
+custom_data_layer_459/name = ""
+custom_data_layer_459/type = 0
+custom_data_layer_460/name = ""
+custom_data_layer_460/type = 0
+custom_data_layer_461/name = ""
+custom_data_layer_461/type = 0
+custom_data_layer_462/name = ""
+custom_data_layer_462/type = 0
+custom_data_layer_463/name = ""
+custom_data_layer_463/type = 0
+custom_data_layer_464/name = ""
+custom_data_layer_464/type = 0
+custom_data_layer_465/name = ""
+custom_data_layer_465/type = 0
+custom_data_layer_466/name = ""
+custom_data_layer_466/type = 0
+custom_data_layer_467/name = ""
+custom_data_layer_467/type = 0
+custom_data_layer_468/name = ""
+custom_data_layer_468/type = 0
+custom_data_layer_469/name = ""
+custom_data_layer_469/type = 0
+custom_data_layer_470/name = ""
+custom_data_layer_470/type = 0
+custom_data_layer_471/name = ""
+custom_data_layer_471/type = 0
+custom_data_layer_472/name = ""
+custom_data_layer_472/type = 0
+custom_data_layer_473/name = ""
+custom_data_layer_473/type = 0
+custom_data_layer_474/name = ""
+custom_data_layer_474/type = 0
+custom_data_layer_475/name = ""
+custom_data_layer_475/type = 0
+custom_data_layer_476/name = ""
+custom_data_layer_476/type = 0
+custom_data_layer_477/name = ""
+custom_data_layer_477/type = 0
+custom_data_layer_478/name = ""
+custom_data_layer_478/type = 0
+custom_data_layer_479/name = ""
+custom_data_layer_479/type = 0
+custom_data_layer_480/name = ""
+custom_data_layer_480/type = 0
+custom_data_layer_481/name = ""
+custom_data_layer_481/type = 0
+custom_data_layer_482/name = ""
+custom_data_layer_482/type = 0
+custom_data_layer_483/name = ""
+custom_data_layer_483/type = 0
+custom_data_layer_484/name = ""
+custom_data_layer_484/type = 0
+custom_data_layer_485/name = ""
+custom_data_layer_485/type = 0
+custom_data_layer_486/name = ""
+custom_data_layer_486/type = 0
+custom_data_layer_487/name = ""
+custom_data_layer_487/type = 0
+custom_data_layer_488/name = ""
+custom_data_layer_488/type = 0
+custom_data_layer_489/name = ""
+custom_data_layer_489/type = 0
+custom_data_layer_490/name = ""
+custom_data_layer_490/type = 0
+custom_data_layer_491/name = ""
+custom_data_layer_491/type = 0
+custom_data_layer_492/name = ""
+custom_data_layer_492/type = 0
+custom_data_layer_493/name = ""
+custom_data_layer_493/type = 0
+custom_data_layer_494/name = ""
+custom_data_layer_494/type = 0
+custom_data_layer_495/name = ""
+custom_data_layer_495/type = 0
+custom_data_layer_496/name = ""
+custom_data_layer_496/type = 0
+custom_data_layer_497/name = ""
+custom_data_layer_497/type = 0
+custom_data_layer_498/name = ""
+custom_data_layer_498/type = 0
+custom_data_layer_499/name = ""
+custom_data_layer_499/type = 0
+custom_data_layer_500/name = ""
+custom_data_layer_500/type = 0
+custom_data_layer_501/name = ""
+custom_data_layer_501/type = 0
+custom_data_layer_502/name = ""
+custom_data_layer_502/type = 0
+custom_data_layer_503/name = ""
+custom_data_layer_503/type = 0
+custom_data_layer_504/name = ""
+custom_data_layer_504/type = 0
+custom_data_layer_505/name = ""
+custom_data_layer_505/type = 0
+custom_data_layer_506/name = ""
+custom_data_layer_506/type = 0
+custom_data_layer_507/name = ""
+custom_data_layer_507/type = 0
+custom_data_layer_508/name = ""
+custom_data_layer_508/type = 0
+custom_data_layer_509/name = ""
+custom_data_layer_509/type = 0
+custom_data_layer_510/name = ""
+custom_data_layer_510/type = 0
+custom_data_layer_511/name = "_advanced_autotiles"
+custom_data_layer_511/type = 27
+sources/0 = SubResource("TileSetAtlasSource_bwojl")
+script = ExtResource("1_vtu2y")
+advanced_tile_size = Vector2i(8, 8)
+empty_terrain_bindings = 3
+empty_terrain_priority = 1
+_need_recalc = false
+advanced_terrain_count = 1
+advanced_terrain_0/name = "Grass"
+advanced_terrain_0/color = Color(0.45, 1, 0.50499994, 1)
+advanced_terrain_0/mode = 1
+advanced_terrain_0/priority = 2
+advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 2
+metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
+
+[sub_resource type="TileSet" id="TileSet_ynxr4"]
+
+[node name="Tilemap" type="TileMapLayer" unique_id=1868272959]
+tile_map_data = PackedByteArray("AAAAAAAAAAAAAAAAAAAAAAEAAAAAAAEAAAABAAAAAAABAAAAAAABAAEAAAABAAEAAAACAAAAAAABAAAAAAADAAAAAAACAAAAAAACAAEAAAABAAEAAAADAAEAAAACAAEAAAAAAAIAAAAAAAEAAAABAAIAAAABAAEAAAAAAAMAAAAAAAIAAAABAAMAAAABAAIAAAACAAIAAAABAAEAAAADAAIAAAADAAEAAAACAAMAAAAEAAAAAAADAAMAAAABAAEAAAAEAAIAAAABAAAAAAAEAAMAAAABAAEAAAAFAAIAAAACAAAAAAAFAAMAAAACAAEAAAAFAAQAAAADAAEAAAAEAAQAAAABAAEAAAAEAAUAAAABAAEAAAAFAAUAAAABAAEAAAAFAAYAAAABAAEAAAADAAYAAAABAAEAAAAEAAYAAAABAAEAAAACAAYAAAAEAAEAAAACAAcAAAABAAIAAAADAAcAAAABAAIAAAAEAAcAAAABAAIAAAAFAAcAAAABAAIAAAABAAYAAAABAAAAAAABAAcAAAABAAIAAAAAAAYAAAAAAAAAAAAAAAcAAAAAAAIAAAAGAAUAAAABAAEAAAAHAAUAAAABAAEAAAAGAAQAAAABAAAAAAAHAAQAAAABAAAAAAAIAAQAAAAEAAEAAAAIAAUAAAABAAEAAAAJAAQAAAADAAEAAAAJAAUAAAADAAAAAAAIAAYAAAABAAEAAAAJAAYAAAACAAEAAAAIAAcAAAABAAIAAAAJAAcAAAACAAIAAAAHAAYAAAABAAEAAAAHAAcAAAABAAIAAAAGAAYAAAABAAEAAAAGAAcAAAABAAIAAAADAAQAAAABAAEAAAADAAUAAAABAAEAAAACAAQAAAAAAAEAAAACAAUAAAAAAAEAAAAKAAUAAAABAAIAAAAKAAQAAAABAAAAAAALAAQAAAABAAAAAAALAAUAAAABAAIAAAAMAAQAAAABAAAAAAAMAAUAAAABAAIAAAANAAQAAAABAAAAAAANAAUAAAABAAIAAAAOAAQAAAABAAAAAAAOAAUAAAABAAIAAAAPAAQAAAABAAAAAAAPAAUAAAABAAIAAAAQAAQAAAABAAAAAAAQAAUAAAABAAIAAAARAAQAAAACAAAAAAARAAUAAAACAAIAAAAGAAAAAAAAAAAAAAAHAAAAAAACAAAAAAAGAAEAAAAAAAIAAAAHAAEAAAACAAIAAAAKAAAAAAAAAAAAAAAKAAEAAAAAAAIAAAALAAAAAAACAAAAAAALAAEAAAACAAIAAAAIAAIAAAAAAAAAAAAIAAMAAAAAAAEAAAAJAAIAAAACAAAAAAAJAAMAAAACAAEAAAA=")
+tile_set = SubResource("TileSet_3iry8")
+script = ExtResource("1_babt6")
+advanced_tile_set = SubResource("TileSet_3iry8")
+metadata/_custom_type_script = "uid://ddwcn185b61k0"
+
+[node name="LargerGrid" type="TileMapLayer" parent="." unique_id=613301322]
+tile_set = SubResource("TileSet_ynxr4")

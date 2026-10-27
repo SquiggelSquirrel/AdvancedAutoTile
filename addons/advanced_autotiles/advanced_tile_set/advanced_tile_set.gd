@@ -5,6 +5,9 @@ extends TileSet
 ## Key used for storing per-tile plugin data on TileSet custom data layer
 const DATA_LAYER_NAME := "_advanced_autotiles"
 
+signal terrains_changed
+
+
 ## If enabled, properties of the base [class TileSet] will not show in the
 ## editor if intended to be replaced by Advanced Autotiles properties.
 ## (Note that this only affects the inspector and not the underlying API)
@@ -28,7 +31,7 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 			_apply_base_overrides()
 			_need_recalc = true
 			notify_property_list_changed()
-			changed.emit()
+			_queue_signal(changed)
 ## The tile layout used by the Advanced Autotiles plugin.
 ## Currently just a mirror of the base [member tile_layout]
 @export var advanced_layout := TileGeometry.Layout.STACKED:
@@ -38,7 +41,7 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		advanced_layout = value
 		if _is_loaded:
 			_apply_base_overrides()
-			changed.emit()
+			_queue_signal(changed)
 ## For half-offset shapes (isometric, hexagonal, half-offset square),
 ## determines the offset axis. For triangles, determines the allowed
 ## orientations
@@ -53,7 +56,7 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 					clear_advanced_mask(tile)
 			advanced_tile_size = advanced_tile_size
 			_apply_base_overrides()
-			changed.emit()
+			_queue_signal(changed)
 ## The size, in pixels, of the minumum rectangle that fully encompasses
 ## one cell. Triangles must have even width if horizontal, or height if vertical
 ## (due to implementation limitations).
@@ -73,7 +76,7 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 		advanced_tile_size = value
 		if _is_loaded:
 			_apply_base_overrides()
-			changed.emit()
+			_queue_signal(changed)
 
 @export_group("Autotiling")
 @export var auto_priorities := true:
@@ -100,8 +103,9 @@ const DATA_LAYER_NAME := "_advanced_autotiles"
 @export var empty_terrain_bindings: int = 0
 @export var empty_terrain_priority := 0
 @export_storage var _need_recalc := true
-var _is_loaded := false
 var _terrains: Array[Terrain] = []
+var _is_loaded := false
+var _queued_signals: Array[Signal] = []
 
 
 #region Editor/Inspector logic
@@ -211,7 +215,7 @@ func _set(property: StringName, value: Variant) -> bool:
 						break
 		notify_property_list_changed()
 		if _is_loaded:
-			changed.emit()
+			_queue_signal(terrains_changed)
 		return true
 	elif property.begins_with("advanced_terrain_"):
 		var parts: PackedStringArray = property.trim_prefix(
@@ -241,7 +245,7 @@ func _set(property: StringName, value: Variant) -> bool:
 					_recalc()
 		_terrains[terrain_index].set(terrain_property, value)
 		if _is_loaded:
-			changed.emit()
+			_queue_signal(terrains_changed)
 		return true
 	return false
 
@@ -306,6 +310,7 @@ func set_advanced_orientation(
 	if get_advanced_terrain(tile) > -1:
 		clear_advanced_mask(tile)
 	_need_recalc = true
+	_queue_signal(changed)
 
 
 ## Get the orientation of a tile
@@ -328,6 +333,7 @@ func set_advanced_terrain(tile: TileKey, terrain_index: int) -> void:
 	else:
 		clear_advanced_mask(tile)
 	_need_recalc = true
+	_queue_signal(changed)
 
 
 ## Get the terrain index of a tile
@@ -356,6 +362,7 @@ func set_advanced_flag(
 			mask[expected_flag] = TileGeometry.FLAG_EMPTY
 	_set_advanced_tile_data(tile, "mask", mask)
 	_need_recalc = true
+	_queue_signal(changed)
 
 
 func clear_advanced_mask(tile: TileKey) -> void:
@@ -667,6 +674,18 @@ static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
 		i += 1
 	return terrains
 #endregion
+
+
+func _queue_signal(signal_object: Signal) -> void:
+	if ! signal_object in _queued_signals:
+		_queued_signals.append(signal_object)
+		_emit_queued_signals.call_deferred()
+
+
+func _emit_queued_signals() -> void:
+	for signal_object in _queued_signals:
+		signal_object.emit()
+	_queued_signals.clear()
 
 
 ## Class TileKey contains all fields needed to identify a Tile in a TileSet

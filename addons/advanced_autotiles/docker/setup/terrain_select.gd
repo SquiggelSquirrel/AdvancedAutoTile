@@ -7,16 +7,16 @@ extends OptionButton
 var tile_set: AdvancedTileSet = null:
 	set(value):
 		if tile_set != null:
-			if tile_set.changed.is_connected(_on_tile_set_changed):
-				tile_set.changed.disconnect(_on_tile_set_changed)
+			if tile_set.terrains_changed.is_connected(_on_tile_set_terrains_changed):
+				tile_set.terrains_changed.disconnect(_on_tile_set_terrains_changed)
 		tile_set = value
 		if tile_set != null:
-			tile_set.changed.connect(_on_tile_set_changed)
+			tile_set.terrains_changed.connect(_on_tile_set_terrains_changed)
 		_update_terrains()
 var item_terrain_indices: PackedInt32Array = []
 
 
-func _on_tile_set_changed() -> void:
+func _on_tile_set_terrains_changed() -> void:
 	_update_terrains()
 
 

@@ -1,0 +1,111 @@
+[gd_scene format=4 uid="uid://rtii71n43r2m"]
+
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_dtmqd"]
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_sktwu"]
+[ext_resource type="Texture2D" uid="uid://lg6722t5k8u8" path="res://examples/01 - Single Terrain Square Grid/10 - Square Match Corners and Sides Reduced/tileset.png" id="2_4ibou"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_vnd53"]
+texture = ExtResource("2_4ibou")
+0:0/0 = 0
+0:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:0/size_in_atlas = Vector2i(2, 1)
+1:0/0 = 0
+1:0/0/texture_origin = Vector2i(8, 0)
+1:0/0/custom_data_0 = {
+"mask": {
+5: -1,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+0:1/size_in_atlas = Vector2i(1, 2)
+0:1/0 = 0
+0:1/0/texture_origin = Vector2i(0, 8)
+0:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: -1,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+1:1/size_in_atlas = Vector2i(2, 2)
+1:1/0 = 0
+1:1/0/texture_origin = Vector2i(8, 8)
+1:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: -1,
+50: -1
+},
+"terrain_index": 0
+}
+3:1/size_in_atlas = Vector2i(2, 2)
+3:1/0 = 0
+3:1/0/texture_origin = Vector2i(8, 8)
+3:1/0/custom_data_0 = {
+"mask": {
+5: 0,
+9: -1,
+14: -1,
+17: -1,
+26: -1,
+33: 0,
+38: 0,
+50: -1
+},
+"terrain_index": 0
+}
+
+[sub_resource type="TileSet" id="TileSet_o1lhi"]
+custom_data_layer_0/name = "_advanced_autotiles"
+custom_data_layer_0/type = 27
+sources/0 = SubResource("TileSetAtlasSource_vnd53")
+script = ExtResource("1_dtmqd")
+empty_terrain_bindings = 3
+empty_terrain_priority = 1
+_need_recalc = false
+advanced_terrain_count = 1
+advanced_terrain_0/name = "Grass"
+advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
+advanced_terrain_0/mode = 3
+advanced_terrain_0/priority = 2
+advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 2
+metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
+
+[node name="Tilemap" type="TileMapLayer" unique_id=440747817]
+y_sort_enabled = true
+tile_map_data = PackedByteArray("AAABAAAAAAAAAAAAAAABAAEAAAABAAEAAAAAAAEAAAAAAAAAAAAAAAIAAAABAAEAAAAAAAMAAAAAAAEAAAABAAMAAAADAAEAAAABAAIAAAADAAEAAAACAAAAAAABAAEAAAADAAAAAAABAAAAAAADAAEAAAADAAEAAAACAAEAAAADAAEAAAACAAIAAAADAAEAAAADAAIAAAADAAEAAAACAAMAAAADAAEAAAADAAMAAAADAAEAAAAEAAIAAAADAAEAAAAEAAEAAAABAAAAAAAEAAMAAAADAAEAAAADAAQAAAADAAEAAAACAAQAAAADAAEAAAABAAQAAAAAAAEAAAACAP//AAAAAAEAAAACAP7/AAABAAEAAAACAP3/AAAAAAAAAAADAP7/AAABAAAAAAABAP7/AAAAAAAAAAD//wIAAAABAAAAAAD+/wIAAAABAAEAAAD9/wIAAAAAAAAAAAD+/wEAAAAAAAAAAAD+/wMAAAAAAAEAAAACAAUAAAAAAAEAAAACAAYAAAABAAEAAAACAAcAAAAAAAEAAAABAAYAAAAAAAAAAAADAAYAAAABAAAAAAAFAAIAAAABAAAAAAAGAAIAAAABAAEAAAAHAAIAAAABAAAAAAAGAAEAAAAAAAAAAAAGAAMAAAAAAAEAAAAFAP//AAAAAAAAAAAFAAUAAAAAAAAAAAD//wUAAAAAAAAAAAD/////AAAAAAAAAAA=")
+tile_set = SubResource("TileSet_o1lhi")
+script = ExtResource("1_sktwu")
+advanced_tile_set = SubResource("TileSet_o1lhi")
+metadata/_custom_type_script = "uid://ddwcn185b61k0"

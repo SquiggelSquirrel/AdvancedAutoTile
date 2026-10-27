@@ -7,6 +7,8 @@ signal settings_changed
 @export var terrain_select_butons: Array[OptionButton] = []
 var tile_set: AdvancedTileSet = null:
 	set(value):
+		if value == tile_set:
+			return
 		if tile_set != null:
 			if tile_set.changed.is_connected(_on_tile_set_changed):
 				tile_set.changed.disconnect(_on_tile_set_changed)
@@ -27,7 +29,6 @@ func _ready() -> void:
 
 func _on_tile_set_changed() -> void:
 	_setup_orientations()
-	_setup_terrains_lists()
 	_on_tool_select_changed()
 
 
