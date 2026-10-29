@@ -5,16 +5,27 @@ extends ItemList
 
 var tile_set: AdvancedTileSet = null:
 	set(value):
+		if tile_set == value:
+			return
 		if tile_set != null:
 			if tile_set.changed.is_connected(_on_tile_set_changed):
 				tile_set.changed.disconnect(_on_tile_set_changed)
 		tile_set = value
 		if tile_set != null:
 			tile_set.changed.connect(_on_tile_set_changed)
-		if ! is_node_ready():
-			await ready
-		_update_sources()
+		if is_node_ready():
+			_update_sources()
 var source_indices: PackedInt32Array = []
+
+
+func _ready() -> void:
+	visibility_changed.connect(_on_visibility_changed)
+	if tile_set is AdvancedTileSet:
+		_update_sources()
+
+
+func _on_visibility_changed() -> void:
+	_update_sources()
 
 
 func _on_tile_set_changed() -> void:
@@ -22,9 +33,11 @@ func _on_tile_set_changed() -> void:
 
 
 func _update_sources() -> void:
+	if not is_visible_in_tree():
+		return
 	clear()
 	source_indices.clear()
-	if ! tile_set is AdvancedTileSet:
+	if tile_set == null:
 		return
 	var sources: Array[TileSetAtlasSource] = []
 	for i in tile_set.get_source_count():

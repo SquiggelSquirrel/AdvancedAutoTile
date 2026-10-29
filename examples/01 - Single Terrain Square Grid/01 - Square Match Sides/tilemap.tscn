@@ -305,7 +305,6 @@ custom_data_layer_0/type = 27
 sources/0 = SubResource("TileSetAtlasSource_uef7p")
 sources/1 = SubResource("TileSetAtlasSource_fg5ld")
 script = ExtResource("1_raqxu")
-advanced_empty_flag_bindings = 6
 _need_recalc = false
 advanced_terrain_count = 2
 advanced_terrain_0/name = "Grass"

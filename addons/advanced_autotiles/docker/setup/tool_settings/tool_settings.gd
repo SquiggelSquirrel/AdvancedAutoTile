@@ -15,9 +15,10 @@ var tile_set: AdvancedTileSet = null:
 		tile_set = value
 		if tile_set != null:
 			tile_set.changed.connect(_on_tile_set_changed)
-		_setup_orientations()
-		_setup_terrains_lists()
-		_on_tool_select_changed()
+		if is_node_ready() and is_visible_in_tree():
+			_setup_orientations()
+			_setup_terrains_lists()
+			_on_tool_select_changed()
 
 
 func _ready() -> void:
@@ -25,6 +26,18 @@ func _ready() -> void:
 	%OrientationSelect.item_selected.connect(_on_settings_changed.unbind(1))
 	for button in terrain_select_butons:
 		button.item_selected.connect(_on_settings_changed.unbind(1))
+	visibility_changed.connect(_on_visibility_changed)
+	if is_visible_in_tree():
+		_setup_orientations()
+		_setup_terrains_lists()
+		_on_tool_select_changed()
+
+
+func _on_visibility_changed() -> void:
+	if is_visible_in_tree():
+		_setup_orientations()
+		_setup_terrains_lists()
+		_on_tool_select_changed()
 
 
 func _on_tile_set_changed() -> void:

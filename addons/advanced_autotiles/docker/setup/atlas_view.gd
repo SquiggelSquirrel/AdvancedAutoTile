@@ -15,6 +15,8 @@ var shift_lmb_terrain_index: int = -1
 var paint_orientation: TileGeometry.Orientation
 var tile_set: AdvancedTileSet:
 	set(value):
+		if value == tile_set:
+			return
 		if tile_set is AdvancedTileSet:
 			if tile_set.changed.is_connected(_on_tile_set_changed):
 				tile_set.changed.disconnect(_on_tile_set_changed)

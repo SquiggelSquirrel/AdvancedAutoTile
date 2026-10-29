@@ -16,16 +16,22 @@ const PAINT_SHAPE_INDEX = [
 ]
 var tile_set: AdvancedTileSet = null:
 	set(value):
+		if value == tile_set:
+			return
 		tile_set = value
-		if ! is_node_ready():
-			await ready
-		%LMBTerrainSelect.tile_set = tile_set
-		%RMBTerrainSelect.tile_set = tile_set
+		if is_node_ready():
+			%LMBTerrainSelect.tile_set = tile_set
+			%RMBTerrainSelect.tile_set = tile_set
 var editor_show_grid := true
 var paint_mode := AdvancedAutoTilePlugin.PaintMode.CELLS
 var paint_shape := AdvancedAutoTilePlugin.PaintShape.POINT
 var paint_terrain := -1
 var rmb_terrain := -1
+
+
+func _ready() -> void:
+	%LMBTerrainSelect.tile_set = tile_set
+	%RMBTerrainSelect.tile_set = tile_set
 
 
 func _on_show_grid_toggled(toggled_on: bool) -> void:

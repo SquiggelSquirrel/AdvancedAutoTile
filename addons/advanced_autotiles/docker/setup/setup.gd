@@ -3,16 +3,19 @@ extends HSplitContainer
 
 var tile_set: AdvancedTileSet = null:
 	set(value):
+		if value == tile_set:
+			return
 		tile_set = value
-		if ! is_node_ready():
-			await ready
-		_setup_sources_list()
-		_setup_tool_settings()
+		if is_node_ready():
+			_setup_sources_list()
+			_setup_tool_settings()
 
 
 func _ready() -> void:
 	%SourceList.item_selected.connect(_on_source_list_item_selected)
 	%ToolSettings.settings_changed.connect(_on_tool_settings_settings_changed)
+	_setup_sources_list()
+	_setup_tool_settings()
 
 
 func _setup_sources_list() -> void:

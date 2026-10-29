@@ -17,7 +17,17 @@ extends ItemList
 var item_terrain_index: PackedInt32Array = []
 
 
+func _ready() -> void:
+	visibility_changed.connect(_on_visibility_changed)
+
+
+func _on_visibility_changed() -> void:
+	_on_tile_set_update()
+
+
 func _on_tile_set_update() -> void:
+	if not is_visible_in_tree():
+		return
 	clear()
 	if tile_set == null:
 		return
