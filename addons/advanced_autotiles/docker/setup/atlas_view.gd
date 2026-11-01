@@ -32,6 +32,7 @@ var scroll := Vector2.ZERO
 var zoom := 1.0
 var tile_under_mouse: AdvancedTileSet.TileKey = null
 var flag_under_mouse := TileGeometry.CellNeighbor.SELF
+var alternative_tile_regions: Array[Dictionary] = []
 
 
 func _gui_input(event: InputEvent) -> void:
@@ -93,9 +94,11 @@ func _draw() -> void:
 		return
 	if ! tile_set.get_source(source_id) is TileSetAtlasSource:
 		return
+	_draw_titles()
 	_draw_non_editable_tiles()
 	_draw_fadeout_overlay()
 	_draw_editable_tiles()
+	_draw_alternative_tiles()
 
 
 func apply_settings(new_settings: Dictionary) -> void:
@@ -209,10 +212,26 @@ func _get_editable_tiles() -> Array[AdvancedTileSet.TileKey]:
 func _get_tile_local_transform(tile: AdvancedTileSet.TileKey) -> Transform2D:
 	const ROTATION := 0
 	const SKEW := 0
+	for region in alternative_tile_regions:
+		if region.tile.equals(tile):
+			return Transform2D(ROTATION, region.rect.size, SKEW, region.rect.position)
 	var atlas: TileSetAtlasSource = tile_set.get_source(tile.source_id)
 	var position := Vector2(_coords_to_src_px(tile.coords)) * zoom + scroll
 	var scale := _tile_size_to_src_px(atlas.get_tile_size_in_atlas(tile.coords)) * zoom
 	return Transform2D(ROTATION, scale, SKEW, position)
+
+
+func _draw_titles() -> void:
+	draw_string(
+			ThemeDB.fallback_font,
+			scroll + Vector2(16, -16),
+			"Base tiles"
+	)
+	draw_string(
+			ThemeDB.fallback_font,
+			_get_alternative_tiles_origin() + Vector2(16, -16),
+			"Alternative Tiles"
+	)
 
 
 func _draw_editable_tiles() -> void:
@@ -221,61 +240,146 @@ func _draw_editable_tiles() -> void:
 		var local_transform := _get_tile_local_transform(tile)
 		var src_rect := _get_tile_src_rect(tile)
 		var local_rect := local_transform * Rect2(Vector2.ZERO, Vector2.ONE)
-		var outline := _get_tile_outline(tile)
-		var center_shape: PackedVector2Array = TileGeometry.get_flag_polygons(
-				tile_set.advanced_shape,
-				tile_set.advanced_axis,
-				TileGeometry.ConnectionMode.NONE,
-				tile_set.get_advanced_orientation(tile)
-		)[TileGeometry.CellNeighbor.SELF]
 		draw_texture_rect_region(atlas.texture, local_rect, src_rect)
-		if tile.equals(tile_under_mouse) and mode in [
-				Mode.SETUP_TERRAIN,
-				Mode.SETUP_ORIENTATION
-		]:
-			draw_rect(local_rect, Color(1.0, 0.9, 0.0, 0.5), false, 3.0)
-		else:
-			draw_rect(local_rect, Color(1.0, 1.0, 1.0, 0.5), false, 1.0)
-		
-		draw_polyline(local_transform * _polygon_to_polyline(outline),
-				Color(1.0, 0.5, 0.5, 0.5)
+		_draw_tile_overlay(tile, local_transform, local_rect)
+
+
+func _draw_tile_overlay(
+		tile: AdvancedTileSet.TileKey,
+		local_transform: Transform2D,
+		local_rect: Rect2
+) -> void:
+	var outline := _get_tile_outline(tile)
+	var center_shape: PackedVector2Array = TileGeometry.get_flag_polygons(
+			tile_set.advanced_shape,
+			tile_set.advanced_axis,
+			TileGeometry.ConnectionMode.NONE,
+			tile_set.get_advanced_orientation(tile)
+	)[TileGeometry.CellNeighbor.SELF]
+	if tile.equals(tile_under_mouse) and mode in [
+			Mode.SETUP_TERRAIN,
+			Mode.SETUP_ORIENTATION
+	]:
+		draw_rect(local_rect, Color(1.0, 0.9, 0.0, 0.5), false, 3.0)
+	else:
+		draw_rect(local_rect, Color(1.0, 1.0, 1.0, 0.5), false, 1.0)
+	
+	draw_polyline(local_transform * _polygon_to_polyline(outline),
+			Color(1.0, 0.5, 0.5, 0.5)
+	)
+	
+	var terrain_index: int = tile_set.get_advanced_terrain(tile)
+	if terrain_index != -1:
+		draw_colored_polygon(
+				local_transform * center_shape,
+				tile_set.get_advanced_terrain_color(terrain_index),
 		)
-		
-		var terrain_index: int = tile_set.get_advanced_terrain(tile)
-		if terrain_index != -1:
-			draw_colored_polygon(
-					local_transform * center_shape,
-					tile_set.get_advanced_terrain_color(terrain_index),
+		if mode == Mode.SETUP_MASKS:
+			var flag_polygons := _get_tile_flag_polygons(tile)
+			var mask := tile_set.get_advanced_mask(tile)
+			for flag_key in flag_polygons.keys():
+				var polygon: PackedVector2Array = flag_polygons[flag_key]
+				var scaled_polygon := local_transform * polygon
+				var flag_value := mask.get(flag_key, TileGeometry.FLAG_EMPTY)
+				if flag_value != TileGeometry.FLAG_EMPTY:
+					draw_colored_polygon(
+							scaled_polygon,
+							tile_set.get_advanced_terrain_color(flag_value),
+					)
+				if (
+						tile.equals(tile_under_mouse)
+						and
+						flag_under_mouse == flag_key
+				):
+					draw_polyline(
+							_polygon_to_polyline(scaled_polygon),
+							Color(1.0, 0.9, 0.0, 0.5),
+							4.0
+					)
+				else:
+					draw_polyline(
+							_polygon_to_polyline(scaled_polygon),
+							Color(1.0, 1.0, 1.0, 0.5)
+					)
+	
+	# Finally, draw center outline
+	draw_polyline(
+			local_transform * _polygon_to_polyline(center_shape),
+			Color(1.0, 1.0, 1.0, 0.5)
+	)
+
+
+func _draw_alternative_tiles() -> void:
+	alternative_tile_regions.clear()
+	var alt_origin := _get_alternative_tiles_origin()
+	var cursor := Vector2.ZERO
+	var atlas: TileSetAtlasSource = tile_set.get_source(source_id)
+	for base_tile in _get_editable_tiles():
+		var row_height := 0
+		var src_rect := _get_tile_src_rect(base_tile)
+		for i in atlas.get_alternative_tiles_count(base_tile.coords):
+			var alt_id := atlas.get_alternative_tile_id(base_tile.coords, i)
+			if alt_id == 0:
+				continue
+			var tile := AdvancedTileSet.TileKey.new(
+					source_id,
+					base_tile.coords,
+					alt_id
 			)
-			if mode == Mode.SETUP_MASKS:
-				var flag_polygons := _get_tile_flag_polygons(tile)
-				var mask := tile_set.get_advanced_mask(tile)
-				for flag_key in flag_polygons.keys():
-					var polygon: PackedVector2Array = flag_polygons[flag_key]
-					var scaled_polygon := local_transform * polygon
-					var flag_value := mask.get(flag_key, TileGeometry.FLAG_EMPTY)
-					if flag_value != TileGeometry.FLAG_EMPTY:
-						draw_colored_polygon(
-								scaled_polygon,
-								tile_set.get_advanced_terrain_color(flag_value),
-						)
-					if tile.equals(tile_under_mouse) and flag_under_mouse == flag_key:
-						draw_polyline(
-								_polygon_to_polyline(scaled_polygon),
-								Color(1.0, 0.9, 0.0, 0.5),
-								4.0
-						)
-					else:
-						draw_polyline(
-								_polygon_to_polyline(scaled_polygon),
-								Color(1.0, 1.0, 1.0, 0.5)
-						)
-		
-		# Finally, draw center outline
-		draw_polyline(
-				local_transform * _polygon_to_polyline(center_shape),
-				Color(1.0, 1.0, 1.0, 0.5)
-		)
+			var data := atlas.get_tile_data(tile.coords, alt_id)
+			var tile_size := (
+					atlas.get_tile_size_in_atlas(tile.coords)
+					* atlas.texture_region_size
+			) * zoom
+			if data.transpose:
+				tile_size = Vector2i(tile_size.y, tile_size.x)
+			row_height = maxi(row_height, tile_size.y)
+			
+			var position := cursor + alt_origin
+			var scale := tile_size
+			var local_transform := Transform2D(0.0, scale, 0.0, position)
+			
+			if data.flip_h:
+				position.x += tile_size.x
+				scale.x *= -1
+			if data.flip_v:
+				position.y += tile_size.y
+				scale.y *= -1
+			var draw_transform := Transform2D(0.0, scale, 0.0, position)
+			
+			var local_rect := (
+					local_transform * Rect2(Vector2.ZERO, Vector2.ONE)
+			)
+			draw_set_transform_matrix(draw_transform)
+			draw_texture_rect_region(
+					atlas.texture,
+					Rect2(Vector2.ZERO, Vector2.ONE),
+					src_rect,
+					Color.WHITE,
+					data.transpose
+			)
+			draw_set_transform_matrix(Transform2D.IDENTITY)
+			alternative_tile_regions.append({
+					"tile": tile,
+					"rect": local_rect
+			})
+			_draw_tile_overlay(tile, local_transform, local_rect)
+			
+			cursor.x += tile_size.x
+		cursor.x = 0
+		cursor.y += row_height
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+
+func _get_alternative_tiles_origin() -> Vector2:
+	var atlas: TileSetAtlasSource = tile_set.get_source(source_id)
+	return (
+			Vector2(
+				_coords_to_src_px(atlas.get_atlas_grid_size()).x,
+				0.0
+			)
+			* zoom + scroll + Vector2.RIGHT * 16.0
+	)
 
 
 func _get_tile_flag_polygons(tile: AdvancedTileSet.TileKey) -> Dictionary:
@@ -356,6 +460,9 @@ func _point_to_tile_local(
 
 
 func _get_tile_under_point(point: Vector2) -> AdvancedTileSet.TileKey:
+	for region in alternative_tile_regions:
+		if (region.rect as Rect2).has_point(point):
+			return region.tile
 	var atlas: TileSetAtlasSource = tile_set.get_source(source_id)
 	var point_coords := _point_to_coords(point)
 	var tile_coords := atlas.get_tile_at_coords(point_coords)

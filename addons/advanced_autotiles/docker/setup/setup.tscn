@@ -46,6 +46,7 @@ size_flags_horizontal = 3
 
 [node name="AtlasView" type="Control" parent="AtlasEditor/PanelContainer" unique_id=863875627]
 unique_name_in_owner = true
+texture_filter = 1
 texture_repeat = 2
 clip_contents = true
 layout_mode = 2
