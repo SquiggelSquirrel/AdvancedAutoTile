@@ -35,17 +35,24 @@ func _on_tile_set_changed() -> void:
 func _update_sources() -> void:
 	if not is_visible_in_tree():
 		return
+	
+	if tile_set == null:
+		clear()
+		source_indices.clear()
+		return
+	
+	if tile_set.get_source_count() == source_indices.size():
+		return
+	
 	clear()
 	source_indices.clear()
-	if tile_set == null:
-		return
-	var sources: Array[TileSetAtlasSource] = []
 	for i in tile_set.get_source_count():
 		var source: TileSetSource = tile_set.get_source(i)
-		if ! source is TileSetAtlasSource:
+		if source is TileSetAtlasSource:
 			continue
 		source_indices.append(i)
 		add_item(source.texture.get_path().get_file(), source.texture)
+	
 	if ! source_indices.is_empty():
 		select(0)
 		item_selected.emit(0)

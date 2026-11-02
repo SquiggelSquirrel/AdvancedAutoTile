@@ -28,11 +28,16 @@ func _update_terrains() -> void:
 		anti_recursion_lock = false
 		assert(false)
 	anti_recursion_lock = true
-	clear()
-	item_terrain_indices.clear()
 	if ! tile_set is AdvancedTileSet:
+		clear()
+		item_terrain_indices.clear()
 		anti_recursion_lock = false
 		return
+	if tile_set.get_advanced_terrains_count() == item_terrain_indices.size():
+		anti_recursion_lock = false
+		return
+	clear()
+	item_terrain_indices.clear()
 	if include_empty:
 		add_item("Empty")
 		item_terrain_indices.append(TileGeometry.FLAG_EMPTY)
