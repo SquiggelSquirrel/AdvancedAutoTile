@@ -1,0 +1,199 @@
+[gd_scene format=4 uid="uid://sjnhwcnnc4ek"]
+
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_u2oty"]
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_x7lnc"]
+[ext_resource type="Texture2D" uid="uid://biry6piwpgh2v" path="res://examples/02 - Single Terrain Isometric Grid/02 - Isometric Match Corners/tileset.png" id="2_3vkna"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_fvpw7"]
+texture = ExtResource("2_3vkna")
+texture_region_size = Vector2i(32, 16)
+0:0/0 = 0
+0:0/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: 0,
+18: 0,
+34: 0
+},
+"terrain_index": 0
+}
+1:0/0 = 0
+1:0/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: -1,
+18: 0,
+34: -1
+},
+"terrain_index": 0
+}
+2:0/0 = 0
+2:0/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: -1,
+18: 0,
+34: 0
+},
+"terrain_index": 0
+}
+3:0/0 = 0
+3:0/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: -1,
+18: -1,
+34: -1
+},
+"terrain_index": 0
+}
+0:1/0 = 0
+0:1/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: 0,
+18: -1,
+34: 0
+},
+"terrain_index": 0
+}
+1:1/0 = 0
+1:1/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: 0,
+18: 0,
+34: -1
+},
+"terrain_index": 0
+}
+2:1/0 = 0
+2:1/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: -1,
+18: 0,
+34: -1
+},
+"terrain_index": 0
+}
+3:1/0 = 0
+3:1/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: -1,
+18: -1,
+34: 0
+},
+"terrain_index": 0
+}
+0:2/0 = 0
+0:2/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: 0,
+18: 0,
+34: -1
+},
+"terrain_index": 0
+}
+1:2/0 = 0
+1:2/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: 0,
+18: -1,
+34: -1
+},
+"terrain_index": 0
+}
+2:2/0 = 0
+2:2/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: 0,
+18: -1,
+34: -1
+},
+"terrain_index": 0
+}
+3:2/0 = 0
+3:2/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: -1,
+18: -1,
+34: 0
+},
+"terrain_index": 0
+}
+0:3/0 = 0
+0:3/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: -1,
+18: 0,
+34: 0
+},
+"terrain_index": 0
+}
+1:3/0 = 0
+1:3/0/custom_data_0 = {
+"mask": {
+6: -1,
+10: 0,
+18: -1,
+34: 0
+},
+"terrain_index": 0
+}
+2:3/0 = 0
+2:3/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: -1,
+18: -1,
+34: -1
+},
+"terrain_index": 0
+}
+3:3/0 = 0
+3:3/0/custom_data_0 = {
+"mask": {
+6: 0,
+10: 0,
+18: 0,
+34: 0
+},
+"terrain_index": 0
+}
+
+[sub_resource type="TileSet" id="TileSet_8wgb3"]
+tile_shape = 1
+tile_layout = 5
+tile_size = Vector2i(32, 16)
+custom_data_layer_0/name = "_advanced_autotiles"
+custom_data_layer_0/type = 27
+sources/0 = SubResource("TileSetAtlasSource_fvpw7")
+script = ExtResource("1_x7lnc")
+advanced_shape = 1
+advanced_layout = 5
+advanced_tile_size = Vector2i(32, 16)
+empty_terrain_bindings = 3
+empty_terrain_priority = 1
+_need_recalc = false
+advanced_terrain_count = 1
+advanced_terrain_0/name = "Grass"
+advanced_terrain_0/color = Color(0.8039216, 0.36078432, 0.36078432, 1)
+advanced_terrain_0/mode = 1
+advanced_terrain_0/priority = 2
+advanced_terrain_0/auto_binding = true
+advanced_terrain_0/bindings = 2
+metadata/_custom_type_script = "uid://b4lmdag5yvoi3"
+
+[node name="Tilemap" type="TileMapLayer" unique_id=1095727319]
+tile_map_data = PackedByteArray("AAAAAAAAAAADAAAAAAACAP//AAACAAEAAAADAP//AAADAAIAAAACAAAAAAABAAIAAAADAAAAAAACAAMAAAADAAEAAAACAAEAAAAEAAEAAAADAAIAAAADAAIAAAABAAIAAAAEAAIAAAACAAMAAAAFAP3/AAACAAEAAAAFAP7/AAABAAEAAAAGAP3/AAAAAAAAAAAGAP7/AAADAAMAAAAHAP3/AAADAAMAAAAHAP7/AAADAAMAAAAIAP3/AAAAAAMAAAAIAP7/AAADAAMAAAAGAPz/AAACAAEAAAAHAPz/AAACAAAAAAAGAP//AAAAAAIAAAAHAP//AAADAAMAAAAFAP//AAABAAIAAAAIAP//AAAAAAEAAAAGAAAAAAABAAIAAAAHAAAAAAACAAIAAAAIAAAAAAACAAMAAAAJAP//AAACAAMAAAAJAP7/AAADAAEAAAAJAP3/AAADAAIAAAAIAPz/AAADAAIAAAAHAAQAAAADAAIAAAAGAAQAAAACAAEAAAAGAAUAAAABAAIAAAAHAAUAAAABAAAAAAAIAAUAAAADAAIAAAAIAAYAAAACAAMAAAAHAAYAAAABAAIAAAAKAAQAAAACAAMAAAAJAAQAAAABAAIAAAAJAAMAAAACAAEAAAAKAAMAAAABAAMAAAAKAAIAAAACAAEAAAALAAIAAAADAAIAAAALAAMAAAACAAMAAAAHAAMAAAADAAAAAAAHAAIAAAADAAAAAAAHAAEAAAADAAAAAAAEAP//AAADAAAAAAA=")
+tile_set = SubResource("TileSet_8wgb3")
+script = ExtResource("1_u2oty")
+advanced_tile_set = SubResource("TileSet_8wgb3")
+metadata/_custom_type_script = "uid://ddwcn185b61k0"
