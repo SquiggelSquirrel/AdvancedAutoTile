@@ -9,14 +9,15 @@ enum Mode {SETUP, PAINTING}
 var tile_set: AdvancedTileSet = null:
 	set(value):
 		tile_set = value
-		if ! is_node_ready():
-			await ready
-		%Setup.tile_set = tile_set
-		%Painting.tile_set = tile_set
+		if is_node_ready():
+			%Setup.tile_set = tile_set
+			%Painting.tile_set = tile_set
 
 
 func _ready() -> void:
 	%Painting.changed.connect(_on_painting_setup_changed)
+	%Setup.tile_set = tile_set
+	%Painting.tile_set = tile_set
 
 
 func _on_painting_setup_changed() -> void:

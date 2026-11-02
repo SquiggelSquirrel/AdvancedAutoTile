@@ -48,7 +48,7 @@ func _update_sources() -> void:
 	source_indices.clear()
 	for i in tile_set.get_source_count():
 		var source: TileSetSource = tile_set.get_source(i)
-		if source is TileSetAtlasSource:
+		if not source is TileSetAtlasSource:
 			continue
 		source_indices.append(i)
 		add_item(source.texture.get_path().get_file(), source.texture)

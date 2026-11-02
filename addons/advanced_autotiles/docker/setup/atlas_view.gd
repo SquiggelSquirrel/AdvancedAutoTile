@@ -36,6 +36,8 @@ var alternative_tile_regions: Array[Dictionary] = []
 
 
 func _gui_input(event: InputEvent) -> void:
+	if tile_set == null:
+		return
 	if event is InputEventMouseButton:
 		match event.button_index:
 			MOUSE_BUTTON_WHEEL_UP:
