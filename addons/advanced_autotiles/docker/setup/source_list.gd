@@ -11,6 +11,8 @@ var tile_set: AdvancedTileSet = null:
 			if tile_set.changed.is_connected(_on_tile_set_changed):
 				tile_set.changed.disconnect(_on_tile_set_changed)
 		tile_set = value
+		clear()
+		source_indices.clear()
 		if tile_set != null:
 			tile_set.changed.connect(_on_tile_set_changed)
 		if is_node_ready():
