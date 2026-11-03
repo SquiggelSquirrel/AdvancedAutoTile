@@ -1,5 +1,7 @@
 class_name DirectedGraph
 extends RefCounted
+## A directed graph, with tools to identifiy Strongly Connected Components,
+## and to run a topological sort.
 
 var node_count := 0
 var edges: Array[PackedInt32Array] = []

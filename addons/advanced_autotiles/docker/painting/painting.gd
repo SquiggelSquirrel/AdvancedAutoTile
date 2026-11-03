@@ -60,15 +60,21 @@ func _on_paint_mode_item_selected(index: int) -> void:
 					AdvancedAutoTilePlugin.PaintShape.RECTANGLE,
 					AdvancedAutoTilePlugin.PaintShape.FILL,
 			]
+			%LMBTerrainSelect.terrains_without_tiles = false
+			%RMBTerrainSelect.terrains_without_tiles = false
 		AdvancedAutoTilePlugin.PaintMode.PATH:
 			supported_shapes = [
 					AdvancedAutoTilePlugin.PaintShape.POINT,
 					AdvancedAutoTilePlugin.PaintShape.LINE,
 			]
+			%LMBTerrainSelect.terrains_without_tiles = false
+			%RMBTerrainSelect.terrains_without_tiles = false
 		AdvancedAutoTilePlugin.PaintMode.CORNERS:
 			supported_shapes = [
 					AdvancedAutoTilePlugin.PaintShape.POINT
 			]
+			%LMBTerrainSelect.terrains_without_tiles = true
+			%RMBTerrainSelect.terrains_without_tiles = true
 	for i in 4:
 		var button: BaseButton = %PaintShape.get_child(i)
 		button.disabled = not (

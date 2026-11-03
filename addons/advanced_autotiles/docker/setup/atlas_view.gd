@@ -125,7 +125,7 @@ func _paint_terrain() -> void:
 			terrain_index = rmb_terrain_index
 		_:
 			return
-	tile_set.set_advanced_terrain(
+	tile_set.advanced_set_tile_terrain(
 			tile_under_mouse, terrain_index
 	)
 	queue_redraw()
@@ -146,14 +146,14 @@ func _paint_mask() -> void:
 			terrain_index = rmb_terrain_index
 		_:
 			return
-	tile_set.set_advanced_flag(tile_under_mouse, flag_under_mouse, terrain_index)
+	tile_set.advanced_set_tile_mask_flag(tile_under_mouse, flag_under_mouse, terrain_index)
 	queue_redraw()
 
 
 func _paint_orientation() -> void:
 	if tile_under_mouse == null:
 		return
-	tile_set.set_advanced_orientation(tile_under_mouse, paint_orientation)
+	tile_set.advanced_set_tile_orientation(tile_under_mouse, paint_orientation)
 	queue_redraw()
 
 
@@ -256,7 +256,7 @@ func _draw_tile_overlay(
 			tile_set.advanced_shape,
 			tile_set.advanced_axis,
 			TileGeometry.ConnectionMode.NONE,
-			tile_set.get_advanced_orientation(tile)
+			tile_set.advanced_get_tile_orientation(tile)
 	)[TileGeometry.CellNeighbor.SELF]
 	if tile.equals(tile_under_mouse) and mode in [
 			Mode.SETUP_TERRAIN,
@@ -270,15 +270,15 @@ func _draw_tile_overlay(
 			Color(1.0, 0.5, 0.5, 0.5)
 	)
 	
-	var terrain_index: int = tile_set.get_advanced_terrain(tile)
+	var terrain_index: int = tile_set.advanced_get_tile_terrain(tile)
 	if terrain_index != -1:
 		draw_colored_polygon(
 				local_transform * center_shape,
-				tile_set.get_advanced_terrain_color(terrain_index),
+				tile_set.advanced_get_tile_terrain_color(terrain_index),
 		)
 		if mode == Mode.SETUP_MASKS:
 			var flag_polygons := _get_tile_flag_polygons(tile)
-			var mask := tile_set.get_advanced_mask(tile)
+			var mask := tile_set.advanced_get_tile_mask(tile)
 			for flag_key in flag_polygons.keys():
 				var polygon: PackedVector2Array = flag_polygons[flag_key]
 				var scaled_polygon := local_transform * polygon
@@ -286,7 +286,7 @@ func _draw_tile_overlay(
 				if flag_value != TileGeometry.FLAG_EMPTY:
 					draw_colored_polygon(
 							scaled_polygon,
-							tile_set.get_advanced_terrain_color(flag_value),
+							tile_set.advanced_get_tile_terrain_color(flag_value),
 					)
 				if (
 						tile.equals(tile_under_mouse)
@@ -385,12 +385,12 @@ func _get_alternative_tiles_origin() -> Vector2:
 
 
 func _get_tile_flag_polygons(tile: AdvancedTileSet.TileKey) -> Dictionary:
-	var terrain_index: int = tile_set.get_advanced_terrain(tile)
-	var orientation := tile_set.get_advanced_orientation(tile)
+	var terrain_index: int = tile_set.advanced_get_tile_terrain(tile)
+	var orientation := tile_set.advanced_get_tile_orientation(tile)
 	return TileGeometry.get_flag_polygons(
 			tile_set.advanced_shape,
 			tile_set.advanced_axis,
-			tile_set.get_advanced_terrain_mode(terrain_index),
+			tile_set.advanced_get_terrain_mode(terrain_index),
 			orientation,
 	)
 
@@ -400,7 +400,7 @@ func _get_tile_outline(tile: AdvancedTileSet.TileKey) -> PackedVector2Array:
 	shape = tile_set.advanced_shape
 	var axis: TileGeometry.Axis
 	axis = tile_set.advanced_axis
-	var orientation := tile_set.get_advanced_orientation(tile)
+	var orientation := tile_set.advanced_get_tile_orientation(tile)
 	return TileGeometry.get_tile_polygon(
 			shape, axis, orientation
 	)
@@ -482,13 +482,13 @@ func _point_to_flag(point: Vector2) -> TileGeometry.CellNeighbor:
 	var tile: AdvancedTileSet.TileKey = _get_tile_under_point(point)
 	if tile == null:
 		return TileGeometry.CellNeighbor.SELF
-	var terrain_index := tile_set.get_advanced_terrain(tile)
+	var terrain_index := tile_set.advanced_get_tile_terrain(tile)
 	if terrain_index == -1:
 		return TileGeometry.CellNeighbor.SELF
 	var shape := tile_set.advanced_shape
 	var axis := tile_set.advanced_axis
-	var mode := tile_set.get_advanced_terrain_mode(terrain_index)
-	var orientation := tile_set.get_advanced_orientation(tile)
+	var mode := tile_set.advanced_get_terrain_mode(terrain_index)
+	var orientation := tile_set.advanced_get_tile_orientation(tile)
 	var flag_polygons := TileGeometry.get_flag_polygons(
 			shape,
 			axis,

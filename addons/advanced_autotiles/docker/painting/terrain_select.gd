@@ -2,7 +2,13 @@
 extends ItemList
 
 @export var default_index := 0
-@export var tile_set: AdvancedTileSet:
+@export var terrains_without_tiles := false:
+	set(value):
+		if value != terrains_without_tiles:
+			terrains_without_tiles = value
+			if is_node_ready():
+				_on_tile_set_update()
+var tile_set: AdvancedTileSet:
 	set(value):
 		if tile_set == value:
 			return
@@ -31,17 +37,17 @@ func _on_tile_set_update() -> void:
 	clear()
 	if tile_set == null:
 		return
-	item_terrain_index.resize(tile_set.get_advanced_terrains_count() + 1)
+	item_terrain_index.resize(tile_set.advanced_get_terrains_count() + 1)
 	item_terrain_index[
 			add_item("Erase", _create_icon(Color.WHITE))
 			] = TileGeometry.FLAG_EMPTY
-	for i in tile_set.get_advanced_terrains_count():
-		if tile_set.get_advanced_terrain_has_tiles(i):
+	for i in tile_set.advanced_get_terrains_count():
+		if terrains_without_tiles or tile_set.advanced_get_terrain_has_tiles(i):
 			item_terrain_index[
 					add_item(
-							tile_set.get_advanced_terrain_name(i),
+							tile_set.advanced_get_terrain_name(i),
 							_create_icon(
-								tile_set.get_advanced_terrain_color(i)
+								tile_set.advanced_get_tile_terrain_color(i)
 							)
 					)
 					] = i

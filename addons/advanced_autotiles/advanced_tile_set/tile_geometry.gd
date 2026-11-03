@@ -1,9 +1,15 @@
 class_name TileGeometry
 extends Object
+## A utility class with enums and static methods for use by Advanced Autotile
+## plugin - not intended for instantiation.
 
+## Amount to shrink the outline by, to get the center flag polygon.
 const CENTER_FLAG_SHRINK := 0.6
-## Reserved terrain_index values with special meaning
+
+## Terrain index for "empty"
 const FLAG_EMPTY := -1
+
+# Private mapping of flag to coordinate offset vector, for triangles in "UP" orientation
 const _UP_TRIANGLE_NEIGHBOR_OFFSETS: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {
 	TileGeometry.CellNeighbor.TOP_COUNTERCLOCKWISE_CORNER:
 		Vector2i(-1, -1),
@@ -30,10 +36,12 @@ const _UP_TRIANGLE_NEIGHBOR_OFFSETS: Dictionary[TileGeometry.CellNeighbor, Vecto
 	TileGeometry.CellNeighbor.LEFT_SIDE:
 		Vector2i(-1, 0),
 }
+# Private static mappings of flag to coordinates offset vector for triangles.
 static var _down_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {}
 static var _left_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {}
 static var _right_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {}
 static var _triangle_offsets_setup := false
+
 ## Tile shapes suppored by advanced autotile plugin
 enum Shape {
 	SQUARE,
@@ -42,7 +50,8 @@ enum Shape {
 	HEXAGON,
 	TRIANGLE,
 }
-## Tile layouts supported by advanced autotile plugin
+
+## Half-offset tile layouts supported by advanced autotile plugin
 ## (i.e. mapping from co-ordinates to position in grid)
 ## Some layouts only apply to some shapes, see [method get_tile_shape_layouts]
 enum Layout {
@@ -53,12 +62,14 @@ enum Layout {
 	DIAMOND_RIGHT,
 	DIAMOND_DOWN,
 }
+
 ## Tile layout axis (offset axis for hexagon or half-offset, orientations
 ## for triangle layouts) see [method get_tile_shape_axes]
 enum Axis {
 	HORIZONTAL, ## Horizontal half-offet, or triangles with a horizontal edge
 	VERTICAL, ## Vertical half-offset, or triangles with a vertical edge
 }
+
 ## Tile orientations (for triangle shapes only)
 enum Orientation {
 	UP, ## Bottom side and top corner
@@ -66,10 +77,12 @@ enum Orientation {
 	LEFT, ## Right side and left corner
 	RIGHT, ## Left side and right corner
 }
-## Terrain modes supported by Advanced Autotiles plugin depend on tile shape
-## (see [method get_tile_shape_terrain_modes]). Diagonals-only mode is not
-## supported for any shape, but is included for bitwise logic testing on the
-## compound flags.
+
+## Connection modes supported by Advanced Autotiles plugin.
+## Available modes depend on tile shape
+## (see [method get_tile_shape_terrain_modes]).
+## Diagonals-only mode is not supported for any shape,
+## but is included for bitwise logic testing on the compound flags.
 enum ConnectionMode {
 	NONE = 0,
 	CORNERS = 1,
@@ -80,6 +93,7 @@ enum ConnectionMode {
 	EDGES_AND_DIAGONALS = 2 | 4,
 	EDGES_AND_NON_ACUTE_DIAGONALS = 2 | 4 | 8
 }
+
 ## Cell Neighbor flags, defined to support triangle layouts
 ## and bit-wise logic
 enum CellNeighbor {
@@ -309,6 +323,8 @@ static func get_flags(
 #endregion
 
 
+## Get tile outline points, keyed by corner flags
+## For tile size(1.0, 1.0) - scale as needed.
 static func get_tile_outline_points(
 		shape: Shape,
 		axis: Axis,
@@ -397,22 +413,7 @@ static func get_tile_polygon(
 	return get_tile_outline_points(shape, axis, orientation).values()
 
 
-static func _setup_triangle_offsets() -> void:
-	for neighbor in _UP_TRIANGLE_NEIGHBOR_OFFSETS.keys():
-		var offset: Vector2i = _UP_TRIANGLE_NEIGHBOR_OFFSETS[neighbor]
-		_down_triangle_neighbor_offsets[
-				TileGeometry.cell_neighbor_flip_v(neighbor)
-				] = Vector2i(offset.x, - offset.y)
-		_left_triangle_neighbor_offsets[
-				TileGeometry.cell_neighbor_transpose(neighbor)
-				] = Vector2i(offset.y, offset.x)
-		_right_triangle_neighbor_offsets[
-				TileGeometry.cell_neighbor_flip_h(
-					TileGeometry.cell_neighbor_transpose(neighbor)
-				)] = Vector2i(- offset.y, offset.x)
-	_triangle_offsets_setup = true
-
-
+## Flip a cell neighbor flag horizontally
 static func cell_neighbor_flip_h(neighbor_in: CellNeighbor) -> CellNeighbor:
 	var neighbor_out := neighbor_in & (
 			CellNeighbor.SIDE
@@ -429,6 +430,7 @@ static func cell_neighbor_flip_h(neighbor_in: CellNeighbor) -> CellNeighbor:
 	return neighbor_out
 
 
+## Flip a cell neighbor flag vertically
 static func cell_neighbor_flip_v(neighbor_in: CellNeighbor) -> CellNeighbor:
 	var neighbor_out := neighbor_in & (
 			CellNeighbor.SIDE
@@ -445,6 +447,7 @@ static func cell_neighbor_flip_v(neighbor_in: CellNeighbor) -> CellNeighbor:
 	return neighbor_out
 
 
+## Transpose the horizontal/vertical components of a cell neighbor flag
 static func cell_neighbor_transpose(neighbor_in: CellNeighbor) -> CellNeighbor:
 	var neighbor_out := neighbor_in & (CellNeighbor.SIDE | CellNeighbor.CORNER)
 	neighbor_out |= (
@@ -463,6 +466,7 @@ static func cell_neighbor_transpose(neighbor_in: CellNeighbor) -> CellNeighbor:
 	return neighbor_out
 
 
+## Get the coordinates of a neighboring cell in a triangle grid.
 static func get_triangle_neighbor_cell(
 		coords: Vector2i,
 		neighbor: TileGeometry.CellNeighbor,
@@ -489,12 +493,13 @@ static func get_triangle_neighbor_cell(
 	return coords + offsets[neighbor]
 
 
+## Get polygons used for drawing tile mask flags in-editor
 static func get_flag_polygons(
 		shape: TileGeometry.Shape,
 		axis: TileGeometry.Axis,
 		mode: TileGeometry.ConnectionMode,
 		orientation: TileGeometry.Orientation,
-) -> Dictionary:
+) -> Dictionary[CellNeighbor, PackedVector2Array]:
 	var outline := TileGeometry.get_tile_polygon(
 			shape, axis, orientation
 	)
@@ -567,6 +572,41 @@ static func get_flag_polygons(
 	return polygons
 
 
+## Get the corner flags around the given side flag
+static func get_corners_of_side(
+		side_flag: TileGeometry.CellNeighbor,
+		shape: TileGeometry.Shape,
+		axis: TileGeometry.Axis,
+		orientation: TileGeometry.Orientation
+) -> Array[TileGeometry.CellNeighbor]:
+	var corner_points := get_tile_outline_points(shape, axis, orientation)
+	var keys := corner_points.keys()
+	for i in corner_points.size() - 1:
+		if _side_between_points(
+				corner_points[keys[i]],
+				corner_points[keys[i + 1]]
+		) == side_flag:
+			return [keys[i], keys[i+1]]
+	return [keys[-1], keys[0]]
+
+
+# Set up private cached triangle offsets mapping
+static func _setup_triangle_offsets() -> void:
+	for neighbor in _UP_TRIANGLE_NEIGHBOR_OFFSETS.keys():
+		var offset: Vector2i = _UP_TRIANGLE_NEIGHBOR_OFFSETS[neighbor]
+		_down_triangle_neighbor_offsets[
+				TileGeometry.cell_neighbor_flip_v(neighbor)
+				] = Vector2i(offset.x, - offset.y)
+		_left_triangle_neighbor_offsets[
+				TileGeometry.cell_neighbor_transpose(neighbor)
+				] = Vector2i(offset.y, offset.x)
+		_right_triangle_neighbor_offsets[
+				TileGeometry.cell_neighbor_flip_h(
+					TileGeometry.cell_neighbor_transpose(neighbor)
+				)] = Vector2i(- offset.y, offset.x)
+	_triangle_offsets_setup = true
+
+
 # Return the flag of the side between the given points
 static func _side_between_points(
 		point1 :Vector2, point2 :Vector2
@@ -588,6 +628,7 @@ static func _side_between_points(
 	return key
 
 
+# Return the flag of a corner, given a cell-local point
 static func _point_to_corner(
 		point: Vector2
 ) -> TileGeometry.CellNeighbor:
@@ -612,6 +653,7 @@ static func _points_average(points: PackedVector2Array) -> Vector2:
 	return sum / points.size()
 
 
+# Shrink a polygon towards a center point, by a given ratio
 static func _shrink_polygon(
 		polygon: PackedVector2Array, center: Vector2, ratio: float
 ) -> PackedVector2Array:
@@ -621,18 +663,70 @@ static func _shrink_polygon(
 	return points
 
 
-static func get_corners_of_side(
-		side_flag: TileGeometry.CellNeighbor,
-		shape: TileGeometry.Shape,
-		axis: TileGeometry.Axis,
-		orientation: TileGeometry.Orientation
-) -> Array[TileGeometry.CellNeighbor]:
-	var corner_points := get_tile_outline_points(shape, axis, orientation)
-	var keys := corner_points.keys()
-	for i in corner_points.size() - 1:
-		if _side_between_points(
-				corner_points[keys[i]],
-				corner_points[keys[i + 1]]
-		) == side_flag:
-			return [keys[i], keys[i+1]]
-	return [keys[-1], keys[0]]
+## Static class mapping [TileGeometry] enums to Godot built-in enums
+class BaseOverrides:
+	## Return the [enum TileSet.TileShape] corresponding
+	## the given to [enum TileGeometry.TileShape]
+	## (Triangle maps to Square because triangle are implemented using squares).
+	static func get_tile_shape(
+			advanced_shape: TileGeometry.Shape
+	) -> TileSet.TileShape:
+		match advanced_shape:
+			TileGeometry.Shape.SQUARE, TileGeometry.Shape.TRIANGLE:
+				return TileSet.TileShape.TILE_SHAPE_SQUARE
+			TileGeometry.Shape.ISOMETRIC:
+				return TileSet.TileShape.TILE_SHAPE_ISOMETRIC
+			TileGeometry.Shape.HALF_OFFSET_SQUARE:
+				return TileSet.TileShape.TILE_SHAPE_HALF_OFFSET_SQUARE
+			_:
+				assert(advanced_shape == TileGeometry.Shape.HEXAGON)
+				return TileSet.TileShape.TILE_SHAPE_HEXAGON
+	
+	
+	## Return the [enum TileSet.TileLayout] corresponding to the given
+	## [enum TileGeometry.Layout]
+	static func get_tile_layout(
+			advanced_layout: TileGeometry.Layout
+	) -> TileSet.TileLayout:
+		match advanced_layout:
+			TileGeometry.Layout.STACKED_OFFSET:
+				return TileSet.TILE_LAYOUT_STACKED_OFFSET
+			TileGeometry.Layout.STAIRS_RIGHT:
+				return TileSet.TILE_LAYOUT_STAIRS_RIGHT
+			TileGeometry.Layout.STAIRS_DOWN:
+				return TileSet.TILE_LAYOUT_STAIRS_DOWN
+			TileGeometry.Layout.DIAMOND_RIGHT:
+				return TileSet.TILE_LAYOUT_DIAMOND_RIGHT
+			TileGeometry.Layout.DIAMOND_DOWN:
+				return TileSet.TILE_LAYOUT_DIAMOND_DOWN
+			_:
+				assert(advanced_layout == TileGeometry.Layout.STACKED)
+				return TileSet.TILE_LAYOUT_STACKED
+	
+	
+	## Return the given [enum TileSet.TileOffsetAxis] corresponding to the given
+	## [enum TileGeometry.Axis]
+	static func get_tile_offset_axis(
+			advanced_axis: TileGeometry.Axis
+	) -> TileSet.TileOffsetAxis:
+		match advanced_axis:
+			TileGeometry.Axis.HORIZONTAL:
+				return TileSet.TILE_OFFSET_AXIS_HORIZONTAL
+			_:
+				assert(advanced_axis == TileGeometry.Axis.VERTICAL)
+				return TileSet.TILE_OFFSET_AXIS_VERTICAL
+	
+	
+	## Get the base tile size corresponding to the Advanced Autotile tile size
+	## (since triangles are implemented using smaller squares)
+	static func get_tile_size(
+			advanced_shape: TileGeometry.Shape,
+			advanced_axis: TileGeometry.Axis,
+			advanced_size: Vector2i
+	) -> Vector2i:
+		if advanced_shape != TileGeometry.Shape.TRIANGLE:
+			return advanced_size
+		if advanced_axis == TileGeometry.Axis.HORIZONTAL:
+			return Vector2i(Vector2(advanced_size) * Vector2(0.5, 1.0))
+		else:
+			return Vector2i(Vector2(advanced_size) * Vector2(1.0, 0.5))

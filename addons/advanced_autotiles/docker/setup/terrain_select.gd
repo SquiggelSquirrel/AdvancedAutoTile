@@ -33,7 +33,7 @@ func _update_terrains() -> void:
 		item_terrain_indices.clear()
 		anti_recursion_lock = false
 		return
-	if tile_set.get_advanced_terrains_count() == item_terrain_indices.size():
+	if tile_set.advanced_get_terrains_count() == item_terrain_indices.size():
 		anti_recursion_lock = false
 		return
 	clear()
@@ -41,8 +41,8 @@ func _update_terrains() -> void:
 	if include_empty:
 		add_item("Empty")
 		item_terrain_indices.append(TileGeometry.FLAG_EMPTY)
-	for terrain_index in tile_set.get_advanced_terrains_count():
-		add_item(tile_set.get_advanced_terrain_name(terrain_index))
+	for terrain_index in tile_set.advanced_get_terrains_count():
+		add_item(tile_set.advanced_get_terrain_name(terrain_index))
 		item_terrain_indices.append(terrain_index)
 	if default_index < item_count:
 		select(default_index)

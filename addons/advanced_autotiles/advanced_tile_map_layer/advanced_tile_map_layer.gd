@@ -1,13 +1,16 @@
 @tool
 class_name AdvancedTileMapLayer
 extends TileMapLayer
+## TileMapLayer for Advanced Autotiles plugin
 
 
+## Base [member TileMapLayer.tile_set] property as an [AdvancedTileSet]
 @export var advanced_tile_set: AdvancedTileSet:
 	set(value):
 		tile_set = value as AdvancedTileSet
 	get:
 		return tile_set as AdvancedTileSet
+## Hide the base [member TileMapLayer.tile_set] property
 @export var hide_base_class_features := true:
 	set(value):
 		hide_base_class_features = value
@@ -20,6 +23,9 @@ func _validate_property(property: Dictionary) -> void:
 		property.usage &= ~ PROPERTY_USAGE_EDITOR
 
 
+## Get neighbor cell. Intended as a replacement for
+## [method TileMapLayer.get_neighbor_cell], but using [TileGeometry] enums
+## and supporting triangle cells
 func advanced_get_neighbor_cell(
 		coords: Vector2i,
 		neighbor: TileGeometry.CellNeighbor
@@ -31,15 +37,17 @@ func advanced_get_neighbor_cell(
 	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
 		var base_neighbor := TileGeometry.advanced_neighbor_to_base_neighbor(neighbor)
 		return get_neighbor_cell(coords, base_neighbor)
-	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
+	var orientation := advanced_get_cell_orientation(coords)
 	return TileGeometry.get_triangle_neighbor_cell(coords, neighbor, orientation)
 
 
+## Get map co-ordinates under point. Intended as a replacement for
+## [method TileMapLayer.local_to_map], but with support for triangle cells.
 func advanced_local_to_map(local: Vector2) -> Vector2i:
 	if advanced_tile_set.advanced_shape != TileGeometry.Shape.TRIANGLE:
 		return local_to_map(local)
 	var base := local_to_map(local)
-	var orientation := advanced_tile_set.get_advanced_cell_orientation(base)
+	var orientation := advanced_get_cell_orientation(base)
 	var center := map_to_local(base)
 	var in_cell := local - center
 	match orientation:
@@ -66,6 +74,12 @@ func advanced_local_to_map(local: Vector2) -> Vector2i:
 	return base
 
 
+## Paint the specified cells with the given Advanced Autotile terrain, and
+## updates the surrounding cells.
+## Optionally try to preserve surrounding connections with non-painted cells.
+## Returns a Dictionary[Vector2i: Dictionary[String: TileKey]]
+## of cell co-ord, "old" and "new" tiles (optionally dry-run to only return
+## dictionary without applying changes).
 func advanced_autotile_paint_cells(
 		terrain_id: int,
 		cells: Array[Vector2i],
@@ -79,7 +93,7 @@ func advanced_autotile_paint_cells(
 		var change := advanced_autotile_choose_tile(cell)
 		_merge_changes(changes, cell, change)
 	
-	var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+	var connection_mode := advanced_tile_set.advanced_get_terrain_mode(
 			terrain_id
 	)
 	
@@ -87,7 +101,7 @@ func advanced_autotile_paint_cells(
 		var prioritise_mask := {}
 		
 		if preserve_surrounding_connections:
-			var orientation := advanced_tile_set.get_advanced_cell_orientation(
+			var orientation := advanced_get_cell_orientation(
 					cell
 			)
 			var existing_mask := advanced_get_existing_cell_mask(cell)
@@ -109,6 +123,12 @@ func advanced_autotile_paint_cells(
 	return changes
 
 
+## Paint a path of cells using Advanced Autotile terrain.
+## Will only try to create new high-priority connections where consecutive
+## cells in the path are adjacent.
+## Returns a Dictionary[Vector2i: Dictionary[String: TileKey]]
+## of cell co-ord, "old" and "new" tiles (optionally dry-run to only return
+## dictionary without applying changes).
 func advanced_autotile_paint_path(
 		terrain_id: int,
 		path: Array[Vector2i],
@@ -117,7 +137,7 @@ func advanced_autotile_paint_path(
 	add_incoming_terrain(terrain_id, path)
 	var changes := {}
 	
-	var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+	var connection_mode := advanced_tile_set.advanced_get_terrain_mode(
 			terrain_id
 	)
 	var has_diagonals := bool(
@@ -131,9 +151,10 @@ func advanced_autotile_paint_path(
 		var is_first := bool(i == 0)
 		var is_last := bool(i == path.size() - 1)
 		
-		var orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
+		var orientation := advanced_get_cell_orientation(cell)
 		var empty_mask := advanced_tile_set.get_terrain_empty_mask(
-				terrain_id, orientation
+				advanced_tile_set.advanced_get_terrain_mode(terrain_id),
+				orientation
 		)
 		var preserve_mask := advanced_get_existing_cell_mask(cell)
 		for flag in empty_mask:
@@ -200,7 +221,14 @@ func advanced_autotile_paint_path(
 	return changes
 
 
-func advanced_autotile_paint_corners(
+## Paint connections using Advanced Autotile terrain, without changing the
+## cells terrain. Cells are paired up with flags (if more cell than flags are
+## given, flags array will wrap) to specify connections. Each connection only
+## needs to be specified from one cell - additional cell-flags are implied.
+## Returns a Dictionary[Vector2i: Dictionary[String: TileKey]]
+## of cell co-ord, "old" and "new" tiles (optionally dry-run to only return
+## dictionary without applying changes).
+func advanced_autotile_paint_connections(
 		terrain_id: int,
 		cells: Array[Vector2i],
 		flags: Array[TileGeometry.CellNeighbor],
@@ -212,25 +240,32 @@ func advanced_autotile_paint_corners(
 			advanced_tile_set.advanced_axis
 	)
 	for i in cells.size():
-		var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
-				advanced_get_final_cell_terrain(cells[i])
+		var cell := cells[i]
+		var flag := flags[wrapi(i, 0, flags.size())]
+		var mode := advanced_tile_set.advanced_get_terrain_mode(
+				advanced_get_final_cell_terrain(cell)
 		)
-		constraints.add_constraint(
-				self,
-				cells[i],
-				flags[wrapi(i, 0, flags.size())],
-				connection_mode,
-				terrain_id
-		)
+		var orientation := advanced_get_cell_orientation(cell)
+		if flag in TileGeometry.get_flags(
+				mode,
+				advanced_tile_set.advanced_shape,
+				advanced_tile_set.advanced_axis,
+				orientation
+		):
+			constraints.add_constraint(
+					self,
+					cell,
+					flag,
+					mode,
+					terrain_id
+			)
 	
 	for cell in _get_cells_around_constraints(constraints):
-		var connection_mode := advanced_tile_set.get_advanced_terrain_mode(
+		var connection_mode := advanced_tile_set.advanced_get_terrain_mode(
 				advanced_get_final_cell_terrain(cell)
 		)
 		var mask := advanced_get_existing_cell_mask(cell)
-		for flag in mask.keys().filter(
-				func(flag): return flag & TileGeometry.CellNeighbor.CORNER
-		):
+		for flag in mask.keys():
 			if constraints.has_constraint(
 					self,
 					cell,
@@ -249,17 +284,22 @@ func advanced_autotile_paint_corners(
 	return changes
 
 
+## Flood fills with a given Advanded Autotile terrain, from a given start cell.
+## Returns a Dictionary[Vector2i: Dictionary[String: TileKey]]
+## of cell co-ord, "old" and "new" tiles (optionally dry-run to only return
+## dictionary without applying changes).
 func advanced_autotile_flood_fill(
 		start_cell: Vector2i,
 		terrain_id: int,
 		dry_run := false
 ) -> Dictionary:
-	var used := get_used_rect()
+	var used_rect := get_used_rect()
 	var cells: Array[Vector2i] = []
 	var start_terrain := advanced_get_final_cell_terrain(start_cell)
 	var start_tile := advanced_get_existing_tile(start_cell)
 	if start_terrain == terrain_id:
 		return {}
+	
 	var is_match: Callable
 	if start_terrain == TileGeometry.FLAG_EMPTY:
 		is_match = func(neighbor: Vector2i) -> bool:
@@ -267,15 +307,17 @@ func advanced_autotile_flood_fill(
 	else:
 		is_match = func(neighbor: Vector2i) -> bool:
 			return advanced_get_final_cell_terrain(neighbor) == start_terrain
+	
 	var queue: Array[Vector2i] = [start_cell]
-	for safety_limit in used.size.x * used.size.y:
+	# Could be "while not queue.is_empty()", but set a limit just to be safe.
+	for safety_limit in used_rect.size.x * used_rect.size.y:
 		if queue.is_empty():
 			break
 		var cell := queue.pop_front()
 		cells.append(cell)
 		for neighbor in advanced_get_surrounding_cells(cell):
 			if (
-					used.has_point(neighbor)
+					used_rect.has_point(neighbor)
 					and
 					is_match.call(neighbor)
 					and not
@@ -284,6 +326,7 @@ func advanced_autotile_flood_fill(
 					queue.has(neighbor)
 			):
 				queue.append(neighbor)
+	
 	return advanced_autotile_paint_cells(
 			terrain_id,
 			cells,
@@ -291,15 +334,27 @@ func advanced_autotile_flood_fill(
 	)
 
 
+## Add an incoming terrain-to-be-painted in one or more cells, so that
+## autotiling will connect with that terrain and not the existing one.
+## Lower-level than most autotiling functions, intended for use with
+## [method advanced_autotile_choose_tile].
+## Caution: remember to clear incoming terrains after you're done autotiling.
 func add_incoming_terrain(terrain_id: int, cells: Array[Vector2i]) -> void:
 	for cell in cells:
 		_incoming_terrains[cell] = terrain_id
 
 
+## Clear incoming terrains (see [method add_incoming_terrain] and
+## [method advanced_autotile_choose_tile])
 func clear_incoming_terrains() -> void:
 	_incoming_terrains.clear()
 
 
+## Choose a tile for the given cell, based on incoming terrains.
+## Optionally provide a mask (dictionary of flag:terrain_id) to try and match.
+## Returns a dictionary of "old": TileKey, "new": TileKey, or an empty
+## dictionary if no change should occur.
+## Optionally dry-run to only get dictionary result without applying change.
 func advanced_autotile_choose_tile(
 		cell: Vector2i,
 		prioritize_mask: Dictionary = {},
@@ -308,7 +363,7 @@ func advanced_autotile_choose_tile(
 	var existing := advanced_get_existing_tile(cell)
 	var terrain := advanced_get_final_cell_terrain(cell)
 	if terrain == -1:
-		if advanced_tile_set.get_advanced_terrain(existing) == -1:
+		if advanced_tile_set.advanced_get_tile_terrain(existing) == -1:
 			return {}
 		else:
 			if ! dry_run:
@@ -321,12 +376,12 @@ func advanced_autotile_choose_tile(
 	var max_priority := TilePriority.new()
 	max_priority.matching_tile = false
 	var candidates: Array[AdvancedTileSet.TileKey] = []
-	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
-	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
-	for tile in advanced_tile_set.get_advanced_tiles():
-		if advanced_tile_set.get_advanced_terrain(tile) != terrain:
+	var cell_orientation := advanced_get_cell_orientation(cell)
+	var mode := advanced_tile_set.advanced_get_terrain_mode(terrain)
+	for tile in advanced_tile_set.advanced_get_tiles():
+		if advanced_tile_set.advanced_get_tile_terrain(tile) != terrain:
 			continue
-		var tile_orientation := advanced_tile_set.get_advanced_orientation(tile)
+		var tile_orientation := advanced_tile_set.advanced_get_tile_orientation(tile)
 		if tile_orientation != cell_orientation:
 			continue
 		if mode == TileGeometry.ConnectionMode.NONE:
@@ -366,6 +421,252 @@ func advanced_autotile_choose_tile(
 		}
 
 
+## Get the incoming terrain for this cell, or the existing terrain if there is
+## no incoming terrain.
+func advanced_get_final_cell_terrain(cell: Vector2i) -> int:
+	if _incoming_terrains.has(cell):
+		return _incoming_terrains[cell]
+	var source_id := get_cell_source_id(cell)
+	var atlas_coords := get_cell_atlas_coords(cell)
+	var alternative_id := get_cell_alternative_tile(cell)
+	var tile := AdvancedTileSet.TileKey.new(
+			source_id, atlas_coords, alternative_id
+	)
+	return advanced_tile_set.advanced_get_tile_terrain(tile)
+
+
+## Get the mask of the existing tile in this cell, or an empty dictionary
+## if no tile is present (or a tile with invalid orientation).
+func advanced_get_existing_cell_mask(
+		cell: Vector2i
+) -> Dictionary:
+	var cell_orientation := advanced_get_cell_orientation(cell)
+	var source_id := get_cell_source_id(cell)
+	if source_id == -1:
+		return {}
+	var atlas_coords := get_cell_atlas_coords(cell)
+	var alternative_id := get_cell_alternative_tile(cell)
+	var tile := AdvancedTileSet.TileKey.new(
+			source_id, atlas_coords, alternative_id
+	)
+	if advanced_tile_set.advanced_get_tile_orientation(tile) != cell_orientation:
+		return {}
+	return advanced_tile_set.advanced_get_tile_mask(tile)
+
+
+## Get all the cells surrounding (but not included in) the given array of cells.
+func get_cells_surrounding_cells(
+		cells: Array[Vector2i],
+		include_diagonals := false
+) -> Array[Vector2i]:
+	var surrounding_cells:Array[Vector2i] = []
+	for cell in cells:
+		for neighbor in advanced_get_surrounding_cells(cell, include_diagonals):
+			if ! neighbor in cells and ! neighbor in surrounding_cells:
+				surrounding_cells.append(neighbor)
+	return surrounding_cells
+
+
+## Get the cells surrounding the given cell. Similar to
+## [method TileMapLayer.get_surrounding_cells], but with support for triangles
+## and diagonals (optionally).
+func advanced_get_surrounding_cells(
+		coords: Vector2i,
+		include_diagonals := false
+) -> Array[Vector2i]:
+	var mode: TileGeometry.ConnectionMode
+	if (
+			TileGeometry.shape_has_diagonals(advanced_tile_set.advanced_shape)
+			and include_diagonals
+	):
+		mode = TileGeometry.ConnectionMode.CORNERS_AND_EDGES
+	else:
+		mode = TileGeometry.ConnectionMode.EDGES
+	
+	var orientation := advanced_get_cell_orientation(coords)
+	var flags := TileGeometry.get_flags(
+			mode,
+			advanced_tile_set.advanced_shape,
+			advanced_tile_set.advanced_axis,
+			orientation,
+	)
+	var cells: Array[Vector2i] = []
+	for flag in flags:
+		cells.append(advanced_get_neighbor_cell(coords, flag))
+		if (
+				advanced_tile_set.advanced_shape == TileGeometry.Shape.TRIANGLE
+				and
+				bool(flag & TileGeometry.CellNeighbor.CORNER)
+		):
+			cells.append(advanced_get_neighbor_cell(
+					coords,
+					flag | TileGeometry.CellNeighbor.COUNTERCLOCKWISE
+			))
+			cells.append(advanced_get_neighbor_cell(
+					coords,
+					flag | TileGeometry.CellNeighbor.CLOCKWISE
+			))
+	return cells
+
+
+## Get the TileKey for the tile already in this cell
+func advanced_get_existing_tile(cell: Vector2i) -> AdvancedTileSet.TileKey:
+	var source_id := get_cell_source_id(cell)
+	if source_id == -1:
+		return AdvancedTileSet.TileKey.EMPTY
+	return AdvancedTileSet.TileKey.new(
+			source_id,
+			get_cell_atlas_coords(cell),
+			get_cell_alternative_tile(cell)
+	)
+
+
+## Get relevant neighbor cells for the given flag + connection mode.
+func advanced_get_neighbor_cells_for_flag(
+		cell: Vector2i,
+		flag: TileGeometry.CellNeighbor,
+		mode: TileGeometry.ConnectionMode
+) -> Array[Vector2i]:
+	var result_cells: Array[Vector2i] = []
+	for neighbor_flag in advanced_get_neighbor_flags_for_flag(cell, flag, mode):
+		result_cells.append(advanced_get_neighbor_cell(cell, neighbor_flag))
+	return result_cells
+
+
+## Give a cell, mode, and flag for a mask, get the neighbor flags for relevant
+## cells. 
+## (For every mode except match-corners, and every flag that isn't a corner
+## flag, there is one neighbor flag, it is just the same as the mask flag)
+func advanced_get_neighbor_flags_for_flag(
+		cell: Vector2i,
+		flag: TileGeometry.CellNeighbor,
+		mode: TileGeometry.ConnectionMode
+) -> Array[TileGeometry.CellNeighbor]:
+	var CN := TileGeometry.CellNeighbor
+	var CM := TileGeometry.ConnectionMode
+	
+	# For every mode except match-corners, and every flag that isn't a corner
+	# flag, the neighbor flag is just the same as the mask flag.
+	if not (flag & CN.CORNER and mode & CM.CORNERS):
+		return [flag]
+	
+	# ====
+	# NB. from here it must be a corner flag in corner connections mode
+	
+	# The same flag but as a side instead of a corner
+	var side_flag := (flag | CN.SIDE) & ~ CN.CORNER
+	
+	match advanced_tile_set.advanced_shape:
+		TileGeometry.Shape.SQUARE:
+			# One side can be found by stripping horizontal component,
+			# the other by stripping vertical.
+			# e.g. TOP_LEFT -> TOP + LEFT
+			return [
+				side_flag & ~ (CN.LEFT | CN.RIGHT),
+				flag,
+				side_flag & ~ (CN.TOP | CN.BOTTOM),
+			]
+		TileGeometry.Shape.ISOMETRIC:
+			if flag & (CN.TOP | CN.BOTTOM):
+				# TOP or BOTTOM corner flag, sides are TL/TR or BL/BR
+				return [
+					side_flag | CN.LEFT,
+					flag,
+					side_flag | CN.RIGHT,
+				]
+			else:
+				# LEFT or RIGHT corner, sides are TL/BL or TR/BR
+				return [
+					side_flag | CN.TOP,
+					flag,
+					side_flag | CN.BOTTOM,
+				]
+		TileGeometry.Shape.TRIANGLE:
+			if not (flag & (CN.TOP | CN.BOTTOM)):
+				# Flag does not have a vertical component (is LEFT or RIGHT)
+				# (e.g. LEFT -> TL, LCC, L, LC, BL)
+				return [
+					CN.TOP_SIDE,
+					flag | CN.COUNTERCLOCKWISE,
+					flag,
+					flag | CN.CLOCKWISE,
+					CN.BOTTOM_SIDE,
+				]
+			if not (flag & (CN.LEFT | CN.RIGHT)):
+				# Flag does not have a horizontal component (is TOP or BOTTOM)
+				return [
+					CN.LEFT_SIDE,
+					flag | CN.COUNTERCLOCKWISE,
+					flag,
+					flag | CN.CLOCKWISE,
+					CN.RIGHT_SIDE,
+				]
+			return [
+				side_flag & ~ (CN.LEFT | CN.RIGHT),
+				flag | CN.COUNTERCLOCKWISE,
+				flag,
+				flag | CN.CLOCKWISE,
+				side_flag & ~ (CN.TOP | CN.BOTTOM),
+			]
+		_: # HEXAGON, HALF_OFFSET_SQUARE, but make it default to avoid errors.
+			assert(advanced_tile_set.advanced_shape in [
+					TileGeometry.Shape.HALF_OFFSET_SQUARE,
+					TileGeometry.Shape.HEXAGON
+			])
+			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
+				if not (flag & (CN.TOP | CN.BOTTOM)):
+					return [
+						side_flag | CN.TOP,
+						side_flag | CN.BOTTOM,
+					]
+				return [
+					side_flag,
+					side_flag & ~ (CN.LEFT | CN.RIGHT),
+				]
+			else:
+				assert(advanced_tile_set.advanced_axis == TileGeometry.Axis.HORIZONTAL)
+				if not (flag & (CN.LEFT | CN.RIGHT)):
+					return [
+						side_flag | CN.LEFT,
+						side_flag | CN.RIGHT,
+					]
+				return [
+					side_flag,
+					side_flag & ~ (CN.TOP | CN.BOTTOM),
+				]
+
+
+
+## Get the side flags either side of a diagonal flag
+func advanced_get_side_flags_for_diagonal(
+		cell: Vector2i,
+		diagonal_flag: TileGeometry.CellNeighbor
+) -> Array[TileGeometry.CellNeighbor]:
+	return advanced_get_neighbor_flags_for_flag(
+			cell, diagonal_flag, TileGeometry.ConnectionMode.CORNERS
+	).filter(
+		func(flag): return flag != diagonal_flag
+	)
+
+
+## Get orientation of the specified cell
+func advanced_get_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation:
+	if advanced_tile_set.advanced_shape == TileGeometry.Shape.TRIANGLE:
+		if advanced_tile_set.advanced_axis == TileGeometry.Axis.HORIZONTAL:
+			if (coords.x ^ coords.y) & 1 == 1:
+				return TileGeometry.Orientation.UP
+			else:
+				return TileGeometry.Orientation.DOWN
+		else:
+			if (coords.x ^ coords.y) & 1 == 1:
+				return TileGeometry.Orientation.LEFT
+			else:
+				return TileGeometry.Orientation.RIGHT
+	else:
+		return TileGeometry.Orientation.UP
+
+
+# Test if the given cell/flag combination touches any cell from the given region.
 func _cell_flag_touches_region(
 		cell: Vector2i,
 		flag: TileGeometry.CellNeighbor,
@@ -381,10 +682,10 @@ func _cell_flag_touches_region(
 	return false
 
 
+# Get array of cells around the given constraint set.
 func _get_cells_around_constraints(
 		constraints: ConstraintSet
 ) -> Array[Vector2i]:
-	#n.b. support for side constraint not implemented
 	var cells: Array[Vector2i] = []
 	for i in constraints.get_count():
 		var cell := constraints.get_cell(i)
@@ -394,13 +695,19 @@ func _get_cells_around_constraints(
 		for neighbor in advanced_get_neighbor_cells_for_flag(
 				cell,
 				flag,
-				TileGeometry.ConnectionMode.CORNERS
+				constraints.get_mode(i)
 		):
 			if neighbor not in cells:
 				cells.append(neighbor)
 	return cells
 
 
+# If cell is adjacent to neighbor cell, update mask with terrain on whichever
+# flag connects them. If using non-acute diagonals, also update flags either
+# side of the connection flag to prefer empty.
+# (Pulled out of [method advanced_autotile_paint_path], because its long, and
+# was used twice inside an already nested loop. Overly specific because
+# I'm not sure how it generalises if at all.)
 func _mask_apply_path(
 		mask: Dictionary,
 		cell: Vector2i,
@@ -429,22 +736,24 @@ func _mask_apply_path(
 				connection_flag,
 				advanced_tile_set.advanced_shape,
 				advanced_tile_set.advanced_axis,
-				advanced_tile_set.get_advanced_cell_orientation(cell)
+				advanced_tile_set.advanced_get_cell_orientation(cell)
 		):
 			mask[diagonal_flag] = TileGeometry.FLAG_EMPTY
 
 
+# Get the TilePriority object representing how well the given tile fits the
+# specified cell, with the given prioritize mask.
 func _tile_match_priority(
 		cell: Vector2i,
 		tile: AdvancedTileSet.TileKey,
 		priotitize_mask: Dictionary
 ) -> TilePriority:
-	var terrain := advanced_tile_set.get_advanced_terrain(tile)
-	var mode := advanced_tile_set.get_advanced_terrain_mode(terrain)
+	var terrain := advanced_tile_set.advanced_get_tile_terrain(tile)
+	var mode := advanced_tile_set.advanced_get_terrain_mode(terrain)
 	var tile_priority := TilePriority.new()
-	var mask: Dictionary = advanced_tile_set.get_advanced_mask(tile)
+	var mask: Dictionary = advanced_tile_set.advanced_get_tile_mask(tile)
 	for flag in mask.keys():
-		var flag_priority := advanced_tile_set.get_advanced_terrain_priority(
+		var flag_priority := advanced_tile_set.advanced_get_terrain_priority(
 				mask[flag]
 		)
 		
@@ -471,6 +780,8 @@ func _tile_match_priority(
 	return tile_priority
 
 
+# Test whether the given tile mask partial-matches neighboring cells of the 
+# given cell, for the given flag, assuming the given connection mode.
 func _flag_matches_neighbors(
 		cell: Vector2i,
 		mask: Dictionary,
@@ -481,13 +792,16 @@ func _flag_matches_neighbors(
 			cell, flag, mode
 	):
 		var neighbor_terrain := advanced_get_final_cell_terrain(neighbor)
-		if ! advanced_tile_set.get_advanced_terrain_binds_to(
+		if ! advanced_tile_set.advanced_get_terrain_binds_to(
 				mask[flag], neighbor_terrain
 		):
 			return false
 	return true
 
 
+# Used to test if a diagonal is non-acute:
+# For the given cell, mask, and flag, if we were using "Corners and Edges"
+# mode, would this flag of this mask match exactly one relevant neighbor.
 func _flag_matches_one_neighbor(
 		cell: Vector2i,
 		mask: Dictionary,
@@ -498,13 +812,15 @@ func _flag_matches_one_neighbor(
 			cell, flag, TileGeometry.ConnectionMode.CORNERS_AND_EDGES
 	):
 		var neighbor_terrain := advanced_get_final_cell_terrain(neighbor)
-		if advanced_tile_set.get_advanced_terrain_binds_to(
+		if advanced_tile_set.advanced_get_terrain_binds_to(
 				mask[flag], neighbor_terrain
 		):
 			matches += 1
 	return bool(matches == 1)
 
 
+# Select one tile at random from the array of random tiles,
+# using [member TileData.probability]
 func _tile_select_random(
 		tiles: Array[AdvancedTileSet.TileKey]
 ) -> AdvancedTileSet.TileKey:
@@ -525,207 +841,7 @@ func _tile_select_random(
 	return tiles[0]
 
 
-func advanced_get_final_cell_terrain(cell: Vector2i) -> int:
-	if _incoming_terrains.has(cell):
-		return _incoming_terrains[cell]
-	var source_id := get_cell_source_id(cell)
-	var atlas_coords := get_cell_atlas_coords(cell)
-	var alternative_id := get_cell_alternative_tile(cell)
-	var tile := AdvancedTileSet.TileKey.new(source_id, atlas_coords, alternative_id)
-	return advanced_tile_set.get_advanced_terrain(tile)
-
-
-func advanced_get_existing_cell_mask(
-		cell: Vector2i
-) -> Dictionary:
-	var cell_orientation := advanced_tile_set.get_advanced_cell_orientation(cell)
-	var source_id := get_cell_source_id(cell)
-	var atlas_coords := get_cell_atlas_coords(cell)
-	var alternative_id := get_cell_alternative_tile(cell)
-	var tile := AdvancedTileSet.TileKey.new(
-			source_id, atlas_coords, alternative_id
-	)
-	if advanced_tile_set.get_advanced_orientation(tile) != cell_orientation:
-		return {}
-	return advanced_tile_set.get_advanced_mask(tile)
-
-
-func get_cells_surrounding_cells(
-		cells: Array[Vector2i],
-		include_diagonals := false
-) -> Array[Vector2i]:
-	var surrounding_cells:Array[Vector2i] = []
-	for cell in cells:
-		for neighbor in advanced_get_surrounding_cells(cell, include_diagonals):
-			if ! neighbor in cells and ! neighbor in surrounding_cells:
-				surrounding_cells.append(neighbor)
-	return surrounding_cells
-
-
-func advanced_get_surrounding_cells(
-		coords: Vector2i,
-		include_diagonals := false
-) -> Array[Vector2i]:
-	var mode := (
-			TileGeometry.ConnectionMode.CORNERS_AND_EDGES
-			if include_diagonals and TileGeometry.shape_has_diagonals(advanced_tile_set.advanced_shape)
-			else TileGeometry.ConnectionMode.EDGES
-	)
-	var orientation := advanced_tile_set.get_advanced_cell_orientation(coords)
-	var flags := TileGeometry.get_flags(
-			mode,
-			advanced_tile_set.advanced_shape,
-			advanced_tile_set.advanced_axis,
-			orientation,
-	)
-	var cells: Array[Vector2i] = []
-	for flag in flags:
-		cells.append(advanced_get_neighbor_cell(coords, flag))
-		if (
-				advanced_tile_set.advanced_shape == TileGeometry.Shape.TRIANGLE
-				and
-				bool(flag & TileGeometry.CellNeighbor.CORNER)
-		):
-			cells.append(advanced_get_neighbor_cell(
-					coords,
-					flag | TileGeometry.CellNeighbor.COUNTERCLOCKWISE
-			))
-			cells.append(advanced_get_neighbor_cell(
-					coords,
-					flag | TileGeometry.CellNeighbor.CLOCKWISE
-			))
-	return cells
-
-
-func advanced_get_existing_tile(cell: Vector2i) -> AdvancedTileSet.TileKey:
-	var source_id := get_cell_source_id(cell)
-	if source_id == -1:
-		return AdvancedTileSet.TileKey.EMPTY
-	return AdvancedTileSet.TileKey.new(
-			source_id,
-			get_cell_atlas_coords(cell),
-			get_cell_alternative_tile(cell)
-	)
-
-
-func advanced_get_neighbor_cells_for_flag(
-		cell: Vector2i,
-		flag: TileGeometry.CellNeighbor,
-		mode: TileGeometry.ConnectionMode
-) -> Array[Vector2i]:
-	var result_cells: Array[Vector2i] = []
-	for neighbor_flag in advanced_get_neighbor_flags_for_flag(cell, flag, mode):
-		result_cells.append(advanced_get_neighbor_cell(cell, neighbor_flag))
-	return result_cells
-
-
-func advanced_get_neighbor_flags_for_flag(
-		cell: Vector2i,
-		flag: TileGeometry.CellNeighbor,
-		mode: TileGeometry.ConnectionMode
-) -> Array[TileGeometry.CellNeighbor]:
-	var CN := TileGeometry.CellNeighbor
-	var CM := TileGeometry.ConnectionMode
-	
-	# For every mode excpe match-corners, and every flag that isn't a corner
-	# flag, the neighbor flag is just the same as the mask flag.
-	if not (flag & CN.CORNER and mode & CM.CORNERS):
-		return [flag]
-	
-	# ====
-	# NB. from here it must be a corner flag in corner connections mode
-	
-	# The same flag but as a side instead of a corner
-	var side_flag := (flag | CN.SIDE) & ~ CN.CORNER
-	
-	match advanced_tile_set.advanced_shape:
-		TileGeometry.Shape.SQUARE:
-			# One side can be found by stripping horizontal component,
-			# the other by stripping vertical
-			return [
-				side_flag & ~ (CN.LEFT | CN.RIGHT),
-				flag,
-				side_flag & ~ (CN.TOP | CN.BOTTOM),
-			]
-		TileGeometry.Shape.ISOMETRIC:
-			if flag & (CN.TOP | CN.BOTTOM):
-				# TOP or BOTTOM corner flag, sides are TL/TR or BL/BR
-				return [
-					side_flag | CN.LEFT,
-					flag,
-					side_flag | CN.RIGHT,
-				]
-			return [
-				side_flag | CN.TOP,
-				flag,
-				side_flag | CN.BOTTOM,
-			]
-		TileGeometry.Shape.TRIANGLE:
-			if not (flag & (CN.TOP | CN.BOTTOM)):
-				# Flag does not have a vertical component
-				# (e.g. LEFT -> TL, LCC, L, LC, BL)
-				return [
-					CN.TOP_SIDE,
-					flag | CN.COUNTERCLOCKWISE,
-					flag,
-					flag | CN.CLOCKWISE,
-					CN.BOTTOM_SIDE,
-				]
-			if not (flag & (CN.LEFT | CN.RIGHT)):
-				# Flag does not have a horizontal component
-				return [
-					CN.LEFT_SIDE,
-					flag | CN.COUNTERCLOCKWISE,
-					flag,
-					flag | CN.CLOCKWISE,
-					CN.RIGHT_SIDE,
-				]
-			return [
-				side_flag & ~ (CN.LEFT | CN.RIGHT),
-				flag | CN.COUNTERCLOCKWISE,
-				flag,
-				flag | CN.CLOCKWISE,
-				side_flag & ~ (CN.TOP | CN.BOTTOM),
-			]
-		_:
-			assert(advanced_tile_set.advanced_shape in [
-					TileGeometry.Shape.HALF_OFFSET_SQUARE,
-					TileGeometry.Shape.HEXAGON
-			])
-			if advanced_tile_set.advanced_axis == TileGeometry.Axis.VERTICAL:
-				if not (flag & (CN.TOP | CN.BOTTOM)):
-					return [
-						side_flag | CN.TOP,
-						side_flag | CN.BOTTOM,
-					]
-				return [
-					side_flag,
-					side_flag & ~ (CN.LEFT | CN.RIGHT),
-				]
-			else:
-				assert(advanced_tile_set.advanced_axis == TileGeometry.Axis.HORIZONTAL)
-				if not (flag & (CN.LEFT | CN.RIGHT)):
-					return [
-						side_flag | CN.LEFT,
-						side_flag | CN.RIGHT,
-					]
-				return [
-					side_flag,
-					side_flag & ~ (CN.TOP | CN.BOTTOM),
-				]
-
-
-func advanced_get_side_flags_for_diagonal(
-		cell: Vector2i,
-		diagonal_flag: TileGeometry.CellNeighbor
-) -> Array[TileGeometry.CellNeighbor]:
-	return advanced_get_neighbor_flags_for_flag(
-			cell, diagonal_flag, TileGeometry.ConnectionMode.CORNERS
-	).filter(
-		func(flag): return flag != diagonal_flag
-	)
-
-
+# Merge a new change into an existing dictionary of changes.
 func _merge_changes(
 		changes: Dictionary, cell: Vector2i, change: Dictionary
 ) -> Dictionary:
@@ -736,11 +852,15 @@ func _merge_changes(
 		return changes
 
 
+## Intended only for internal use by [AdvancedTileMapLayer].
+## Represents a tile-match priority.
 class TilePriority:
 	enum Comparison {OTHER_IS_LESSER, EQUAL, OTHER_IS_GREATER}
 	var matching_tile := true
 	var priorities := {}
 	
+	
+	## Add one flag-match priority
 	func add_priorty(priority: int) -> void:
 		if priorities.has(priority):
 			priorities[priority] += 1
@@ -748,6 +868,8 @@ class TilePriority:
 			priorities[priority] = 1
 	
 	
+	## Compare with another TilePriority, based on count of flag-matches
+	## in descending flag-match priority order.
 	func compare(other: TilePriority) -> Comparison:
 		if matching_tile and not other.matching_tile:
 			return Comparison.OTHER_IS_LESSER
@@ -778,6 +900,10 @@ class TilePriority:
 		return Comparison.EQUAL
 
 
+## Intended for internal use by AdvancedTileMapLayer
+## Represents a set of constraints on a grid - each can be an edge between
+## two cells, a corner-intersection, or a diagonal between two cells.
+## Each has one terrain.
 class ConstraintSet:
 	const CN := TileGeometry.CellNeighbor
 	enum FlagType {CORNER, SIDE, DIAGONAL_POS, DIAGONAL_NEG}
@@ -857,9 +983,15 @@ class ConstraintSet:
 		return parts[2].to_int()
 	
 	
+	func get_mode(index: int) -> TileGeometry.ConnectionMode:
+		var parts: PackedStringArray = data.keys()[index].split(":")
+		return parts[3].to_int()
+	
+	
 	func get_is_diagonal(index: int) -> bool:
 		var parts: PackedStringArray = data.keys()[index].split(":")
-		return parts[3] == "true"
+		var mode := get_mode(index)
+		return mode & TileGeometry.ConnectionMode.DIAGONALS
 	
 	
 	func _get_key(
@@ -868,27 +1000,26 @@ class ConstraintSet:
 			in_flag: TileGeometry.CellNeighbor,
 			mode: TileGeometry.ConnectionMode
 	) -> String:
-		var is_diagonal := mode & TileGeometry.ConnectionMode.DIAGONALS
 		var constraint := _get_constraint_cell_and_flag(
 				tilemap,
 				in_cell,
 				in_flag,
-				is_diagonal
+				mode
 		)
 		var key_cell: Vector2i = constraint[0]
 		var key_flag: TileGeometry.CellNeighbor = constraint[1]
-		return "%s:%s:%s:%s" % [key_cell.x, key_cell.y, key_flag, is_diagonal]
+		return "%s:%s:%s:%s" % [key_cell.x, key_cell.y, key_flag, mode]
 
 
 	func _get_constraint_cell_and_flag(
 			tilemap: AdvancedTileMapLayer,
 			cell: Vector2i,
 			flag: int,
-			is_diagonal: bool
+			mode: TileGeometry.ConnectionMode
 	) -> Array:
 		if flag & TileGeometry.CellNeighbor.SIDE:
 			return _get_side_constraint_cell_and_flag(tilemap, cell, flag)
-		elif is_diagonal:
+		elif mode & TileGeometry.ConnectionMode.DIAGONALS:
 			return _get_diagonal_constraint_cell_and_flag(tilemap, cell, flag)
 		else:
 			return _get_corner_constraint_cell_and_flag(tilemap, cell, flag)

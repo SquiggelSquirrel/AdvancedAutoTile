@@ -1,39 +1,55 @@
 @tool
 class_name AdvancedTileSet
 extends TileSet
+## Tile Set for use with Advanced Autotiles plugin
+##
+## An extension of Godot's built-in [TileSet] class, intended for use with an
+## [AdvancedTileMapLayer] node. Adds support for triangle grid configuration
+## and terrain setup for this plugin.
+##
+## Plugins cannot extend built-in methods or properties, so this class has
+## a number of replacements, and the built-in class features are hidden in the
+## editor unless [member hide_base_class_features] is disabled.
+##
+## Triangle grids are implemented using Godot's square grid with half the
+## width/height for horizontal/vertical stacking, so triangles must have an
+## even width/height (depending on axis).
+
+## Emitted when the terrains setup changes. (Other changes use the
+## [signal changed] signal.
+signal terrains_changed
+
 
 ## Key used for storing per-tile plugin data on TileSet custom data layer
 const DATA_LAYER_NAME := "_advanced_autotiles"
 
-signal terrains_changed
 
-
-## If enabled, properties of the base [class TileSet] will not show in the
-## editor if intended to be replaced by Advanced Autotiles properties.
-## (Note that this only affects the inspector and not the underlying API)
+## Hide properties of the base [class TileSet] in the editor, if an
+## Advanced Autotiles property is intended to replace.
+## (Does not affect underlying API)
 @export var hide_base_class_features := true:
 	set(value):
 		hide_base_class_features = value
 		notify_property_list_changed()
+
 @export_group("Grid properties", "advanced_")
 ## The tile shape used by the Advanced Autotiles plugin.
-## In most cases, this is the same as the base [member tile_shape],
-## but triangles are supported (and will use square shape on the base class)
+## Overwrites [member TileSet.tile_shape]
 @export var advanced_shape := TileGeometry.Shape.SQUARE:
 	set(value):
 		if advanced_shape == value:
 			return
 		advanced_shape = value
 		if _is_loaded:
-			for tile in get_advanced_tiles():
-				if get_advanced_terrain(tile) > -1:
-					clear_advanced_mask(tile)
+			for tile in advanced_get_tiles():
+				if advanced_get_tile_terrain(tile) > -1:
+					advanced_clear_tile_mask(tile)
 			_apply_base_overrides()
 			_need_recalc = true
 			notify_property_list_changed()
 			_queue_signal(changed)
 ## The tile layout used by the Advanced Autotiles plugin.
-## Currently just a mirror of the base [member tile_layout]
+## Overwrites [member TileSet.tile_layout]
 @export var advanced_layout := TileGeometry.Layout.STACKED:
 	set(value):
 		if advanced_layout == value:
@@ -43,17 +59,17 @@ signal terrains_changed
 			_apply_base_overrides()
 			_queue_signal(changed)
 ## For half-offset shapes (isometric, hexagonal, half-offset square),
-## determines the offset axis. For triangles, determines the allowed
-## orientations
+## determines the offset axis. For triangles, determines the stacking and
+## allowed orientations.
 @export var advanced_axis := TileGeometry.Axis.HORIZONTAL:
 	set(value):
 		if advanced_axis == value:
 			return
 		advanced_axis = value
 		if _is_loaded:
-			for tile in get_advanced_tiles():
-				if get_advanced_terrain(tile) > -1:
-					clear_advanced_mask(tile)
+			for tile in advanced_get_tiles():
+				if advanced_get_tile_terrain(tile) > -1:
+					advanced_clear_tile_mask(tile)
 			advanced_tile_size = advanced_tile_size
 			_apply_base_overrides()
 			_queue_signal(changed)
@@ -79,6 +95,7 @@ signal terrains_changed
 			_queue_signal(changed)
 
 @export_group("Autotiling")
+## If true, calculate terrain properties automatically from bindings
 @export var auto_priorities := true:
 	set(value):
 		if value == auto_priorities:
@@ -89,7 +106,9 @@ signal terrains_changed
 			_recalc()
 		auto_priorities = value
 		notify_property_list_changed()
+
 @export_subgroup("Empty tile", "empty_terrain_")
+## If true, determine bindings for the "empty" terrain automatically.
 @export var empty_terrain_auto_bindings := true:
 	set(value):
 		if value == empty_terrain_auto_bindings:
@@ -100,15 +119,52 @@ signal terrains_changed
 			_recalc()
 		empty_terrain_auto_bindings = value
 		notify_property_list_changed()
+## Bitmask of bindings for the "empty" terrain.
 @export var empty_terrain_bindings: int = 0
-@export var empty_terrain_priority := 0
+## Priority of the "empty" terrain.
+@export_range(1, 100, 1, "or_greater") var empty_terrain_priority: int = 0
+
 @export_storage var _need_recalc := true
 var _terrains: Array[Terrain] = []
 var _is_loaded := false
 var _queued_signals: Array[Signal] = []
 
 
-#region Editor/Inspector logic
+#region Static functions for manipulating terrain binding bitmask
+static func _binding_set_terrain_index(
+		binding: int, terrain_index: int, value: bool
+) -> int:
+	var mask := _binding_get_terrain_mask(terrain_index)
+	if value:
+		return binding | mask
+	else:
+		return binding & ~ mask
+
+
+static func _binding_matches_terrain_index(
+		binding: int, terrain_index: int
+) -> bool:
+	var mask := _binding_get_terrain_mask(terrain_index)
+	return (binding & mask == mask)
+
+
+static func _binding_get_terrain_mask(terrain_index: int) -> int:
+	return 1 << (terrain_index + 1)
+
+
+static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
+	var terrains: PackedInt32Array = []
+	var mask := 1
+	var i := -1
+	while mask <= binding:
+		if binding & mask:
+			terrains.append(i)
+		mask <<= 1
+		i += 1
+	return terrains
+#endregion
+
+
 func _init() -> void:
 	_set_is_loaded.call_deferred()
 
@@ -145,6 +201,8 @@ func _get_property_list() -> Array[Dictionary]:
 			}, {
 				"name": "advanced_terrain_%d/priority" % i,
 				"type": TYPE_INT,
+				"hint": PROPERTY_HINT_RANGE,
+				"hint_string": "1,100,1,or_greater",
 				"usage": (
 						PROPERTY_USAGE_STORAGE if auto_priorities
 						else PROPERTY_USAGE_DEFAULT
@@ -183,7 +241,11 @@ func _validate_property(property: Dictionary) -> void:
 		"empty_terrain_priority":
 			if auto_priorities:
 				property.usage = PROPERTY_USAGE_STORAGE
-		"tile_shape", "tile_layout", "tile_offset_axis", "tile_size", "terrain_sets":
+		"tile_shape",\
+		"tile_layout",\
+		"tile_offset_axis",\
+		"tile_size",\
+		"terrain_sets":
 			if hide_base_class_features:
 				property.usage &= ~ PROPERTY_USAGE_EDITOR
 
@@ -200,18 +262,18 @@ func _set(property: StringName, value: Variant) -> bool:
 				_terrains[i] = Terrain.new(
 						"Terrain %s" % i,
 						color)
-		for tile in get_advanced_tiles():
-			if get_advanced_terrain(tile) >= value:
+		for tile in advanced_get_tiles():
+			if advanced_get_tile_terrain(tile) >= value:
 				# This tile was using a now-removed terrain,
 				# set its terrain to empty
-				set_advanced_terrain(tile, -1)
+				advanced_set_tile_terrain(tile, -1)
 				
-			elif get_advanced_terrain(tile) > -1:
+			elif advanced_get_tile_terrain(tile) > -1:
 				# This tile's terrain still exists, but it may have a mask
 				# that uses a now-removed terrain. If so, clear the mask.
-				for flag in get_advanced_mask(tile).values():
+				for flag in advanced_get_tile_mask(tile).values():
 					if flag >= value:
-						clear_advanced_mask(tile)
+						advanced_clear_tile_mask(tile)
 						break
 		notify_property_list_changed()
 		if _is_loaded:
@@ -227,9 +289,9 @@ func _set(property: StringName, value: Variant) -> bool:
 		if _is_loaded:
 			match terrain_property:
 				"mode":
-					for tile in get_advanced_tiles():
-						if get_advanced_terrain(tile) == terrain_index:
-							clear_advanced_mask(tile)
+					for tile in advanced_get_tiles():
+						if advanced_get_tile_terrain(tile) == terrain_index:
+							advanced_clear_tile_mask(tile)
 							_need_recalc = true
 				"auto_binding":
 					# If we are enabling manual bindings,
@@ -242,7 +304,7 @@ func _set(property: StringName, value: Variant) -> bool:
 				"bindings":
 					# (Only priorities really need recalc, should cache be
 					# more granular?)
-					_recalc()
+					_need_recalc = true
 		_terrains[terrain_index].set(terrain_property, value)
 		if _is_loaded:
 			_queue_signal(terrains_changed)
@@ -261,44 +323,8 @@ func _get(property: StringName) -> Variant:
 	return null
 
 
-func _get_bindings_hint_string(include_empty := true) -> String:
-	var names: PackedStringArray = []
-	if include_empty:
-		var name := "Empty"
-		var mask := _binding_get_terrain_mask(-1)
-		var hint := "%s:%d" % [name, mask]
-		names.append(hint)
-	for terrain_index in _terrains.size():
-		var name := _terrains[terrain_index].name
-		var mask := _binding_get_terrain_mask(terrain_index)
-		var hint := "%s:%d" % [name, mask]
-		names.append(hint)
-	return ",".join(names)
-
-
-func _get_enum_hint_string(
-		enum_dict: Dictionary,
-		values: PackedInt32Array = []
-) -> String:
-	var hint_strings: PackedStringArray = []
-	if values.is_empty():
-		for key: String in enum_dict.keys():
-			hint_strings.append(
-				"%s:%s" % [key.capitalize(), enum_dict[key]])
-	else:
-		for value in values:
-			hint_strings.append(
-				"%s:%s" % [
-					enum_dict.find_key(value).capitalize(),
-					value
-				]
-			)
-	return ",".join(hint_strings)
-#endregion
-
-
-## Set the orientation of a tile
-func set_advanced_orientation(
+## Set the orientation of a tile (only relevant for triangle tiles)
+func advanced_set_tile_orientation(
 	tile: TileKey, orientation: TileGeometry.Orientation
 ) -> void:
 	var allowed := TileGeometry.get_orientations(
@@ -307,14 +333,14 @@ func set_advanced_orientation(
 	assert(orientation in allowed,
 			"Tile orientation not supported by tile set shape+axis")
 	_set_advanced_tile_data(tile, "orientation", orientation)
-	if get_advanced_terrain(tile) > -1:
-		clear_advanced_mask(tile)
+	if advanced_get_tile_terrain(tile) > -1:
+		advanced_clear_tile_mask(tile)
 	_need_recalc = true
 	_queue_signal(changed)
 
 
 ## Get the orientation of a tile
-func get_advanced_orientation(tile: TileKey) -> TileGeometry.Orientation:
+func advanced_get_tile_orientation(tile: TileKey) -> TileGeometry.Orientation:
 	var orientation := _get_advanced_tile_data(tile, "orientation", -1)
 	if orientation == -1:
 		return TileGeometry.get_orientations(advanced_shape, advanced_axis)[0]
@@ -322,7 +348,7 @@ func get_advanced_orientation(tile: TileKey) -> TileGeometry.Orientation:
 
 
 ## Set the terrain index of a tile
-func set_advanced_terrain(tile: TileKey, terrain_index: int) -> void:
+func advanced_set_tile_terrain(tile: TileKey, terrain_index: int) -> void:
 	assert(terrain_index < _terrains.size(),
 			"Terrain index outside size of tile set terrains")
 	assert(terrain_index >= -1,
@@ -331,31 +357,31 @@ func set_advanced_terrain(tile: TileKey, terrain_index: int) -> void:
 	if terrain_index == -1:
 		_clear_advanced_tile_data(tile, "mask")
 	else:
-		clear_advanced_mask(tile)
+		advanced_clear_tile_mask(tile)
 	_need_recalc = true
 	_queue_signal(changed)
 
 
 ## Get the terrain index of a tile
-func get_advanced_terrain(tile: TileKey) -> int:
+func advanced_get_tile_terrain(tile: TileKey) -> int:
 	return _get_advanced_tile_data(tile, "terrain_index", -1)
 
 
 ## Set a flag of the "Advanced Autotiles" mask of a tile
-func set_advanced_flag(
+func advanced_set_tile_mask_flag(
 		tile: TileKey, flag: TileGeometry.CellNeighbor, flag_value: int
 ) -> void:
-	var terrain_index: int = get_advanced_terrain(tile)
+	var terrain_index: int = advanced_get_tile_terrain(tile)
 	assert(terrain_index > -1,
 			"Cannot set autotile flag on tile without terrain")
 	var expected_flags := TileGeometry.get_flags(
 			_terrains[terrain_index].mode,
 			advanced_shape,
 			advanced_axis,
-			get_advanced_orientation(tile)
+			advanced_get_tile_orientation(tile)
 	)
 	assert(flag in expected_flags, "Unsupported autotile flag for this tile")
-	var mask := get_advanced_mask(tile)
+	var mask := advanced_get_tile_mask(tile)
 	mask[flag] = flag_value
 	for expected_flag in expected_flags:
 		if ! mask.has(expected_flag):
@@ -365,15 +391,16 @@ func set_advanced_flag(
 	_queue_signal(changed)
 
 
-func clear_advanced_mask(tile: TileKey) -> void:
-	var terrain_index: int = get_advanced_terrain(tile)
+## Clear the "Advanced Autotiles" mask of a tile (set all flags to "empty")
+func advanced_clear_tile_mask(tile: TileKey) -> void:
+	var terrain_index: int = advanced_get_tile_terrain(tile)
 	assert(terrain_index > -1,
 			"Cannot set autotile mask on tile without terrain")
 	var flags := TileGeometry.get_flags(
 			_terrains[terrain_index].mode,
 			advanced_shape,
 			advanced_axis,
-			get_advanced_orientation(tile)
+			advanced_get_tile_orientation(tile)
 	)
 	var mask := {}
 	for flag in flags:
@@ -381,67 +408,123 @@ func clear_advanced_mask(tile: TileKey) -> void:
 	_set_advanced_tile_data(tile, "mask", mask)
 
 
-## Get the autotile mask of a tile
-func get_advanced_mask(tile: TileKey) -> Dictionary:
-	var terrain_index: int = get_advanced_terrain(tile)
-	var orientation: TileGeometry.Orientation = get_advanced_orientation(tile)
+## Get the "Advanced Autotiles" mask of a tile
+func advanced_get_tile_mask(tile: TileKey) -> Dictionary:
+	var terrain_index: int = advanced_get_tile_terrain(tile)
+	var orientation: TileGeometry.Orientation
+	orientation = advanced_get_tile_orientation(tile)
 	var mask := _get_advanced_tile_data(
 			tile,
 			"mask",
 			{}
 	)
 	if mask.is_empty():
-		return get_terrain_empty_mask(terrain_index, orientation)
+		return get_terrain_empty_mask(
+				_terrains[terrain_index].mode,
+				orientation
+		)
 	return mask.duplicate()
 
 
-## Returns an array of tile keys in all the atlas sources of this tile set.
-func get_advanced_tiles() -> Array[TileKey]:
+## Returns an array of tile keys objects, for all tiles in all the atlas sources
+## of this tile set.
+func advanced_get_tiles() -> Array[TileKey]:
 	var tiles: Array[TileKey] = []
 	for source_index in get_source_count():
 		var id := get_source_id(source_index)
 		var source := get_source(id)
-		if source is TileSetAtlasSource:
-			var size: Vector2 = source.get_atlas_grid_size()
-			for x in size.x:
-				for y in size.y:
-					var coords := Vector2i(x, y)
-					if source.get_tile_at_coords(coords) != coords:
-						continue
-					for alternative_id in source.get_alternative_tiles_count(coords):
-						tiles.append(TileKey.new(
-								id, coords, alternative_id
-						))
+		if not source is TileSetAtlasSource:
+			continue
+		var size: Vector2 = source.get_atlas_grid_size()
+		for x in size.x:
+			for y in size.y:
+				var coords := Vector2i(x, y)
+				if source.get_tile_at_coords(coords) != coords:
+					continue
+				for alternative_id in source.get_alternative_tiles_count(coords):
+					tiles.append(TileKey.new(
+							id, coords, alternative_id
+					))
 	return tiles
 
 
+## Return the [TileData] of a tile identified by a [TileKey]
 func get_tile_data(tile: TileKey) -> TileData:
 	return (
 			get_source(tile.source_id) as TileSetAtlasSource
 	).get_tile_data(tile.coords, tile.alternative_id)
 
 
-func get_advanced_terrains_count() -> int:
+## Get the number of "Advanced Autotile" terrains defined for this tileset.
+func advanced_get_terrains_count() -> int:
 	return _terrains.size()
 
 
-func get_advanced_terrain_name(terrain_index: int) -> String:
+## Add a new "Advanced Autotile" terrain. Returns the index of the new terrain.
+func advanced_add_terrain(
+		terrain_name: String,
+		terrain_mode: TileGeometry.ConnectionMode
+) -> int:
+	var new_index := advanced_get_terrains_count()
+	_set(&"advanced_terrain_count", new_index + 1)
+	return new_index
+
+
+## Get the name of the "Advanced Autotile" terrain at this index.
+func advanced_get_terrain_name(terrain_index: int) -> String:
 	return _terrains[terrain_index].name
 
 
-func get_advanced_terrain_color(terrain_index: int) -> Color:
+## Set the name of an "Advanced Autotile" terrain
+func advanced_set_terrain_name(terrain_index: int, name: String) -> void:
+	_terrains[terrain_index].name = name
+
+
+## Get the color assigned to an "Advanced Autotile" terrain (for use in editor)
+func advanced_get_tile_terrain_color(terrain_index: int) -> Color:
 	return _terrains[terrain_index].color
 
 
-func get_advanced_terrain_mode(terrain_index: int) -> TileGeometry.ConnectionMode:
+## Set the color assigned to an "Advanced Autotile" terrain (for use in editor)
+func advanced_set_tile_terrain_color(terrain_index: int, color: Color) -> void:
+	_terrains[terrain_index].color = color
+
+
+## Get the connection mode of an "Advanced Autotile" terrain
+func advanced_get_terrain_mode(
+		terrain_index: int
+) -> TileGeometry.ConnectionMode:
 	return _terrains[terrain_index].mode
 
 
-func get_advanced_terrain_auto_binding(terrain_index: int) -> bool:
+## Set the connection mode of an "Advanced Autotile" terrain
+func advanced_set_terrain_mode(
+		terrain_index: int,
+		mode: TileGeometry.ConnectionMode
+) -> void:
+	_set("advanced_terrain_%d/mode" % terrain_index, mode)
+
+
+## If true, binding will be determined automatically for the specified
+## "Advanced Autotile" terrain
+func advanced_get_terrain_auto_binding(terrain_index: int) -> bool:
 	return _terrains[terrain_index].auto_binding
 
 
-func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool:
+## Set whether binding should be determined automatically for the specified
+## "Advanced Autotile" terrain.
+func advanced_set_terrain_auto_binding(
+		terrain_index: int,
+		auto_binding: bool
+) -> void:
+	_set("advanced_terrain_%d/auto_binding" % terrain_index, auto_binding)
+
+
+## Test whether a given terrain binds to another terrain (Advanced Autotiles)
+func advanced_get_terrain_binds_to(
+		terrain_index: int,
+		other_index: int
+) -> bool:
 	if _need_recalc:
 		_recalc()
 	
@@ -455,7 +538,26 @@ func get_advanced_terrain_binds_to(terrain_index: int, other_index: int) -> bool
 		)
 
 
-func get_advanced_terrain_priority(terrain_index: int) -> int:
+## Set whether a given terrain binds to another terrain (Advanced Autotiles)
+func advanced_set_terrain_binds_to(
+		terrain_index: int,
+		other_index: int,
+		binds: bool
+) -> void:
+	assert(
+			not _terrains[terrain_index].auto_binding,
+			"Cannot set a binding if auto-binding is enabled"
+	)
+	_set(
+			"advanced_terrain_%d/bindings" % terrain_index,
+			_binding_set_terrain_index(
+				_terrains[terrain_index].bindings, other_index, binds
+			)
+	)
+
+
+## Get the priority of the specified "Advanced Autotile" terrain
+func advanced_get_terrain_priority(terrain_index: int) -> int:
 	if _need_recalc:
 		_recalc()
 	if terrain_index == TileGeometry.FLAG_EMPTY:
@@ -463,29 +565,45 @@ func get_advanced_terrain_priority(terrain_index: int) -> int:
 	return _terrains[terrain_index].priority
 
 
-func get_advanced_cell_orientation(coords: Vector2i) -> TileGeometry.Orientation:
-	if advanced_shape == TileGeometry.Shape.TRIANGLE:
-		if advanced_axis == TileGeometry.Axis.HORIZONTAL:
-			if (coords.x ^ coords.y) & 1 == 1:
-				return TileGeometry.Orientation.UP
-			else:
-				return TileGeometry.Orientation.DOWN
-		else:
-			if (coords.x ^ coords.y) & 1 == 1:
-				return TileGeometry.Orientation.LEFT
-			else:
-				return TileGeometry.Orientation.RIGHT
-	else:
-		return TileGeometry.Orientation.UP
+## Set the priority of the specified "Advanced Autotile" terrain
+func advanced_set_terrain_priority(terrain_index: int, priority: int) -> void:
+	assert(
+			not auto_priorities,
+			"Cannot set a priority if auto-priorities are enabled"
+	)
+	_set(
+			"advanced_terrain_%d/priority" % terrain_index,
+			priority
+	)
 
 
-func get_advanced_terrain_has_tiles(terrain_id: int) -> bool:
-	for tile in get_advanced_tiles():
-		if get_advanced_terrain(tile) == terrain_id:
+## Test whether the specified "Advanced Autotile" terrain has any tiles
+## assigned to it.
+func advanced_get_terrain_has_tiles(terrain_id: int) -> bool:
+	for tile in advanced_get_tiles():
+		if advanced_get_tile_terrain(tile) == terrain_id:
 			return true
 	return false
 
 
+## Get an empty tile mask for the given connection mode and tile orientation
+func get_terrain_empty_mask(
+		mode: TileGeometry.ConnectionMode,
+		orientation: TileGeometry.Orientation
+) -> Dictionary:
+	var flags: PackedInt32Array = TileGeometry.get_flags(
+			mode,
+			advanced_shape,
+			advanced_axis,
+			orientation
+	)
+	var mask := {}
+	for flag in flags:
+		mask[flag] = TileGeometry.FLAG_EMPTY
+	return mask
+
+
+# Re-calc terrain bindings (and priorities, if auto-priorities enabled)
 func _recalc() -> void:
 	_advanced_terrain_update_auto_bindings()
 	if auto_priorities:
@@ -493,54 +611,54 @@ func _recalc() -> void:
 	_need_recalc = false
 
 
+# Re-calc terrain bindings
 func _advanced_terrain_update_auto_bindings() -> void:
-	# Re-calculate terrain auto bindings
 	if empty_terrain_auto_bindings:
+		# Initialise empty bindings to self only
 		empty_terrain_bindings = _binding_set_terrain_index(0, -1, true)
+		
+		# Bind empty to any terrain with connection mode "NONE"
+		for index in _terrains.size():
+			if _terrains[index].mode == TileGeometry.ConnectionMode.NONE:
+				empty_terrain_bindings = _binding_set_terrain_index(
+						empty_terrain_bindings,
+						index,
+						true
+				)
+	
+	## Initialise binding to self only
 	for index in _terrains.size():
 		if _terrains[index].auto_binding:
 			_terrains[index].bindings = _binding_set_terrain_index(
-					0,
-					index,
-					true
+					0, index, true
 			)
-		if (
-				empty_terrain_auto_bindings
-				and
-				_terrains[index].mode == TileGeometry.ConnectionMode.NONE
-		):
-			empty_terrain_bindings = _binding_set_terrain_index(
-					empty_terrain_bindings,
-					index,
-					true
-			)
-	for tile in get_advanced_tiles():
-		var center_terrain_index: int = get_advanced_terrain(tile)
-		if center_terrain_index < 0:
+	
+	# Bindings based on tiles
+	for tile in advanced_get_tiles():
+		var tile_terrain_index: int = advanced_get_tile_terrain(tile)
+		if tile_terrain_index == -1:
 			continue
-		var mask := get_advanced_mask(tile)
+		var mask := advanced_get_tile_mask(tile)
 		for flag in mask:
 			var flag_terrain_index: int = mask[flag]
 			if flag_terrain_index == TileGeometry.FLAG_EMPTY:
 				if empty_terrain_auto_bindings:
 					empty_terrain_bindings = _binding_set_terrain_index(
 						empty_terrain_bindings,
-						center_terrain_index,
+						tile_terrain_index,
 						true
 					)
-				continue
-			if ! _terrains[flag_terrain_index].auto_binding:
-				continue
-			var flag_terrain: Terrain = _terrains[flag_terrain_index]
-			flag_terrain.bindings = _binding_set_terrain_index(
-					flag_terrain.bindings,
-					center_terrain_index,
-					true
-			)
+			elif _terrains[flag_terrain_index].auto_binding:
+				var flag_terrain: Terrain = _terrains[flag_terrain_index]
+				flag_terrain.bindings = _binding_set_terrain_index(
+						flag_terrain.bindings,
+						tile_terrain_index,
+						true
+				)
 
 
+# Re-calculate terrain priorities, based on bindings
 func _advanced_terrain_update_priorities() -> void:
-	# Re-calculate terrain priorities, based on bindings
 	var graph := DirectedGraph.new()
 	graph.add_node()
 	for i in _terrains.size():
@@ -580,7 +698,7 @@ func _set_advanced_tile_data(
 	custom_data[key] = value
 
 
-# Retrieve any per-tile data used by the AdvancedTileSet plugin,
+# Retrieve any per-tile data used by the Advanced Autotile plugin,
 # requires a default value
 func _get_advanced_tile_data(
 		tile: TileKey,
@@ -601,6 +719,7 @@ func _get_advanced_tile_data(
 	return tile_data.get_custom_data(DATA_LAYER_NAME).get(key, default)
 
 
+# Clear per-tile data used by the Advanced Autotile plugin
 func _clear_advanced_tile_data(tile: TileKey, key: String) -> void:
 	var layer_index: int = get_custom_data_layer_by_name(DATA_LAYER_NAME)
 	if layer_index == -1:
@@ -612,70 +731,57 @@ func _clear_advanced_tile_data(tile: TileKey, key: String) -> void:
 	custom_data.erase(key)
 
 
+# Overwrite base properties as needed, depending on Advanced Autotile properties
 func _apply_base_overrides() -> void:
-	tile_shape = BaseOverrides.get_tile_shape(advanced_shape)
-	tile_layout = BaseOverrides.get_tile_layout(advanced_layout)
-	tile_offset_axis = BaseOverrides.get_tile_offset_axis(advanced_axis)
-	tile_size = BaseOverrides.get_tile_size(
+	tile_shape = TileGeometry.BaseOverrides.get_tile_shape(advanced_shape)
+	tile_layout = TileGeometry.BaseOverrides.get_tile_layout(advanced_layout)
+	tile_offset_axis = \
+			TileGeometry.BaseOverrides.get_tile_offset_axis(advanced_axis)
+	tile_size = TileGeometry.BaseOverrides.get_tile_size(
 			advanced_shape,
 			advanced_axis,
 			advanced_tile_size,
 	)
 
 
-func get_terrain_empty_mask(
-		terrain_index: int,
-		orientation: TileGeometry.Orientation
-) -> Dictionary:
-	if terrain_index == TileGeometry.FLAG_EMPTY:
-		return {}
-	var flags: PackedInt32Array = TileGeometry.get_flags(
-			_terrains[terrain_index].mode,
-			advanced_shape,
-			advanced_axis,
-			orientation
-	)
-	var mask := {}
-	for flag in flags:
-		mask[flag] = TileGeometry.FLAG_EMPTY
-	return mask
+# Get hint string for bindings as exported property
+func _get_bindings_hint_string(include_empty := true) -> String:
+	var names: PackedStringArray = []
+	if include_empty:
+		var name := "Empty"
+		var mask := _binding_get_terrain_mask(-1)
+		var hint := "%s:%d" % [name, mask]
+		names.append(hint)
+	for terrain_index in _terrains.size():
+		var name := _terrains[terrain_index].name
+		var mask := _binding_get_terrain_mask(terrain_index)
+		var hint := "%s:%d" % [name, mask]
+		names.append(hint)
+	return ",".join(names)
 
 
-#region Functions for manipulating terrain binding bitmask
-static func _binding_set_terrain_index(
-		binding: int, terrain_index: int, value: bool
-) -> int:
-	var mask := _binding_get_terrain_mask(terrain_index)
-	if value:
-		return binding | mask
+# Get hint string for exporting an enum type
+func _get_enum_hint_string(
+		enum_dict: Dictionary,
+		values: PackedInt32Array = []
+) -> String:
+	var hint_strings: PackedStringArray = []
+	if values.is_empty():
+		for key: String in enum_dict.keys():
+			hint_strings.append(
+				"%s:%s" % [key.capitalize(), enum_dict[key]])
 	else:
-		return binding & ~ mask
+		for value in values:
+			hint_strings.append(
+				"%s:%s" % [
+					enum_dict.find_key(value).capitalize(),
+					value
+				]
+			)
+	return ",".join(hint_strings)
 
 
-static func _binding_matches_terrain_index(
-		binding: int, terrain_index: int
-) -> bool:
-	var mask := _binding_get_terrain_mask(terrain_index)
-	return (binding & mask == mask)
-
-
-static func _binding_get_terrain_mask(terrain_index: int) -> int:
-	return 1 << (terrain_index + 1)
-
-
-static func _binding_get_matched_terrains(binding: int) -> PackedInt32Array:
-	var terrains: PackedInt32Array = []
-	var mask := 1
-	var i := -1
-	while mask <= binding:
-		if binding & mask:
-			terrains.append(i)
-		mask <<= 1
-		i += 1
-	return terrains
-#endregion
-
-
+# Queue a signal to be called at end of frame (if not already queued)
 func _queue_signal(signal_object: Signal) -> void:
 	if ! signal_object in _queued_signals:
 		_queued_signals.append(signal_object)
@@ -701,6 +807,7 @@ class TileKey:
 		self.alternative_id = alternative_id
 	
 	
+	## Test if this key identifies the same tile as another key
 	func equals(other_tile: TileKey) -> bool:
 		if other_tile == null:
 			return false
@@ -711,7 +818,8 @@ class TileKey:
 		)
 
 
-## Class for storing a single terrain.
+## Class for storing a single terrain (intended only for internal use
+## by [AdvancedTileSet] class.
 class Terrain:
 	var name := ""
 	var color := Color.INDIAN_RED
@@ -724,62 +832,3 @@ class Terrain:
 	func _init(init_name: String, init_color: Color) -> void:
 		name = init_name
 		color = init_color
-
-
-class BaseOverrides:
-	static func get_tile_shape(
-			advanced_shape: TileGeometry.Shape
-	) -> TileSet.TileShape:
-		match advanced_shape:
-			TileGeometry.Shape.SQUARE, TileGeometry.Shape.TRIANGLE:
-				return TileSet.TileShape.TILE_SHAPE_SQUARE
-			TileGeometry.Shape.ISOMETRIC:
-				return TileSet.TileShape.TILE_SHAPE_ISOMETRIC
-			TileGeometry.Shape.HALF_OFFSET_SQUARE:
-				return TileSet.TileShape.TILE_SHAPE_HALF_OFFSET_SQUARE
-			_:
-				assert(advanced_shape == TileGeometry.Shape.HEXAGON)
-				return TileSet.TileShape.TILE_SHAPE_HEXAGON
-	
-	
-	static func get_tile_layout(
-			advanced_layout: TileGeometry.Layout
-	) -> TileSet.TileLayout:
-		match advanced_layout:
-			TileGeometry.Layout.STACKED_OFFSET:
-				return TileSet.TILE_LAYOUT_STACKED_OFFSET
-			TileGeometry.Layout.STAIRS_RIGHT:
-				return TileSet.TILE_LAYOUT_STAIRS_RIGHT
-			TileGeometry.Layout.STAIRS_DOWN:
-				return TileSet.TILE_LAYOUT_STAIRS_DOWN
-			TileGeometry.Layout.DIAMOND_RIGHT:
-				return TileSet.TILE_LAYOUT_DIAMOND_RIGHT
-			TileGeometry.Layout.DIAMOND_DOWN:
-				return TileSet.TILE_LAYOUT_DIAMOND_DOWN
-			_:
-				assert(advanced_layout == TileGeometry.Layout.STACKED)
-				return TileSet.TILE_LAYOUT_STACKED
-	
-	
-	static func get_tile_offset_axis(
-			advanced_axis: TileGeometry.Axis
-	) -> TileSet.TileOffsetAxis:
-		match advanced_axis:
-			TileGeometry.Axis.HORIZONTAL:
-				return TileSet.TILE_OFFSET_AXIS_HORIZONTAL
-			_:
-				assert(advanced_axis == TileGeometry.Axis.VERTICAL)
-				return TileSet.TILE_OFFSET_AXIS_VERTICAL
-	
-	
-	static func get_tile_size(
-			advanced_shape: TileGeometry.Shape,
-			advanced_axis: TileGeometry.Axis,
-			advanced_size: Vector2i
-	) -> Vector2i:
-		if advanced_shape != TileGeometry.Shape.TRIANGLE:
-			return advanced_size
-		if advanced_axis == TileGeometry.Axis.HORIZONTAL:
-			return Vector2i(Vector2(advanced_size) * Vector2(0.5, 1.0))
-		else:
-			return Vector2i(Vector2(advanced_size) * Vector2(1.0, 0.5))

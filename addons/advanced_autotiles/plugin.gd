@@ -101,7 +101,7 @@ func _forward_canvas_draw_over_viewport(viewport_control: Control) -> void:
 					active_tilemap_layer.map_to_local(coords)
 					- active_tileset.advanced_tile_size * 0.5
 			)
-			var orientation := active_tileset.get_advanced_cell_orientation(coords)
+			var orientation := active_tilemap_layer.advanced_get_cell_orientation(coords)
 			var polyline := TileGeometry.get_tile_polygon(
 					active_tileset.advanced_shape,
 					active_tileset.advanced_axis,
@@ -270,7 +270,7 @@ func _update_cell_and_flag_under_mouse() -> void:
 			var corner_points := TileGeometry.get_tile_outline_points(
 					active_tileset.advanced_shape,
 					active_tileset.advanced_axis,
-					active_tileset.get_advanced_cell_orientation(new_cell)
+					active_tilemap_layer.advanced_get_cell_orientation(new_cell)
 			)
 			var min_distance_squared = 1.0
 			for flag in corner_points.keys():
@@ -361,7 +361,7 @@ class PaintAction:
 						)
 					PaintMode.CORNERS:
 						add_changes(
-								tile_map_layer.advanced_autotile_paint_corners(
+								tile_map_layer.advanced_autotile_paint_connections(
 									terrain_id,
 									[current_cell],
 									[current_flag]
@@ -408,7 +408,7 @@ class PaintAction:
 		if terrain_id == -1:
 			terrain_name = "Erase"
 		else:
-			terrain_name = tile_map_layer.advanced_tile_set.get_advanced_terrain_name(
+			terrain_name = tile_map_layer.advanced_tile_set.advanced_get_terrain_name(
 					terrain_id
 			)
 		undo_redo.create_action(_commit_name(terrain_name))
