@@ -165,10 +165,14 @@ static func advanced_neighbor_to_base_neighbor(
 ## Check whether diagonals make sense for a grid of given shape.
 static func shape_has_diagonals(shape: Shape) -> bool:
 	match shape:
-		Shape.SQUARE, Shape.ISOMETRIC, Shape.TRIANGLE:
+		Shape.SQUARE, Shape.ISOMETRIC:
 			return true
 		_:
-			assert(shape in [Shape.HEXAGON, Shape.HALF_OFFSET_SQUARE])
+			assert(shape in [
+					Shape.HEXAGON,
+					Shape.HALF_OFFSET_SQUARE,
+					Shape.TRIANGLE
+			])
 			return false
 
 

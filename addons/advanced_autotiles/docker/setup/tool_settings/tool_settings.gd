@@ -75,9 +75,22 @@ func _setup_orientations() -> void:
 			tile_set.advanced_shape,
 			tile_set.advanced_axis
 	)
-	%OrientationSelect.clear()
+	var orientation_select: OptionButton = %OrientationSelect
+	
+	var has_changes := false
+	if orientation_select.item_count != orientations.size():
+		has_changes = true
+	else:
+		for i in orientation_select.item_count:
+			if orientation_select.get_item_id(i) not in orientations:
+				has_changes = true
+				break
+	if not has_changes:
+		return
+		
+	orientation_select.clear()
 	for orientation in orientations:
-		%OrientationSelect.add_item(
+		orientation_select.add_item(
 				TileGeometry.Orientation.find_key(
 					orientation).capitalize(),
 				orientation

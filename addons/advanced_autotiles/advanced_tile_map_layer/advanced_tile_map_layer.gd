@@ -475,10 +475,7 @@ func advanced_get_surrounding_cells(
 		include_diagonals := false
 ) -> Array[Vector2i]:
 	var mode: TileGeometry.ConnectionMode
-	if (
-			TileGeometry.shape_has_diagonals(advanced_tile_set.advanced_shape)
-			and include_diagonals
-	):
+	if include_diagonals:
 		mode = TileGeometry.ConnectionMode.CORNERS_AND_EDGES
 	else:
 		mode = TileGeometry.ConnectionMode.EDGES
