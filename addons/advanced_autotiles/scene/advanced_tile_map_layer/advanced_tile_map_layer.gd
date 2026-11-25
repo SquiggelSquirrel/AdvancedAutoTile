@@ -2,19 +2,32 @@
 class_name AdvancedTileMapLayer
 extends TileMapLayer
 ## TileMapLayer for Advanced Autotiles plugin
+##
+## Node for 2D tile-based maps using the Advanced Autotiles plugin.
+## Extends Godot's built-in [TileMapLayer] node.
+## [br][br]
+## For basic auto-tile usage, I recommend using
+## [method advanced_autotile_paint_cells], 
+## [method advanced_autotile_paint_path],
+## or for "dual-grid": [method advanced_autotile_paint_connections].
 
 
 ## Base [member TileMapLayer.tile_set] property as an [AdvancedTileSet]
+## (For ease of static typing and inspector UX)
 @export var advanced_tile_set: AdvancedTileSet:
 	set(value):
 		tile_set = value as AdvancedTileSet
 	get:
 		return tile_set as AdvancedTileSet
-## Hide the base [member TileMapLayer.tile_set] property
+## If true, hide (in the inspector) any features of the base class that
+## should be ignored as overriden by the plugin (currently only the base
+## [member TileMapLayer.tile_set] property).
 @export var hide_base_class_features := true:
 	set(value):
 		hide_base_class_features = value
 		notify_property_list_changed()
+# Incoming terrain changes. Autotilers should use these instead of whatever
+# terrains are currently in those cells.
 var _incoming_terrains: Dictionary[Vector2i, int] = {}
 
 
@@ -25,7 +38,7 @@ func _validate_property(property: Dictionary) -> void:
 
 ## Get neighbor cell. Intended as a replacement for
 ## [method TileMapLayer.get_neighbor_cell], but using [TileGeometry] enums
-## and supporting triangle cells
+## to identify cell neighbor, and with support for triangle cells.
 func advanced_get_neighbor_cell(
 		coords: Vector2i,
 		neighbor: TileGeometry.CellNeighbor

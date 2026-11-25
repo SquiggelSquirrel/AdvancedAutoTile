@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://bcg5wsjjxgaae"]
 
-[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_r78df"]
-[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/advanced_tile_set/advanced_tile_set.gd" id="1_yjcyk"]
+[ext_resource type="Script" uid="uid://ddwcn185b61k0" path="res://addons/advanced_autotiles/scene/advanced_tile_map_layer/advanced_tile_map_layer.gd" id="1_r78df"]
+[ext_resource type="Script" uid="uid://b4lmdag5yvoi3" path="res://addons/advanced_autotiles/scene/advanced_tile_set/advanced_tile_set.gd" id="1_yjcyk"]
 [ext_resource type="Texture2D" uid="uid://c7lgyv6dv8c8y" path="res://examples/03 - Single Terrain Hexagon and Triangle Grids/06 - Hexagon to Triangle Subgrid/tileset.png" id="2_k1q65"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_yjcyk"]
