@@ -86,7 +86,11 @@ Get map co-ordinates under point. Intended as a replacement for `local_to_map()`
     dry_run: <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a> = false
 ) -> <a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a>:</code></pre>
 
-Paint the specified cells with the given Advanced Autotile terrain, and updates the surrounding cells. Optionally try to preserve surrounding connections with non-painted cells. Returns a Dictionary`Vector2i: Dictionary[String: TileKey`] of cell co-ord, "old" and "new" tiles (optionally dry-run to only return dictionary without applying changes).
+Paint the specified cells with the given Advanced Autotile terrain, and updates the surrounding cells.
+
+Optionally try to preserve surrounding connections with non-painted cells.
+
+Returns a Dictionary of changes, keyed by cell co-ordinates, where values are nested Dictionarties with String keys "old" and "new", values are `class AdvancedTileSet.TileKey` objects. (optionally dry-run to only return dictionary without applying changes).
 
 <a id="method-advanced_autotile_paint_path"></a>
 
@@ -98,7 +102,11 @@ Paint the specified cells with the given Advanced Autotile terrain, and updates 
     dry_run: <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a> = false
 ) -> <a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a>:</code></pre>
 
-Paint a path of cells using Advanced Autotile terrain. Will only try to create new high-priority connections where consecutive cells in the path are adjacent. Returns a Dictionary`Vector2i: Dictionary[String: TileKey`] of cell co-ord, "old" and "new" tiles (optionally dry-run to only return dictionary without applying changes).
+Paint a path of cells using Advanced Autotile terrain.
+
+Will only try to create new high-priority connections where consecutive cells in the path are adjacent.
+
+Returns a Dictionary of changes, keyed by cell co-ordinates, where values are nested Dictionarties with String keys "old" and "new", values are `class AdvancedTileSet.TileKey` objects. (optionally dry-run to only return dictionary without applying changes).
 
 <a id="method-advanced_autotile_paint_connections"></a>
 
@@ -111,7 +119,11 @@ Paint a path of cells using Advanced Autotile terrain. Will only try to create n
     dry_run: <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a> = false
 ) -> <a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a>:</code></pre>
 
-Paint connections using Advanced Autotile terrain, without changing the cells terrain. Cells are paired up with flags (if more cell than flags are given, flags array will wrap) to specify connections. Each connection only needs to be specified from one cell - additional cell-flags are implied. Returns a Dictionary`Vector2i: Dictionary[String: TileKey`] of cell co-ord, "old" and "new" tiles (optionally dry-run to only return dictionary without applying changes).
+Paint connections using Advanced Autotile terrain, without changing the cells terrain.
+
+Connections are identified by cell-flag pairs, if more cell than flags are given, flags array will wrap. Each connection only needs to be specified from one cell - additional cell-flags are implied.
+
+Returns a Dictionary of changes, keyed by cell co-ordinates, where values are nested Dictionarties with String keys "old" and "new", values are `class AdvancedTileSet.TileKey` objects. (optionally dry-run to only return dictionary without applying changes).
 
 <a id="method-advanced_autotile_flood_fill"></a>
 
@@ -123,7 +135,7 @@ Paint connections using Advanced Autotile terrain, without changing the cells te
     dry_run: <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a> = false
 ) -> <a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a>:</code></pre>
 
-Flood fills with a given Advanded Autotile terrain, from a given start cell. Returns a Dictionary`Vector2i: Dictionary[String: TileKey`] of cell co-ord, "old" and "new" tiles (optionally dry-run to only return dictionary without applying changes).
+Flood-fills with a given Advanded Autotile terrain, from a given start cell. Returns a Dictionary`Vector2i: Dictionary[String: TileKey`] of cell co-ord, "old" and "new" tiles (optionally dry-run to only return dictionary without applying changes).
 
 <a id="method-add_incoming_terrain"></a>
 
@@ -134,7 +146,11 @@ Flood fills with a given Advanded Autotile terrain, from a given start cell. Ret
     cells: <a href="https://docs.godotengine.org/en/stable/classes/class_array.html">Array</a>[<a href="https://docs.godotengine.org/en/stable/classes/class_vector2i.html">Vector2i</a>]
 ) -> void:</code></pre>
 
-Add an incoming terrain-to-be-painted in one or more cells, so that autotiling will connect with that terrain and not the existing one. Lower-level than most autotiling functions, intended for use with [`advanced_autotile_choose_tile()`](#method-advanced_autotile_choose_tile). Caution: remember to clear incoming terrains after you're done autotiling.
+Add an incoming terrain-to-be-painted in one or more cells, so that autotiling will connect with that terrain and not the existing one.
+
+Lower-level than most autotiling functions, intended for use with [`advanced_autotile_choose_tile()`](#method-advanced_autotile_choose_tile).
+
+Caution: remember to clear incoming terrains after you're done autotiling.
 
 <a id="method-clear_incoming_terrains"></a>
 
@@ -154,7 +170,9 @@ Clear incoming terrains (see [`add_incoming_terrain()`](#method-add_incoming_ter
     dry_run: <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a> = false
 ) -> <a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a>:</code></pre>
 
-Choose a tile for the given cell, based on incoming terrains. Optionally provide a mask (dictionary of flag:terrain_id) to try and match. Returns a dictionary of "old": TileKey, "new": TileKey, or an empty dictionary if no change should occur. Optionally dry-run to only get dictionary result without applying change.
+Choose a tile for the given cell, based on incoming terrains.
+
+Optionally provide a mask (dictionary of flag:terrain_id) to try and match. Returns a dictionary of "old": TileKey, "new": TileKey, or an empty dictionary if no change should occur. Optionally dry-run to only get dictionary result without applying change.
 
 <a id="method-advanced_get_final_cell_terrain"></a>
 
@@ -224,7 +242,9 @@ Get relevant neighbor cells for the given flag + connection mode.
     mode: <a href="TileGeometry.md#enum-ConnectionMode">ConnectionMode</a>
 ) -> TileGeometry.CellNeighbor[]:</code></pre>
 
-Give a cell, mode, and flag for a mask, get the neighbor flags for relevant cells. (For every mode except match-corners, and every flag that isn't a corner flag, there is one neighbor flag, it is just the same as the mask flag)
+Give a cell, mode, and flag for a mask, get the neighbor flags for relevant cells. 
+
+(There will be one neighbor flag, which will be the same as the mask flag, if the mask flag isn't a corner or the connection mode treats corner flags as diagonals.)
 
 <a id="method-advanced_get_side_flags_for_diagonal"></a>
 

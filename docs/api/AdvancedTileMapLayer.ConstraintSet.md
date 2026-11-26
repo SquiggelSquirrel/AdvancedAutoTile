@@ -2,7 +2,13 @@
 
 **Inherits:** [`RefCounted`](https://docs.godotengine.org/en/stable/classes/class_refcounted.html)
 
-Intended for internal use by AdvancedTileMapLayer Represents a set of constraints on a grid - each can be an edge between two cells, a corner-intersection, or a diagonal between two cells. Each has one terrain.
+(Intended for internal use by AdvancedTileMapLayer)
+
+Represents a set of terrain constraints on a grid.
+
+Each constraint has one terrain index, and one location.
+
+Each location can be an edge between two cells, a corner-intersection, or a diagonal between two cells.
 
 ## Properties
 
@@ -27,9 +33,9 @@ Intended for internal use by AdvancedTileMapLayer Represents a set of constraint
 
 ## Constants
 
-<a id="constant-CN"></a>
+<a id="constant-_CN"></a>
 
-**<code>CN = {&quot;BOTTOM&quot;: 16, &quot;BOTTOM_CLOCKWISE_CORNER&quot;: 82, &quot;BOTTOM_CORNER&quot;: 18, &quot;BOTTOM_COUNTERCLOCKWISE_CORNER&quot;: 146, &quot;BOTTOM_LEFT_CLOCKWISE_CORNER&quot;: 114, &quot;BOTTOM_LEFT_CORNER&quot;: 50, &quot;BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 178, &quot;BOTTOM_LEFT_SIDE&quot;: 49, &quot;BOTTOM_RIGHT_CLOCKWISE_CORNER&quot;: 90, &quot;BOTTOM_RIGHT_CORNER&quot;: 26, &quot;BOTTOM_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 154, &quot;BOTTOM_RIGHT_SIDE&quot;: 25, &quot;BOTTOM_SIDE&quot;: 17, &quot;CLOCKWISE&quot;: 64, &quot;CORNER&quot;: 2, &quot;COUNTERCLOCKWISE&quot;: 128, &quot;LEFT&quot;: 32, &quot;LEFT_CLOCKWISE_CORNER&quot;: 98, &quot;LEFT_CORNER&quot;: 34, &quot;LEFT_COUNTERCLOCKWISE_CORNER&quot;: 162, &quot;LEFT_SIDE&quot;: 33, &quot;RIGHT&quot;: 8, &quot;RIGHT_CLOCKWISE_CORNER&quot;: 74, &quot;RIGHT_CORNER&quot;: 10, &quot;RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 138, &quot;RIGHT_SIDE&quot;: 9, &quot;SELF&quot;: 0, &quot;SIDE&quot;: 1, &quot;TOP&quot;: 4, &quot;TOP_CLOCKWISE_CORNER&quot;: 70, &quot;TOP_CORNER&quot;: 6, &quot;TOP_COUNTERCLOCKWISE_CORNER&quot;: 134, &quot;TOP_LEFT_CLOCKWISE_CORNER&quot;: 102, &quot;TOP_LEFT_CORNER&quot;: 38, &quot;TOP_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 166, &quot;TOP_LEFT_SIDE&quot;: 37, &quot;TOP_RIGHT_CLOCKWISE_CORNER&quot;: 78, &quot;TOP_RIGHT_CORNER&quot;: 14, &quot;TOP_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 142, &quot;TOP_RIGHT_SIDE&quot;: 13, &quot;TOP_SIDE&quot;: 5}</code>**
+**<code>_CN = {&quot;BOTTOM&quot;: 16, &quot;BOTTOM_CLOCKWISE_CORNER&quot;: 82, &quot;BOTTOM_CORNER&quot;: 18, &quot;BOTTOM_COUNTERCLOCKWISE_CORNER&quot;: 146, &quot;BOTTOM_LEFT_CLOCKWISE_CORNER&quot;: 114, &quot;BOTTOM_LEFT_CORNER&quot;: 50, &quot;BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 178, &quot;BOTTOM_LEFT_SIDE&quot;: 49, &quot;BOTTOM_RIGHT_CLOCKWISE_CORNER&quot;: 90, &quot;BOTTOM_RIGHT_CORNER&quot;: 26, &quot;BOTTOM_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 154, &quot;BOTTOM_RIGHT_SIDE&quot;: 25, &quot;BOTTOM_SIDE&quot;: 17, &quot;CLOCKWISE&quot;: 64, &quot;CORNER&quot;: 2, &quot;COUNTERCLOCKWISE&quot;: 128, &quot;LEFT&quot;: 32, &quot;LEFT_CLOCKWISE_CORNER&quot;: 98, &quot;LEFT_CORNER&quot;: 34, &quot;LEFT_COUNTERCLOCKWISE_CORNER&quot;: 162, &quot;LEFT_SIDE&quot;: 33, &quot;RIGHT&quot;: 8, &quot;RIGHT_CLOCKWISE_CORNER&quot;: 74, &quot;RIGHT_CORNER&quot;: 10, &quot;RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 138, &quot;RIGHT_SIDE&quot;: 9, &quot;SELF&quot;: 0, &quot;SIDE&quot;: 1, &quot;TOP&quot;: 4, &quot;TOP_CLOCKWISE_CORNER&quot;: 70, &quot;TOP_CORNER&quot;: 6, &quot;TOP_COUNTERCLOCKWISE_CORNER&quot;: 134, &quot;TOP_LEFT_CLOCKWISE_CORNER&quot;: 102, &quot;TOP_LEFT_CORNER&quot;: 38, &quot;TOP_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 166, &quot;TOP_LEFT_SIDE&quot;: 37, &quot;TOP_RIGHT_CLOCKWISE_CORNER&quot;: 78, &quot;TOP_RIGHT_CORNER&quot;: 14, &quot;TOP_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 142, &quot;TOP_RIGHT_SIDE&quot;: 13, &quot;TOP_SIDE&quot;: 5}</code>**
 
 <a id="enum-FlagType"></a>
 
