@@ -4,6 +4,8 @@
 
 A directed graph, with tools to identifiy Strongly Connected Components, and to run a topological sort.
 
+Used by `class AdvancedTileSet` to determine terrain priorities.
+
 ## Properties
 
 | Type | Name | Default |
@@ -29,21 +31,31 @@ A directed graph, with tools to identifiy Strongly Connected Components, and to 
 
 ### <code><a href="https://docs.godotengine.org/en/stable/classes/class_int.html">int</a> node_count = 0</code>
 
+Count of how many nodes are in the graph.
+
 <a id="property-edges"></a>
 
 ### <code><a href="https://docs.godotengine.org/en/stable/classes/class_array.html">Array</a>[<a href="https://docs.godotengine.org/en/stable/classes/class_packedint32array.html">PackedInt32Array</a>] edges = []</code>
+
+Nested array of edges, keyed from-to.
 
 <a id="property-sccs"></a>
 
 ### <code><a href="https://docs.godotengine.org/en/stable/classes/class_array.html">Array</a>[<a href="https://docs.godotengine.org/en/stable/classes/class_packedint32array.html">PackedInt32Array</a>] sccs = []</code>
 
+Array of Strongly Connected Components. Each entry is an array of node ids.
+
 <a id="property-node_sccs"></a>
 
 ### <code><a href="https://docs.godotengine.org/en/stable/classes/class_packedint32array.html">PackedInt32Array</a> node_sccs = []</code>
 
+Array mapping nodes to SCCs. Index is node index, value is SCC index.
+
 <a id="property-t_sort"></a>
 
 ### <code><a href="https://docs.godotengine.org/en/stable/classes/class_packedint32array.html">PackedInt32Array</a> t_sort = []</code>
+
+Array of node indices in topological sort order.
 
 ## Method Descriptions
 

@@ -9,7 +9,7 @@ A utility class with enums and static methods for use by Advanced Autotile plugi
 | Returns | Signature |
 |---------|-----------|
 | `TileSet.CellNeighbor` | <code><a href="#method-advanced_neighbor_to_base_neighbor">advanced_neighbor_to_base_neighbor</a>(advanced_neighbor: <a href="#enum-CellNeighbor">CellNeighbor</a>)</code> |
-| [`bool`](https://docs.godotengine.org/en/stable/classes/class_bool.html) | <code><a href="#method-shape_has_diagonals">shape_has_diagonals</a>(shape: <a href="#enum-Shape">Shape</a>)</code> |
+| [`bool`](https://docs.godotengine.org/en/stable/classes/class_bool.html) | <code><a href="#method-shape_supports_diagonal_connections">shape_supports_diagonal_connections</a>(shape: <a href="#enum-Shape">Shape</a>)</code> |
 | `TileGeometry.ConnectionMode[]` | <code><a href="#method-get_connection_modes">get_connection_modes</a>(shape: <a href="#enum-Shape">Shape</a>)</code> |
 | `TileGeometry.Orientation[]` | <code><a href="#method-get_orientations">get_orientations</a>(shape: <a href="#enum-Shape">Shape</a>, axis: <a href="#enum-Axis">Axis</a>)</code> |
 | [`PackedInt32Array`](https://docs.godotengine.org/en/stable/classes/class_packedint32array.html) | <code><a href="#method-get_flags">get_flags</a>(mode: <a href="#enum-ConnectionMode">ConnectionMode</a>, shape: <a href="#enum-Shape">Shape</a>, axis: <a href="#enum-Axis">Axis</a>, orientation: <a href="#enum-Orientation">Orientation</a>)</code> |
@@ -35,14 +35,6 @@ Amount to shrink the outline by, to get the center flag polygon.
 **<code>FLAG_EMPTY = -1</code>**
 
 Terrain index for "empty"
-
-<a id="enum-TileGeometry.CellNeighbor"></a>
-
-### enum `TileGeometry.CellNeighbor`
-
-| Name | Value | Description |
-|------|-------|-------------|
-| <a id="enum-TileGeometry.CellNeighbor-_UP_TRIANGLE_NEIGHBOR_OFFSETS"></a> `_UP_TRIANGLE_NEIGHBOR_OFFSETS` | `Dictionary[int, Vector2i]({6: Vector2i(0, -1), 9: Vector2i(1, 0), 17: Vector2i(0, 1), 26: Vector2i(2, 1), 33: Vector2i(-1, 0), 50: Vector2i(-2, 1), 70: Vector2i(1, -1), 90: Vector2i(1, 1), 114: Vector2i(-2, 0), 134: Vector2i(-1, -1), 154: Vector2i(2, 0), 178: Vector2i(-1, 1)})` |  |
 
 <a id="enum-Shape"></a>
 
@@ -162,13 +154,13 @@ Terrain index for "empty"
 
 Convert an TileGeometry.CellNeighbor (Advanced Autotiles Plugin) to a TileSet.CellNeighbor (base Godot engine)
 
-<a id="method-shape_has_diagonals"></a>
+<a id="method-shape_supports_diagonal_connections"></a>
 
-### <code>shape_has_diagonals</code>
+### <code>shape_supports_diagonal_connections</code>
 
-<pre><code>func shape_has_diagonals(shape: <a href="#enum-Shape">Shape</a>) -> <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a>:</code></pre>
+<pre><code>func shape_supports_diagonal_connections(shape: <a href="#enum-Shape">Shape</a>) -> <a href="https://docs.godotengine.org/en/stable/classes/class_bool.html">bool</a>:</code></pre>
 
-Check whether diagonals make sense for a grid of given shape.
+Check whether diagonal connections make sense for a grid of given shape.
 
 <a id="method-get_connection_modes"></a>
 

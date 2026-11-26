@@ -2,7 +2,7 @@
 
 **Inherits:** [`RefCounted`](https://docs.godotengine.org/en/stable/classes/class_refcounted.html)
 
-(Intended only for internal use by [`AdvancedTileMapLayer`](AdvancedTileMapLayer.md).)
+(Intended only for internal use by [`AdvancedTileMapLayer`](AdvancedTileMapLayer.md))
 
 Represents a tile-match priority.
 

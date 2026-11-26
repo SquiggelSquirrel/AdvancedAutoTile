@@ -10,7 +10,7 @@ const CENTER_FLAG_SHRINK := 0.6
 const FLAG_EMPTY := -1
 
 # Private mapping of flag to coordinate offset vector, for triangles in "UP" orientation
-const _UP_TRIANGLE_NEIGHBOR_OFFSETS: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {
+static var _up_triangle_neighbor_offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i] = {
 	TileGeometry.CellNeighbor.TOP_COUNTERCLOCKWISE_CORNER:
 		Vector2i(-1, -1),
 	TileGeometry.CellNeighbor.TOP_CORNER:
@@ -70,8 +70,8 @@ enum Axis {
 	VERTICAL, ## Vertical half-offset, or triangles with a vertical edge
 }
 
-## Tile orientations (for triangle shapes only)
 enum Orientation {
+	## Tile orientations (for triangle shapes only)
 	UP, ## Bottom side and top corner
 	DOWN, ## Top side and bottom corner
 	LEFT, ## Right side and left corner
@@ -162,8 +162,8 @@ static func advanced_neighbor_to_base_neighbor(
 	return -1
 
 
-## Check whether diagonals make sense for a grid of given shape.
-static func shape_has_diagonals(shape: Shape) -> bool:
+## Check whether diagonal connections make sense for a grid of given shape.
+static func shape_supports_diagonal_connections(shape: Shape) -> bool:
 	match shape:
 		Shape.SQUARE, Shape.ISOMETRIC:
 			return true
@@ -178,7 +178,7 @@ static func shape_has_diagonals(shape: Shape) -> bool:
 
 ## Returns an array of connection modes supported for the given shape
 static func get_connection_modes(shape: Shape) -> Array[ConnectionMode]:
-	if shape_has_diagonals(shape):
+	if shape_supports_diagonal_connections(shape):
 		return [
 			ConnectionMode.NONE,
 			ConnectionMode.CORNERS,
@@ -483,7 +483,7 @@ static func get_triangle_neighbor_cell(
 	var offsets: Dictionary[TileGeometry.CellNeighbor, Vector2i]
 	match orientation:
 		OR.UP:
-			offsets = _UP_TRIANGLE_NEIGHBOR_OFFSETS
+			offsets = _up_triangle_neighbor_offsets
 		OR.DOWN:
 			offsets = _down_triangle_neighbor_offsets
 		OR.LEFT:
@@ -596,8 +596,8 @@ static func get_corners_of_side(
 
 # Set up private cached triangle offsets mapping
 static func _setup_triangle_offsets() -> void:
-	for neighbor in _UP_TRIANGLE_NEIGHBOR_OFFSETS.keys():
-		var offset: Vector2i = _UP_TRIANGLE_NEIGHBOR_OFFSETS[neighbor]
+	for neighbor in _up_triangle_neighbor_offsets.keys():
+		var offset: Vector2i = _up_triangle_neighbor_offsets[neighbor]
 		_down_triangle_neighbor_offsets[
 				TileGeometry.cell_neighbor_flip_v(neighbor)
 				] = Vector2i(offset.x, - offset.y)

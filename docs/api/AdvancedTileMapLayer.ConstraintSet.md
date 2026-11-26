@@ -17,6 +17,7 @@ Each location can be an edge between two cells, a corner-intersection, or a diag
 | [`Shape`](TileGeometry.md#enum-Shape) | [`shape`](#property-shape) |  |
 | [`Axis`](TileGeometry.md#enum-Axis) | [`axis`](#property-axis) |  |
 | [`Dictionary`](https://docs.godotengine.org/en/stable/classes/class_dictionary.html)[[`String`](https://docs.godotengine.org/en/stable/classes/class_string.html), [`int`](https://docs.godotengine.org/en/stable/classes/class_int.html)] | [`data`](#property-data) | `{}` |
+| [`Dictionary`](https://docs.godotengine.org/en/stable/classes/class_dictionary.html) | [`CN`](#property-CN) | `{"BOTTOM": 16, "BOTTOM_CLOCKWISE_CORNER": 82, "BOTTOM_CORNER": 18, "BOTTOM_COUNTERCLOCKWISE_CORNER": 146, "BOTTOM_LEFT_CLOCKWISE_CORNER": 114, "BOTTOM_LEFT_CORNER": 50, "BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER": 178, "BOTTOM_LEFT_SIDE": 49, "BOTTOM_RIGHT_CLOCKWISE_CORNER": 90, "BOTTOM_RIGHT_CORNER": 26, "BOTTOM_RIGHT_COUNTERCLOCKWISE_CORNER": 154, "BOTTOM_RIGHT_SIDE": 25, "BOTTOM_SIDE": 17, "CLOCKWISE": 64, "CORNER": 2, "COUNTERCLOCKWISE": 128, "LEFT": 32, "LEFT_CLOCKWISE_CORNER": 98, "LEFT_CORNER": 34, "LEFT_COUNTERCLOCKWISE_CORNER": 162, "LEFT_SIDE": 33, "RIGHT": 8, "RIGHT_CLOCKWISE_CORNER": 74, "RIGHT_CORNER": 10, "RIGHT_COUNTERCLOCKWISE_CORNER": 138, "RIGHT_SIDE": 9, "SELF": 0, "SIDE": 1, "TOP": 4, "TOP_CLOCKWISE_CORNER": 70, "TOP_CORNER": 6, "TOP_COUNTERCLOCKWISE_CORNER": 134, "TOP_LEFT_CLOCKWISE_CORNER": 102, "TOP_LEFT_CORNER": 38, "TOP_LEFT_COUNTERCLOCKWISE_CORNER": 166, "TOP_LEFT_SIDE": 37, "TOP_RIGHT_CLOCKWISE_CORNER": 78, "TOP_RIGHT_CORNER": 14, "TOP_RIGHT_COUNTERCLOCKWISE_CORNER": 142, "TOP_RIGHT_SIDE": 13, "TOP_SIDE": 5}` |
 
 ## Methods
 
@@ -32,10 +33,6 @@ Each location can be an edge between two cells, a corner-intersection, or a diag
 | [`bool`](https://docs.godotengine.org/en/stable/classes/class_bool.html) | <code><a href="#method-get_is_diagonal">get_is_diagonal</a>(index: <a href="https://docs.godotengine.org/en/stable/classes/class_int.html">int</a>)</code> |
 
 ## Constants
-
-<a id="constant-_CN"></a>
-
-**<code>_CN = {&quot;BOTTOM&quot;: 16, &quot;BOTTOM_CLOCKWISE_CORNER&quot;: 82, &quot;BOTTOM_CORNER&quot;: 18, &quot;BOTTOM_COUNTERCLOCKWISE_CORNER&quot;: 146, &quot;BOTTOM_LEFT_CLOCKWISE_CORNER&quot;: 114, &quot;BOTTOM_LEFT_CORNER&quot;: 50, &quot;BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 178, &quot;BOTTOM_LEFT_SIDE&quot;: 49, &quot;BOTTOM_RIGHT_CLOCKWISE_CORNER&quot;: 90, &quot;BOTTOM_RIGHT_CORNER&quot;: 26, &quot;BOTTOM_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 154, &quot;BOTTOM_RIGHT_SIDE&quot;: 25, &quot;BOTTOM_SIDE&quot;: 17, &quot;CLOCKWISE&quot;: 64, &quot;CORNER&quot;: 2, &quot;COUNTERCLOCKWISE&quot;: 128, &quot;LEFT&quot;: 32, &quot;LEFT_CLOCKWISE_CORNER&quot;: 98, &quot;LEFT_CORNER&quot;: 34, &quot;LEFT_COUNTERCLOCKWISE_CORNER&quot;: 162, &quot;LEFT_SIDE&quot;: 33, &quot;RIGHT&quot;: 8, &quot;RIGHT_CLOCKWISE_CORNER&quot;: 74, &quot;RIGHT_CORNER&quot;: 10, &quot;RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 138, &quot;RIGHT_SIDE&quot;: 9, &quot;SELF&quot;: 0, &quot;SIDE&quot;: 1, &quot;TOP&quot;: 4, &quot;TOP_CLOCKWISE_CORNER&quot;: 70, &quot;TOP_CORNER&quot;: 6, &quot;TOP_COUNTERCLOCKWISE_CORNER&quot;: 134, &quot;TOP_LEFT_CLOCKWISE_CORNER&quot;: 102, &quot;TOP_LEFT_CORNER&quot;: 38, &quot;TOP_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 166, &quot;TOP_LEFT_SIDE&quot;: 37, &quot;TOP_RIGHT_CLOCKWISE_CORNER&quot;: 78, &quot;TOP_RIGHT_CORNER&quot;: 14, &quot;TOP_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 142, &quot;TOP_RIGHT_SIDE&quot;: 13, &quot;TOP_SIDE&quot;: 5}</code>**
 
 <a id="enum-FlagType"></a>
 
@@ -61,6 +58,10 @@ Each location can be an edge between two cells, a corner-intersection, or a diag
 <a id="property-data"></a>
 
 ### <code><a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a>[<a href="https://docs.godotengine.org/en/stable/classes/class_string.html">String</a>, <a href="https://docs.godotengine.org/en/stable/classes/class_int.html">int</a>] data = {}</code>
+
+<a id="property-CN"></a>
+
+### <code><a href="https://docs.godotengine.org/en/stable/classes/class_dictionary.html">Dictionary</a> CN = {&quot;BOTTOM&quot;: 16, &quot;BOTTOM_CLOCKWISE_CORNER&quot;: 82, &quot;BOTTOM_CORNER&quot;: 18, &quot;BOTTOM_COUNTERCLOCKWISE_CORNER&quot;: 146, &quot;BOTTOM_LEFT_CLOCKWISE_CORNER&quot;: 114, &quot;BOTTOM_LEFT_CORNER&quot;: 50, &quot;BOTTOM_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 178, &quot;BOTTOM_LEFT_SIDE&quot;: 49, &quot;BOTTOM_RIGHT_CLOCKWISE_CORNER&quot;: 90, &quot;BOTTOM_RIGHT_CORNER&quot;: 26, &quot;BOTTOM_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 154, &quot;BOTTOM_RIGHT_SIDE&quot;: 25, &quot;BOTTOM_SIDE&quot;: 17, &quot;CLOCKWISE&quot;: 64, &quot;CORNER&quot;: 2, &quot;COUNTERCLOCKWISE&quot;: 128, &quot;LEFT&quot;: 32, &quot;LEFT_CLOCKWISE_CORNER&quot;: 98, &quot;LEFT_CORNER&quot;: 34, &quot;LEFT_COUNTERCLOCKWISE_CORNER&quot;: 162, &quot;LEFT_SIDE&quot;: 33, &quot;RIGHT&quot;: 8, &quot;RIGHT_CLOCKWISE_CORNER&quot;: 74, &quot;RIGHT_CORNER&quot;: 10, &quot;RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 138, &quot;RIGHT_SIDE&quot;: 9, &quot;SELF&quot;: 0, &quot;SIDE&quot;: 1, &quot;TOP&quot;: 4, &quot;TOP_CLOCKWISE_CORNER&quot;: 70, &quot;TOP_CORNER&quot;: 6, &quot;TOP_COUNTERCLOCKWISE_CORNER&quot;: 134, &quot;TOP_LEFT_CLOCKWISE_CORNER&quot;: 102, &quot;TOP_LEFT_CORNER&quot;: 38, &quot;TOP_LEFT_COUNTERCLOCKWISE_CORNER&quot;: 166, &quot;TOP_LEFT_SIDE&quot;: 37, &quot;TOP_RIGHT_CLOCKWISE_CORNER&quot;: 78, &quot;TOP_RIGHT_CORNER&quot;: 14, &quot;TOP_RIGHT_COUNTERCLOCKWISE_CORNER&quot;: 142, &quot;TOP_RIGHT_SIDE&quot;: 13, &quot;TOP_SIDE&quot;: 5}</code>
 
 ## Method Descriptions
 

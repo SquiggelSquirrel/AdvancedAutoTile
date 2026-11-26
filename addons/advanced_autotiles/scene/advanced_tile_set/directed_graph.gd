@@ -1,14 +1,25 @@
 class_name DirectedGraph
 extends RefCounted
 ## A directed graph, with tools to identifiy Strongly Connected Components,
-## and to run a topological sort.
+## and to run a topological sort.[br]
+## Used by [class AdvancedTileSet] to determine terrain priorities.
 
+## Count of how many nodes are in the graph.
 var node_count := 0
+## Nested array of edges, keyed from-to.
 var edges: Array[PackedInt32Array] = []
+## Array of Strongly Connected Components. Each entry is an array of node ids.
 var sccs: Array[PackedInt32Array] = []
+## Array mapping nodes to SCCs. Index is node index, value is SCC index.
 var node_sccs: PackedInt32Array = []
+## Array of node indices in topological sort order.
 var t_sort: PackedInt32Array = []
 var _scss_determined := false
+
+var _scc_search_count: int = 0
+var _scc_search_s: Array[int] = []
+var _scc_search_p: Array[int] = []
+var _scc_search_order: PackedInt32Array = []
 
 
 func add_node() -> int:
@@ -71,34 +82,37 @@ func _scc_edges_in() -> Array[PackedInt32Array]:
 
 
 func determine_sccs() -> void:
-	var search := SCCSearch.new()
-	search.order.resize(node_count)
-	search.order.fill(-1)
 	sccs.clear()
 	node_sccs.resize(node_count)
 	node_sccs.fill(-1)
+	_scc_search_order.resize(node_count)
+	_scc_search_order.fill(-1)
 	for node in node_count:
-		if search.order[node] > -1:
+		if _scc_search_order[node] > 1:
 			continue
-		_scc_search_visit(node, search)
+		_scc_search_visit(node)
 	_scss_determined = true
+	_scc_search_count = 0
+	_scc_search_order.clear()
+	_scc_search_s.clear()
+	_scc_search_p.clear()
 
 
-func _scc_search_visit(node: int, search: SCCSearch) -> void:
-	search.order[node] = search.count
-	search.count += 1
-	search.s.append(node)
-	search.p.append(node)
+func _scc_search_visit(node: int) -> void:
+	_scc_search_order[node] = _scc_search_count
+	_scc_search_count += 1
+	_scc_search_s.append(node)
+	_scc_search_p.append(node)
 	for w in edges[node]:
-		if search.order[w] == -1:
-			_scc_search_visit(w, search)
+		if _scc_search_order[w] == -1:
+			_scc_search_visit(w)
 		elif node_sccs[w] == -1:
-			while search.order[search.p[-1]] > search.order[w]:
-				search.p.pop_back()
-	if search.p[-1] == node:
+			while _scc_search_order[_scc_search_p[-1]] > _scc_search_order[w]:
+				_scc_search_p.pop_back()
+	if _scc_search_p[-1] == node:
 		var nodes_in_component: PackedInt32Array = []
 		while true:
-			var popped := search.s.pop_back()
+			var popped := _scc_search_s.pop_back()
 			nodes_in_component.append(popped)
 			if popped == node:
 				break
@@ -107,11 +121,4 @@ func _scc_search_visit(node: int, search: SCCSearch) -> void:
 		sccs.append(nodes_in_component)
 		for n in nodes_in_component:
 			node_sccs[n] = scc_index
-		search.p.pop_back()
-
-
-class SCCSearch:
-	var count: int = 0
-	var s: Array[int] = []
-	var p: Array[int] = []
-	var order: PackedInt32Array = []
+		_scc_search_p.pop_back()
