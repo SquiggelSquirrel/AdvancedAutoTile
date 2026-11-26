@@ -70,8 +70,8 @@ enum Axis {
 	VERTICAL, ## Vertical half-offset, or triangles with a vertical edge
 }
 
+## Tile orientations (for triangle shapes only)
 enum Orientation {
-	## Tile orientations (for triangle shapes only)
 	UP, ## Bottom side and top corner
 	DOWN, ## Top side and bottom corner
 	LEFT, ## Right side and left corner
